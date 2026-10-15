@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Leave Management - WorkEase</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background-color: #f5f7fb;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: #111827;
+        }
+
+        .brand {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 25px 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #d1d5db;
+            text-decoration: none;
+            padding: 13px 20px;
+        }
+
+        .sidebar a:hover {
+            background: #1f2937;
+            color: white;
+        }
+
+        .topbar {
+            background: white;
+            padding: 18px 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .content-card {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .table th {
+            background-color: #f8fafc;
+            white-space: nowrap;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #842029;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar p-0">
+
+            <div class="brand">
+                🏢 WorkEase
+            </div>
+
+            <a href="/admin-dashboard/"> 🏠 Dashboard  </a>
+            <a href="/admin-dashboard/employees/"> 👥 Employees</a>
+            <a href="/admin-dashboard/attendance/">📋 Attendance </a>
+            <a href="/admin-dashboard/leave/">🏖️ Leave</a>
+            <a href="/admin/core/payroll/">💰 Payroll</a>
+            <a href="/admin-dashboard/work-locations/">📍 Work Locations</a>
+            <a href="/admin/">⚙️ Django Admin</a>
+            <a href="/admin/logout/">🚪 Logout</a>
+
+        </div>
+
+
+        <!-- Main Content -->
+        <div class="col-md-10 p-0">
+
+            <!-- Topbar -->
+            <div class="topbar">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+                        <h4 class="mb-0">
+                            Leave Management
+                        </h4>
+
+                        <small class="text-muted">
+                            Manage employee leave requests
+                        </small>
+                    </div>
+
+                    <div>
+                        <strong>
+                            Welcome, {{ request.user.username }}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Page Content -->
+            <div class="p-4">
+
+                <div class="content-card">
+
+                    <div class="card-body p-4">
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+
+                            <div>
+                                <h5 class="mb-1">
+                                    🏖️ Leave Requests
+                                </h5>
+
+                                <small class="text-muted">
+                                    Review and manage employee leave applications
+                                </small>
+                            </div>
+
+                            <a
+                                href="/admin-dashboard/"
+                                class="btn btn-outline-secondary"
+                            >
+                                ← Dashboard
+                            </a>
+
+                        </div>
+
+
+                        {% if leave_requests %}
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Employee
+                                        </th>
+
+                                        <th>
+                                            Employee ID
+                                        </th>
+
+                                        <th>
+                                            Leave Type
+                                        </th>
+
+                                        <th>
+                                            From Date
+                                        </th>
+
+                                        <th>
+                                            To Date
+                                        </th>
+
+                                        <th>
+                                            Reason
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
+                                        <th>
+                                            Action
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    {% for leave in leave_requests %}
+
+                                    <tr>
+
+                                        <!-- Employee -->
+                                        <td>
+                                            <strong>
+                                                {{ leave.employee.name }}
+                                            </strong>
+                                        </td>
+
+
+                                        <!-- Employee ID -->
+                                        <td>
+                                            {{ leave.employee.employee_id }}
+                                        </td>
+
+
+                                        <!-- Leave Type -->
+                                        <td>
+                                            {{ leave.leave_type }}
+                                        </td>
+
+
+                                        <!-- From Date -->
+                                        <td>
+                                            {{ leave.from_date }}
+                                        </td>
+
+
+                                        <!-- To Date -->
+                                        <td>
+                                            {{ leave.to_date }}
+                                        </td>
+
+
+                                        <!-- Reason -->
+                                        <td>
+                                            {{ leave.reason }}
+                                        </td>
+
+
+                                        <!-- Status -->
+                                        <td>
+
+                                            {% if leave.status == "Pending" %}
+
+                                                <span class="status-badge status-pending">
+                                                    Pending
+                                                </span>
+
+                                            {% elif leave.status == "Approved" %}
+
+                                                <span class="status-badge status-approved">
+                                                    Approved
+                                                </span>
+
+                                            {% elif leave.status == "Rejected" %}
+
+                                                <span class="status-badge status-rejected">
+                                                    Rejected
+                                                </span>
+
+                                            {% else %}
+
+                                                <span class="status-badge">
+                                                    {{ leave.status }}
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+
+                                        <!-- Actions -->
+                                        <td>
+
+                                            {% if leave.status == "Pending" %}
+
+                                                <!-- Approve -->
+                                                <form
+                                                    method="POST"
+                                                    action="{% url 'leave_update_status' leave.id 'Approved' %}"
+                                                    class="d-inline"
+                                                >
+
+                                                    {% csrf_token %}
+
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-sm btn-success"
+                                                    >
+                                                        ✓ Approve
+                                                    </button>
+
+                                                </form>
+
+
+                                                <!-- Reject -->
+                                                <form
+                                                    method="POST"
+                                                    action="{% url 'leave_update_status' leave.id 'Rejected' %}"
+                                                    class="d-inline"
+                                                >
+
+                                                    {% csrf_token %}
+
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-sm btn-danger"
+                                                    >
+                                                        ✕ Reject
+                                                    </button>
+
+                                                </form>
+
+                                            {% elif leave.status == "Approved" %}
+
+                                                <span class="text-success fw-semibold">
+                                                    ✓ Approved
+                                                </span>
+
+                                            {% elif leave.status == "Rejected" %}
+
+                                                <span class="text-danger fw-semibold">
+                                                    ✕ Rejected
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                    </tr>
+
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        {% else %}
+
+                        <div class="text-center py-5">
+
+                            <div style="font-size: 50px;">
+                                🏖️
+                            </div>
+
+                            <h5 class="mt-3">
+                                No Leave Requests
+                            </h5>
+
+                            <p class="text-muted">
+                                There are currently no leave applications.
+                            </p>
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,18 @@
+# Python files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Local database (contains private app data)
+db.sqlite3
+
+# Django generated files
+staticfiles/
+media/

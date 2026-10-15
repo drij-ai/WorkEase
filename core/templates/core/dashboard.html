@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkEase Employee Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #17324D;
+            --navy-light: #244766;
+            --blue: #3478C8;
+            --page-bg: #F3F6F9;
+            --text: #1F2937;
+            --muted: #64748B;
+            --border: #DFE7EF;
+        }
+
+        body {
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+        }
+
+       
+.workease-navbar {
+    background: #142D4E;
+    box-shadow: 0 2px 10px rgba(11, 31, 58, 0.12);
+    min-height: 52px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: -0.3px;
+}
+
+.welcome-user {
+    color: #F8FAFC;
+    font-size: 0.9rem;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+
+        .dashboard-container {
+            padding-top: 42px;
+            padding-bottom: 48px;
+        }
+
+        .page-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            letter-spacing: -1.2px;
+            color: #172033;
+        }
+
+        .page-subtitle {
+            color: var(--muted);
+            font-size: 1.08rem;
+        }
+
+        .dashboard-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .055);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 9px 24px rgba(15, 23, 42, .09);
+        }
+
+        .navy-card-header {
+            background: var(--navy);
+            color: #fff;
+            padding: 15px 22px;
+            border: 0;
+        }
+
+        .navy-card-header h5 {
+            font-weight: 650;
+            margin: 0;
+        }
+
+        .dashboard-card .card-body {
+            padding: 24px;
+        }
+
+        .profile-item {
+            min-height: 88px;
+            margin-bottom: 12px;
+        }
+
+        .profile-label {
+            display: block;
+            font-weight: 700;
+            color: #172033;
+            margin-bottom: 5px;
+        }
+
+        .profile-value {
+            color: var(--muted);
+            margin-bottom: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: clamp(1.8rem, 3vw, 2.25rem);
+            font-weight: 750;
+            letter-spacing: -.7px;
+            margin-bottom: 8px;
+        }
+
+        .metric-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #E6F4F1;
+            font-size: 1.35rem;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            color: #172033;
+            font-weight: 700;
+        }
+
+        .table {
+            margin-bottom: 0;
+            --bs-table-hover-bg: #F5F8FD;
+        }
+
+        .table thead th {
+            background: #F1F5F9;
+            color: #334155;
+            font-size: .88rem;
+            font-weight: 700;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table td {
+            color: #475569;
+            vertical-align: middle;
+        }
+
+        .table > :not(caption) > * > * {
+            padding: 13px 14px;
+        }
+
+        .action-card h5 {
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .btn {
+            border-radius: 9px;
+            font-weight: 600;
+            padding: 9px 16px;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, .16);
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .btn-navy {
+            color: #fff;
+            background: var(--navy);
+            border-color: var(--navy);
+        }
+
+        .btn-navy:hover {
+            color: #fff;
+            background: var(--navy-light);
+            border-color: var(--navy-light);
+        }
+
+        .soft-divider {
+            border-color: var(--border);
+            opacity: 1;
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-container {
+                padding-top: 28px;
+            }
+
+            .workease-navbar .container {
+                gap: 12px;
+            }
+
+            .navbar-brand {
+                font-size: 1.3rem;
+            }
+
+            .welcome-user {
+                font-size: .88rem;
+                text-align: right;
+            }
+
+            .dashboard-card .card-body {
+                padding: 19px;
+            }
+
+            .profile-item {
+                min-height: auto;
+                margin-bottom: 18px;
+            }
+
+            .page-title {
+                letter-spacing: -.6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark workease-navbar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold" href="/">WorkEase</a>
+            <span class="welcome-user">Welcome, {{ request.user.username }}</span>
+        </div>
+    </nav>
+
+    <main class="container dashboard-container">
+        <!-- Dashboard Heading -->
+        <div class="mb-4">
+            <h1 class="page-title fw-bold mb-2">Employee Dashboard</h1>
+            <p class="page-subtitle mb-0">Welcome to your WorkEase dashboard.</p>
+        </div>
+
+        <!-- Employee Profile -->
+        <section class="card dashboard-card mt-4">
+            <div class="card-header navy-card-header">
+                <h5>Employee Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 profile-item">
+                        <span class="profile-label">Employee ID</span>
+                        <p class="profile-value">{{ employee.employee_id }}</p>
+                    </div>
+                    <div class="col-md-6 profile-item">
+                        <span class="profile-label">Name</span>
+                        <p class="profile-value">{{ employee.name }}</p>
+                    </div>
+                    <div class="col-md-6 profile-item">
+                        <span class="profile-label">Department</span>
+                        <p class="profile-value">{{ employee.department }}</p>
+                    </div>
+                    <div class="col-md-6 profile-item">
+                        <span class="profile-label">Phone</span>
+                        <p class="profile-value">{{ employee.phone }}</p>
+                    </div>
+                    <div class="col-md-6 profile-item">
+                        <span class="profile-label">Joining Date</span>
+                        <p class="profile-value">{{ employee.joining_date }}</p>
+                    </div>
+                    <div class="col-md-6 profile-item">
+                        <span class="profile-label">Basic Salary</span>
+                        <p class="profile-value">₹ {{ employee.basic_salary }}</p>
+                    </div>
+                    <div class="col-md-6 profile-item mb-0">
+                        <span class="profile-label">Salary Type</span>
+                        <p class="profile-value">{{ employee.salary_type }}</p>
+                    </div>
+                    <div class="col-md-6 profile-item mb-0">
+                        <span class="profile-label">Hourly Rate</span>
+                        <p class="profile-value">₹ {{ employee.hourly_rate }} / hour</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monthly Working Hours -->
+        <div class="row g-4 mt-1">
+            <div class="col-md-6">
+                <section class="card dashboard-card h-100">
+                    <div class="card-body">
+                        <span class="metric-icon">⏱️</span>
+                        <h5 class="metric-label">This Month Working Hours</h5>
+                       <h2 class="metric-value text-primary">{{ monthly_hours|floatformat:2 }} hrs</h2>
+                        <p class="text-muted mb-0">Current month's total working hours</p>
+                    </div>
+                </section>
+            </div>
+            <div class="col-md-6">
+                <section class="card dashboard-card h-100">
+                    <div class="card-body">
+                        <span class="metric-icon">💰</span>
+                        <h5 class="metric-label">Estimated Monthly Salary</h5>
+                       <h2 class="metric-value text-success">₹ {{ monthly_salary|floatformat:2 }}</h2>
+                        {% if employee.salary_type == "Hourly" %}
+                           <p class="text-muted mb-0">{{ monthly_hours|floatformat:2 }} hrs × ₹ {{ employee.hourly_rate|floatformat:2 }}/hr</p>
+                        {% else %}
+                            <p class="text-muted mb-0">Based on monthly basic salary</p>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="row g-4 mt-1">
+            <div class="col-md-4">
+                <section class="card dashboard-card action-card h-100">
+                    <div class="card-body">
+                        <span class="metric-icon">📋</span>
+                        <h5>Attendance</h5>
+                        <p class="text-muted">Check your attendance and working hours.</p>
+                        <a href="/attendance/" class="btn btn-navy">Attendance</a>
+                    </div>
+                </section>
+            </div>
+            <div class="col-md-4">
+                <section class="card dashboard-card action-card h-100">
+                    <div class="card-body">
+                        <span class="metric-icon">📝</span>
+                        <h5>Leave</h5>
+                        <p class="text-muted">Manage your leave requests.</p>
+                        <a href="{% url 'leave_apply' %}" class="btn btn-primary">Leave</a>
+                    </div>
+                </section>
+            </div>
+            <div class="col-md-4">
+                <section class="card dashboard-card action-card h-100">
+                    <div class="card-body">
+                        <span class="metric-icon">💰</span>
+                        <h5>Payroll</h5>
+                        {% if payroll %}
+                            <p class="text-muted mb-1">Net Salary</p>
+                           <h4 class="fw-bold text-success">₹ {{ payroll.net_salary|floatformat:2 }}</h4>
+<p class="text-muted mb-0">Gross: ₹ {{ payroll.gross_salary|floatformat:2 }}</p>
+                        {% else %}
+                            <p class="text-muted">No payroll record for this month.</p>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Leave Requests -->
+        <section class="card dashboard-card mt-4">
+            <div class="card-body">
+                <h5 class="section-title mb-3">📝 My Leave Requests</h5>
+                {% if leave_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Leave Type</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leave_requests %}
+                                    <tr>
+                                        <td>{{ leave.leave_type }}</td>
+                                        <td>{{ leave.from_date }}</td>
+                                        <td>{{ leave.to_date }}</td>
+                                        <td>{{ leave.reason }}</td>
+                                        <td>
+                                            {% if leave.status == "Approved" %}
+                                                <span class="badge bg-success">Approved</span>
+                                            {% elif leave.status == "Rejected" %}
+                                                <span class="badge bg-danger">Rejected</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No leave requests yet.</p>
+                {% endif %}
+            </div>
+        </section>
+        <!-- Attendance Records -->
+        <section class="card dashboard-card mt-4">
+            <div class="card-header navy-card-header d-flex align-items-center justify-content-between">
+                <h5>Attendance Records</h5>
+            </div>
+            <div class="card-body">
+                {% if attendance_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                    <th>Working Hours</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attendance in attendance_records %}
+                                    <tr>
+                                        <td>{{ attendance.date|date:"d-m-Y" }}</td>
+                                        <td>{{ attendance.check_in|default:"-" }}</td>
+                                        <td>{{ attendance.check_out|default:"-" }}</td>
+                                       <td>{{ attendance.working_hours|floatformat:2 }} hrs</td>
+                                        <td>
+                                            {% if attendance.status == "Present" %}
+                                                <span class="badge bg-success">{{ attendance.status }}</span>
+                                            {% elif attendance.status == "Late" %}
+                                                <span class="badge bg-warning text-dark">{{ attendance.status }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ attendance.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No attendance records found.</p>
+                {% endif %}
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

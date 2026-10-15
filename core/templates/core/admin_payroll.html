@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Management - WorkEase</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f3f6fc;
+            color: #111827;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Shared WorkEase sidebar */
+        .sidebar {
+            flex: 0 0 315px;
+            width: 315px;
+            min-height: 100vh;
+            padding: 0 22px 25px;
+            background: #0b111d;
+            color: #e5e7eb;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 30px 12px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #202938;
+            color: #f8fafc;
+            font-size: 32px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .brand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            flex-shrink: 0;
+            border-radius: 13px;
+            background: #1677ff;
+            color: white;
+            font-size: 30px;
+        }
+
+        .menu-heading {
+            margin: 26px 12px 14px;
+            color: #8d9aaf;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .6px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-height: 58px;
+            margin-bottom: 7px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            color: #9eafc6;
+            text-decoration: none;
+            font-size: 18px;
+            transition: background .2s, color .2s;
+        }
+
+        .sidebar a:hover {
+            background: #1c2636;
+            color: white;
+        }
+
+        .sidebar a.active {
+            background: #343d4b;
+            color: white;
+        }
+
+        .menu-icon {
+            display: inline-flex;
+            justify-content: center;
+            width: 24px;
+            flex-shrink: 0;
+            color: #b7c7e2;
+            font-size: 21px;
+        }
+
+        .secondary-heading {
+            margin-top: 35px;
+        }
+
+        /* Main area */
+        .payroll-main {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-height: 120px;
+            padding: 25px 38px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .topbar h1 {
+            margin: 0 0 6px;
+            font-size: 34px;
+            font-weight: 600;
+        }
+
+        .topbar small {
+            color: #64748b;
+            font-size: 17px;
+        }
+
+        .welcome-user {
+            white-space: nowrap;
+            font-size: 17px;
+        }
+
+        .page-content {
+            padding: 30px 36px;
+            min-width: 0;
+        }
+
+        .content-card {
+            width: 100%;
+            min-width: 0;
+            padding: 25px;
+            background: white;
+            border: 1px solid #e8edf5;
+            border-radius: 22px;
+            box-shadow: 0 8px 25px rgba(15, 23, 42, .05);
+        }
+
+        /* Summary cards */
+        .summary-card {
+            height: 100%;
+            padding: 20px;
+            border: 1px solid #e6ebf3;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, .04);
+        }
+
+        .summary-label {
+            margin-bottom: 9px;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        .summary-value {
+            margin: 0;
+            overflow-wrap: anywhere;
+            font-size: 25px;
+            font-weight: 700;
+        }
+
+        .summary-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            margin-bottom: 14px;
+            border-radius: 11px;
+            background: #edf4ff;
+            color: #1677ff;
+            font-size: 20px;
+        }
+
+        .section-title {
+            margin: 8px 0 6px;
+            font-size: 25px;
+            font-weight: 650;
+        }
+
+        .section-subtitle {
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        /* Filters */
+        .payroll-filters {
+            width: 100%;
+            padding: 22px;
+            background: #f7f9fc;
+            border: 1px solid #edf0f5;
+            border-radius: 15px;
+        }
+
+        .payroll-filters .form-label {
+            margin-bottom: 8px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .payroll-filters .form-control,
+        .payroll-filters .form-select {
+            width: 100%;
+            min-width: 0;
+            min-height: 46px;
+            border-color: #dce3ed;
+            border-radius: 9px;
+        }
+
+        .payroll-filter-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .payroll-filter-actions .btn {
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #1677ff;
+            border-color: #1677ff;
+        }
+
+        .btn-primary:hover {
+            background: #075fe0;
+            border-color: #075fe0;
+        }
+
+        /* Table: scroll horizontally instead of stretching page */
+        .payroll-table-wrap {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e8edf5;
+            border-radius: 12px;
+        }
+
+        .payroll-table-wrap table {
+            min-width: 1250px;
+            width: 100%;
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .payroll-table-wrap thead th {
+            padding: 16px 14px;
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 650;
+            border-bottom: 1px solid #dce3ed;
+        }
+
+        .payroll-table-wrap tbody td {
+            padding: 16px 14px;
+            vertical-align: middle;
+        }
+
+        .payroll-table-wrap tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+        .salary-badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .monthly {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .hourly {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .net-salary {
+            color: #15803d;
+            font-weight: 700;
+        }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-buttons .btn {
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            padding: 45px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        @media (max-width: 1100px) {
+            .sidebar {
+                flex-basis: 250px;
+                width: 250px;
+                padding-right: 14px;
+                padding-left: 14px;
+            }
+
+            .brand { font-size: 27px; }
+            .page-content { padding: 22px; }
+            .topbar { padding: 22px; }
+        }
+
+        @media (max-width: 767px) {
+            .app-layout {
+                display: block;
+            }
+
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+                padding-bottom: 15px;
+            }
+
+            .brand {
+                padding: 18px 10px;
+                margin-bottom: 10px;
+            }
+
+            .sidebar a {
+                display: inline-flex;
+                min-height: 42px;
+                margin: 3px;
+                padding: 9px 12px;
+                font-size: 14px;
+            }
+
+            .menu-heading {
+                margin: 16px 8px 8px;
+            }
+
+            .secondary-heading {
+                margin-top: 15px;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 10px;
+                padding: 22px 18px;
+            }
+
+            .topbar h1 { font-size: 27px; }
+            .welcome-user { white-space: normal; }
+            .page-content { padding: 15px; }
+            .content-card { padding: 15px; border-radius: 15px; }
+        }
+
+        /* Match Payroll page size with Dashboard */
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-size: 16px;
+    overflow-x: hidden;
+}
+
+.sidebar {
+    flex: 0 0 17%;
+    max-width: 17%;
+    min-height: 100vh;
+    background: #0b111d;
+    padding: 0 14px !important;
+}
+
+.payroll-main {
+    flex: 0 0 83%;
+    max-width: 83%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.sidebar .brand {
+    font-size: 24px;
+    padding: 24px 12px;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    padding: 13px 12px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+.sidebar a.active {
+    background: #374151;
+    color: #ffffff;
+}
+
+.payroll-main .topbar {
+    padding: 22px 25px;
+}
+
+.payroll-main .topbar h4 {
+    font-size: 30px;
+    font-weight: 600;
+}
+
+.payroll-main .p-4 {
+    padding: 24px !important;
+}
+
+.payroll-main .content-card {
+    border-radius: 20px;
+    box-shadow: 0 5px 24px rgba(15, 23, 42, 0.05);
+}
+
+.payroll-main .content-card > .card-body {
+    padding: 24px !important;
+}
+
+.payroll-main .card {
+    border: 1px solid #e5ebf5;
+    border-radius: 18px;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+.payroll-main .card-body p {
+    font-size: 16px;
+}
+
+.payroll-main .card-body h4 {
+    font-size: 26px;
+    font-weight: 600;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+@media (max-width: 767.98px) {
+    .sidebar,
+    .payroll-main {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Match Payroll page with Dashboard sizing */
+
+.sidebar {
+    width: 17% !important;
+    min-height: 100vh;
+    flex: 0 0 17%;
+    max-width: 17%;
+    background: #0b111d !important;
+    padding: 0 14px !important;
+}
+
+.payroll-main {
+    width: 83% !important;
+    flex: 0 0 83%;
+    max-width: 83%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.sidebar .brand {
+    font-size: 21px;
+    padding: 24px 12px;
+    margin-bottom: 16px;
+    color: #f8fafc;
+}
+
+.sidebar a {
+    display: block;
+    color: #9caec3;
+    text-decoration: none;
+    padding: 13px 12px;
+    margin-bottom: 5px;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+    background: #343d4b;
+    color: #ffffff;
+}
+
+.payroll-main .topbar {
+    padding: 18px 25px;
+}
+
+.payroll-main .topbar h4 {
+    font-size: 30px;
+    font-weight: 600;
+}
+
+.payroll-main > .p-4 {
+    padding: 24px !important;
+}
+
+.payroll-main .content-card {
+    border-radius: 20px;
+}
+
+.payroll-main .content-card > .card-body {
+    padding: 24px !important;
+}
+
+.payroll-main .card-body h4 {
+    font-size: 26px;
+}
+
+.payroll-main .payroll-filters {
+    padding: 16px !important;
+}
+
+.payroll-main .payroll-table-wrap table {
+    min-width: 1200px;
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        width: 100% !important;
+        max-width: 100%;
+        flex: 0 0 100%;
+        min-height: auto;
+    }
+
+    .payroll-main {
+        width: 100% !important;
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+}
+
+
+/* Match Dashboard sizing and sidebar */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Inter", "Segoe UI", sans-serif;
+    background: #f4f7fc;
+    color: #1e293b;
+    margin: 0;
+}
+
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+    overflow-x: hidden;
+}
+
+.container-fluid > .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Same sidebar width as Dashboard */
+.sidebar {
+    flex: 0 0 17%;
+    width: 17%;
+    max-width: 17%;
+    min-height: 100vh;
+    background: #0b111d;
+    color: #e5e7eb;
+    padding: 0 14px !important;
+    border-right: 1px solid #202938;
+}
+
+/* Main content takes the remaining width */
+.payroll-main {
+    flex: 0 0 83%;
+    width: 83%;
+    max-width: 83%;
+    min-width: 0;
+    padding: 0 !important;
+    overflow-x: hidden;
+}
+
+.sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 8px;
+    margin-bottom: 16px;
+    color: #f8fafc;
+    font-size: 21px;
+    font-weight: 700;
+    border-bottom: 1px solid #202938;
+}
+
+.sidebar .brand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: #1677ff;
+    color: white;
+}
+
+.sidebar .menu-heading {
+    padding: 10px 8px 8px;
+    color: #9ca3af;
+    font-size: 11px;
+    letter-spacing: 0.7px;
+    font-weight: 600;
+}
+
+.sidebar .secondary-heading {
+    margin-top: 18px;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 9px;
+    margin: 3px 0;
+    border-radius: 8px;
+    color: #aeb8c7;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sidebar a:hover {
+    background: #202938;
+    color: white;
+}
+
+.sidebar a.active {
+    background: #343c49;
+    color: white;
+}
+
+.sidebar .menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.topbar {
+    width: 100%;
+    background: white;
+    padding: 18px 25px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.payroll-main > .p-4 {
+    width: 100%;
+    min-width: 0;
+    padding: 24px !important;
+}
+
+.payroll-main .content-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border: 1px solid #e8edf5;
+    border-radius: 15px;
+    background: white;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.payroll-main .card-body {
+    min-width: 0;
+}
+
+.payroll-main .payroll-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.payroll-main .payroll-table-wrap table {
+    min-width: 1200px;
+    width: 100%;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+        min-height: auto;
+    }
+
+    .payroll-main {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .payroll-main > .p-4 {
+        padding: 14px !important;
+    }
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-icon">✿</span>
+            <span>WorkEase</span>
+        </div>
+
+        <div class="menu-heading">MAIN MENU</div>
+
+        <a href="/admin-dashboard/">
+            <span class="menu-icon">▦</span>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="/admin-dashboard/employees/">
+            <span class="menu-icon">♧</span>
+            <span>Employees</span>
+        </a>
+
+        <a href="/admin-dashboard/attendance/">
+            <span class="menu-icon">▣</span>
+            <span>Attendance</span>
+        </a>
+
+        <a href="/admin-dashboard/leave/">
+            <span class="menu-icon">◷</span>
+            <span>Leave</span>
+        </a>
+
+        <a href="/admin-dashboard/payroll/" class="active">
+            <span class="menu-icon">$</span>
+            <span>Payroll</span>
+        </a>
+
+        <a href="/admin-dashboard/work-locations/">
+            <span class="menu-icon">⌖</span>
+            <span>Work Locations</span>
+        </a>
+
+        <div class="menu-heading secondary-heading">SYSTEM</div>
+
+        <a href="/admin/">
+            <span class="menu-icon">⚙</span>
+            <span>Django Admin</span>
+        </a>
+
+        <a href="/admin/logout/">
+            <span class="menu-icon">⇥</span>
+            <span>Logout</span>
+        </a>
+    </aside>
+
+    <!-- Main content -->
+    <main class="payroll-main">
+
+        <header class="topbar">
+            <div>
+                <h1>Payroll Management</h1>
+                <small>Manage employee salary and payroll records</small>
+            </div>
+
+            <div class="welcome-user">
+                <strong>Welcome, {{ request.user.username }}</strong>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="content-card">
+
+                <!-- Payroll summary -->
+                <div class="row g-3 mb-4">
+
+                    <div class="col-12 col-sm-6 col-xl">
+                        <div class="summary-card">
+                            <div class="summary-icon">▤</div>
+                            <p class="summary-label">Total Payrolls</p>
+                            <h2 class="summary-value">{{ total_payrolls }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl">
+                        <div class="summary-card">
+                            <div class="summary-icon">₹</div>
+                            <p class="summary-label">Gross Salary</p>
+                            <h2 class="summary-value">₹{{ total_gross|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl">
+                        <div class="summary-card">
+                            <div class="summary-icon">＋</div>
+                            <p class="summary-label">Total Bonus</p>
+                            <h2 class="summary-value">₹{{ total_bonus|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl">
+                        <div class="summary-card">
+                            <div class="summary-icon">−</div>
+                            <p class="summary-label">Total Deductions</p>
+                            <h2 class="summary-value">₹{{ total_deductions|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl">
+                        <div class="summary-card">
+                            <div class="summary-icon">✓</div>
+                            <p class="summary-label">Net Salary</p>
+                            <h2 class="summary-value">₹{{ total_net|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Heading -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <div>
+                        <h2 class="section-title">💰 Payroll Records</h2>
+                        <div class="section-subtitle">
+                            Employee salary and payment overview
+                        </div>
+                    </div>
+
+                    <a href="/admin-dashboard/" class="btn btn-outline-secondary">
+                        ← Dashboard
+                    </a>
+                </div>
+
+                <!-- Filters -->
+                <form method="GET" class="payroll-filters mb-4">
+                    <div class="row g-3 align-items-end">
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <label class="form-label">Employee</label>
+                            <select name="employee" class="form-select">
+                                <option value="">All Employees</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.id }}"
+                                    {% if selected_employee == employee.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ employee.name }} ({{ employee.employee_id }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-2">
+                            <label class="form-label">Month</label>
+                            <select name="month" class="form-select">
+                                <option value="">All Months</option>
+                                {% for number, name in month_choices %}
+                                <option value="{{ number }}"
+                                    {% if selected_month == number|stringformat:"s" %}selected{% endif %}>
+                                    {{ name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-2">
+                            <label class="form-label">Year</label>
+                            <input type="number"
+                                   name="year"
+                                   class="form-control"
+                                   placeholder="e.g. 2026"
+                                   value="{{ selected_year|default:'' }}">
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-2">
+                            <label class="form-label">Salary Type</label>
+                            <select name="salary_type" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="Monthly"
+                                    {% if selected_salary_type == "Monthly" %}selected{% endif %}>
+                                    Monthly
+                                </option>
+                                <option value="Hourly"
+                                    {% if selected_salary_type == "Hourly" %}selected{% endif %}>
+                                    Hourly
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-xl-3">
+                            <div class="payroll-filter-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    🔍 Apply Filters
+                                </button>
+                                <a href="{% url 'admin_payroll_list' %}"
+                                   class="btn btn-outline-secondary">
+                                    Reset
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+
+                <!-- Payroll table -->
+                {% if payroll_records %}
+
+                <div class="payroll-table-wrap">
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Employee ID</th>
+                                <th>Month</th>
+                                <th>Salary Type</th>
+                                <th>Total Hours</th>
+                                <th>Basic Salary</th>
+                                <th>Hourly Rate</th>
+                                <th>Bonus</th>
+                                <th>Deductions</th>
+                                <th>Gross Salary</th>
+                                <th>Net Salary</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for payroll in payroll_records %}
+                            <tr>
+                                <td><strong>{{ payroll.employee.name }}</strong></td>
+                                <td>{{ payroll.employee.employee_id }}</td>
+                                <td>{{ payroll.month }}/{{ payroll.year }}</td>
+
+                                <td>
+                                    {% if payroll.salary_type == "Monthly" %}
+                                    <span class="salary-badge monthly">Monthly</span>
+                                    {% else %}
+                                    <span class="salary-badge hourly">Hourly</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ payroll.total_hours }}</td>
+                                <td>₹{{ payroll.basic_salary|floatformat:2 }}</td>
+                                <td>₹{{ payroll.hourly_rate|floatformat:2 }}</td>
+                                <td>₹{{ payroll.bonus|floatformat:2 }}</td>
+                                <td>₹{{ payroll.deductions|floatformat:2 }}</td>
+                                <td>₹{{ payroll.gross_salary|floatformat:2 }}</td>
+                                <td class="net-salary">₹{{ payroll.net_salary|floatformat:2 }}</td>
+
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{% url 'payroll_edit' payroll.id %}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Edit Payroll">
+                                            ✏️ Edit
+                                        </a>
+
+                                        <a href="{% url 'payroll_delete' payroll.id %}"
+                                           class="btn btn-sm btn-outline-danger"
+                                           title="Delete Payroll">
+                                            🗑️ Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+                {% else %}
+
+                <div class="empty-state">
+                    <div style="font-size: 48px;">💰</div>
+                    <h3 class="mt-3">No Payroll Records</h3>
+                    <p>There are currently no payroll records matching your filters.</p>
+                </div>
+
+                {% endif %}
+
+            </div>
+        </div>
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Employees - WorkEase</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background: #f5f7fb;
+        }
+
+        .navbar {
+            background: #111827;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+        }
+
+        .page-title {
+            font-weight: 700;
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .table {
+            vertical-align: middle;
+        }
+
+        .btn {
+            border-radius: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg">
+
+    <div class="container-fluid px-4">
+
+        <a
+            class="navbar-brand"
+            href="/admin-dashboard/"
+        >
+            🏢 WorkEase
+        </a>
+
+        <div class="text-white">
+            Welcome, {{ request.user.username }}
+        </div>
+
+    </div>
+
+</nav>
+
+
+<div class="container-fluid px-4 py-4">
+
+
+    <!-- Page Header -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="page-title mb-1">
+                Employee Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage your employees
+            </p>
+
+        </div>
+
+
+        <a
+            href="/admin-dashboard/employees/add/"
+            class="btn btn-primary"
+        >
+            ➕ Add Employee
+        </a>
+
+    </div>
+
+
+    <!-- Employee Table -->
+
+    <div class="card p-4">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Employee ID
+                        </th>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Phone
+                        </th>
+
+                        <th>
+                            Department
+                        </th>
+
+                        <th>
+                            Salary Type
+                        </th>
+
+                        <th>
+                            Basic Salary
+                        </th>
+
+                        <th>
+                            Joining Date
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for employee in employees %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ employee.employee_id }}
+                            </strong>
+                        </td>
+
+
+                        <td>
+                            {{ employee.name }}
+                        </td>
+
+
+                        <td>
+                            {{ employee.phone }}
+                        </td>
+
+
+                        <td>
+                            {{ employee.department }}
+                        </td>
+
+
+                        <td>
+                            {{ employee.salary_type }}
+                        </td>
+
+
+                        <td>
+                            ₹{{ employee.basic_salary }}
+                        </td>
+
+
+                        <td>
+                            {{ employee.joining_date }}
+                        </td>
+
+
+                        <td>
+
+                            <div class="action-buttons">
+
+                                <!-- Edit -->
+
+                                <a
+                                    href="/admin-dashboard/employees/{{ employee.id }}/edit/"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    ✏️ Edit
+                                </a>
+
+
+                                <!-- Delete -->
+
+                                <form
+                                    method="POST"
+                                    action="/admin-dashboard/employees/{{ employee.id }}/delete/"
+                                    onsubmit="return confirm('Are you sure you want to delete this employee?');"
+                                >
+
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        🗑️ Delete
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="text-center text-muted py-4"
+                        >
+                            No employees found.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+

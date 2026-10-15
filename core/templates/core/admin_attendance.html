@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance Management - WorkEase</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background: #f5f7fb;
+        }
+
+        .navbar {
+            background: #111827;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+        }
+
+        .page-title {
+            font-weight: 700;
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .table th {
+            background: #f8fafc;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .table td {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .badge {
+            padding: 7px 10px;
+            border-radius: 20px;
+        }
+
+        .empty-state {
+            padding: 50px 20px;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="container-fluid px-4">
+
+        <a
+            class="navbar-brand"
+            href="/admin-dashboard/"
+        >
+            🏢 WorkEase
+        </a>
+
+        <div class="text-white">
+            Welcome, {{ request.user.username }}
+        </div>
+
+    </div>
+</nav>
+
+
+<div class="container-fluid px-4 px-md-5 py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="page-title mb-1">
+                Attendance Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                View and monitor employee attendance
+            </p>
+        </div>
+
+        <a
+            href="/admin-dashboard/"
+            class="btn btn-light border"
+        >
+            ← Dashboard
+        </a>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="p-4 border-bottom">
+
+    <form method="GET" class="row g-3 align-items-end">
+
+        <div class="col-md-4">
+
+            <label class="form-label fw-semibold">
+                Filter by Employee
+            </label>
+
+            <select
+                name="employee"
+                class="form-select"
+            >
+
+                <option value="">
+                    All Employees
+                </option>
+
+                {% for employee in employees %}
+
+                <option
+                    value="{{ employee.id }}"
+                    {% if selected_employee == employee.id|stringformat:"s" %}
+                        selected
+                    {% endif %}
+                >
+                    {{ employee.name }} - {{ employee.employee_id }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <div class="col-md-auto">
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                🔍 Filter
+            </button>
+
+        </div>
+
+        <div class="col-md-auto">
+
+            <a
+                href="/admin-dashboard/attendance/"
+                class="btn btn-light border"
+            >
+                Reset
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+    <label class="form-label fw-semibold">
+        From Date
+    </label>
+
+    <input
+        type="date"
+        name="from_date"
+        class="form-control"
+        value="{{ from_date }}"
+    >
+
+</div>
+
+<div class="col-md-3">
+
+    <label class="form-label fw-semibold">
+        To Date
+    </label>
+
+    <input
+        type="date"
+        name="to_date"
+        class="form-control"
+        value="{{ to_date }}"
+    >
+
+</div>
+<div class="col-md-3">
+
+    <label class="form-label fw-semibold">
+        Status
+    </label>
+
+    <select
+        name="status"
+        class="form-select"
+    >
+
+        <option value="">
+            All Status
+        </option>
+
+        <option
+            value="Present"
+            {% if selected_status == "Present" %}
+                selected
+            {% endif %}
+        >
+            Present
+        </option>
+
+        <option
+            value="Late"
+            {% if selected_status == "Late" %}
+                selected
+            {% endif %}
+        >
+            Late
+        </option>
+
+        <option
+            value="Absent"
+            {% if selected_status == "Absent" %}
+                selected
+            {% endif %}
+        >
+            Absent
+        </option>
+
+    </select>
+
+</div>
+    </form>
+
+</div>
+
+<!-- Attendance Summary -->
+
+<div class="p-4 border-bottom">
+
+    <div class="row g-3">
+
+        <div class="col-md-3">
+
+            <div class="card border shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <p class="text-muted mb-1">
+                        Total Records
+                    </p>
+
+                    <h3 class="mb-0">
+                        {{ total_records }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card border shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <p class="text-muted mb-1">
+                        🟢 Present
+                    </p>
+
+                    <h3 class="mb-0 text-success">
+                        {{ present_count }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card border shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <p class="text-muted mb-1">
+                        🟡 Late
+                    </p>
+
+                    <h3 class="mb-0 text-warning">
+                        {{ late_count }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card border shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <p class="text-muted mb-1">
+                        ⏱️ Working Hours
+                    </p>
+
+                    <h3 class="mb-0">
+                        {{ total_working_hours }} hrs
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Employee ID</th>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Working Hours</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for attendance in attendance_records %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ attendance.employee.name }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ attendance.employee.employee_id }}
+                        </td>
+
+                        <td>
+                            {{ attendance.date|date:"d M Y" }}
+                        </td>
+
+                        <td>
+                            {% if attendance.check_in %}
+                                {{ attendance.check_in|time:"h:i A" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if attendance.check_out %}
+                                {{ attendance.check_out|time:"h:i A" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ attendance.working_hours }} hrs
+                        </td>
+
+                        <td>
+
+                            {% if attendance.status == "Present" %}
+
+                                <span class="badge bg-success">
+                                    Present
+                                </span>
+
+                            {% elif attendance.status == "Late" %}
+
+                                <span class="badge bg-warning text-dark">
+                                    Late
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+                                    Absent
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7">
+
+                            <div class="empty-state">
+
+                                <div style="font-size: 40px;">
+                                    📋
+                                </div>
+
+                                <h5 class="mt-3">
+                                    No Attendance Records
+                                </h5>
+
+                                <p class="mb-0">
+                                    Attendance records will appear here.
+                                </p>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
