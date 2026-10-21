@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,182 +6,677 @@
     <title>{{ title }} - WorkEase</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --we-navy: #142D4E;
+            --we-blue: #2563eb;
+            --we-bg: #f4f7fb;
+            --we-border: #e4eaf2;
+            --we-muted: #64748b;
+            --we-text: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: #f5f7fb;
+            margin: 0;
+            background: var(--we-bg);
+            color: var(--we-text);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
         }
 
-        .navbar {
-            background: #142D4E;
-            min-height: 56px;
+        .topbar {
+            min-height: 68px;
+            background: var(--we-navy);
+            box-shadow: 0 3px 14px rgba(20, 45, 78, 0.12);
         }
 
-        .navbar-brand {
-            color: white !important;
-            font-weight: 700;
+        .topbar-inner {
+            min-height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 21px;
+            font-weight: 750;
+            letter-spacing: -0.5px;
+        }
+
+        .brand:hover {
+            color: #fff;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 11px;
+            font-size: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e2e8f0;
+            font-size: 13px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: var(--we-navy);
+            font-weight: 750;
+            font-size: 14px;
+        }
+
+        .page-container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 34px 20px 48px;
+        }
+
+        .breadcrumb-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+            color: var(--we-muted);
+            font-size: 13px;
+        }
+
+        .breadcrumb-line a {
+            color: var(--we-muted);
+            text-decoration: none;
+        }
+
+        .breadcrumb-line a:hover {
+            color: var(--we-blue);
+        }
+
+        .page-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 26px;
+        }
+
+        .heading-icon {
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: #e7efff;
+            color: var(--we-blue);
+            font-size: 23px;
+        }
+
+        .heading-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .page-title {
-            color: #142D4E;
-            font-weight: 700;
+            margin: 0 0 5px;
+            color: var(--we-navy);
+            font-size: clamp(23px, 3vw, 29px);
+            font-weight: 750;
+            letter-spacing: -0.7px;
         }
 
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
-        }
-
-        .form-label {
-            font-weight: 600;
-        }
-
-        .btn {
-            border-radius: 8px;
+        .page-subtitle {
+            margin: 0;
+            color: var(--we-muted);
+            font-size: 14px;
+            line-height: 1.6;
         }
 
         .required-note {
-            font-size: 13px;
-            color: #6b7280;
+            color: var(--we-muted);
+            font-size: 12px;
         }
 
+        .required-star {
+            color: #dc2626;
+        }
+
+        .form-card {
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--we-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 28px rgba(15, 23, 42, 0.045);
+        }
+
+        .form-card-header {
+            padding: 22px 28px;
+            border-bottom: 1px solid var(--we-border);
+            background: #fff;
+        }
+
+        .form-card-title {
+            margin: 0 0 5px;
+            color: var(--we-navy);
+            font-size: 16px;
+            font-weight: 750;
+        }
+
+        .form-card-description {
+            margin: 0;
+            color: var(--we-muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .form-card-body {
+            padding: 28px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 20px;
+            color: var(--we-navy);
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+        .section-heading i {
+            color: var(--we-blue);
+            font-size: 17px;
+        }
+
+        .section-divider {
+            margin: 26px 0;
+            border: 0;
+            border-top: 1px solid var(--we-border);
+            opacity: 1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        /* Styling for Django-rendered form fields */
         .form-control,
-        .form-select {
-            border-radius: 8px;
+        .form-select,
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="password"],
+        select,
+        textarea {
+            width: 100%;
+            min-height: 44px;
             padding: 10px 12px;
+            color: var(--we-text);
+            background-color: #fff;
+            border: 1px solid #d8e1ec;
+            border-radius: 9px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #7aa7ff;
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
+        }
+
+        input[type="checkbox"],
+        input[type="radio"] {
+            accent-color: var(--we-blue);
+        }
+
+        .field-help {
+            margin-top: 7px;
+            color: var(--we-muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .field-error {
+            margin-top: 7px;
+            color: #b91c1c;
+            font-size: 12px;
+        }
+
+        .field-error ul,
+        .alert ul {
+            margin-bottom: 0;
+            padding-left: 18px;
+        }
+
+        .alert {
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        .alert-danger {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 28px;
+            background: #fafbfd;
+            border-top: 1px solid var(--we-border);
+        }
+
+        .btn {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 17px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 650;
+            transition: all 0.18s ease;
+        }
+
+        .btn-primary {
+            background: var(--we-blue);
+            border-color: var(--we-blue);
+            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-light {
+            background: #fff;
+            border-color: #d8e1ec !important;
+            color: #334155;
+        }
+
+        .btn-light:hover {
+            background: #f1f5f9;
+            color: var(--we-navy);
+        }
+
+        .form-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 22px;
+            padding: 14px 16px;
+            border: 1px solid #dbeafe;
+            border-radius: 10px;
+            background: #f5f9ff;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .form-tip i {
+            margin-top: 1px;
+            color: var(--we-blue);
+            font-size: 16px;
+        }
+
+        .footer-note {
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 767px) {
+            .topbar-inner {
+                padding-top: 12px;
+                padding-bottom: 12px;
+            }
+
+            .brand {
+                font-size: 19px;
+            }
+
+            .user-info .welcome-text {
+                display: none;
+            }
+
+            .page-container {
+                padding: 24px 14px 34px;
+            }
+
+            .page-heading {
+                margin-bottom: 20px;
+            }
+
+            .heading-content {
+                align-items: flex-start;
+                gap: 11px;
+            }
+
+            .heading-icon {
+                width: 42px;
+                height: 42px;
+                flex-basis: 42px;
+                border-radius: 11px;
+                font-size: 20px;
+            }
+
+            .form-card-header {
+                padding: 19px 18px;
+            }
+
+            .form-card-body {
+                padding: 22px 18px;
+            }
+
+            .form-actions {
+                padding: 17px 18px;
+            }
+
+            .form-actions .btn {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<nav class="navbar">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand" href="/admin-dashboard/">
-            🏢 WorkEase
+<header class="topbar">
+    <div class="container topbar-inner">
+        <a class="brand" href="/admin-dashboard/" aria-label="WorkEase dashboard">
+            <span class="brand-icon">
+                <i class="bi bi-buildings"></i>
+            </span>
+            <span>WorkEase</span>
         </a>
 
-        <div class="text-white">
-            Welcome, {{ request.user.username }}
+        <div class="user-info">
+            <span class="user-avatar">
+                {{ request.user.username|first|upper }}
+            </span>
+            <span class="welcome-text">
+                Welcome, <strong>{{ request.user.username }}</strong>
+            </span>
         </div>
     </div>
-</nav>
+</header>
 
-<div class="container py-5">
+<main class="page-container">
 
-    <div class="mb-4">
-        <h2 class="page-title mb-1">{{ title }}</h2>
-
-        <p class="text-muted mb-0">
-            {% if title == 'Edit Employee' %}
-                Update employee information
-            {% else %}
-                Add a new employee to your organization
-            {% endif %}
-        </p>
+    <div class="breadcrumb-line">
+        <a href="/admin-dashboard/">
+            <i class="bi bi-house-door me-1"></i>Dashboard
+        </a>
+        <i class="bi bi-chevron-right" style="font-size: 10px;"></i>
+        <a href="/admin-dashboard/employees/">Employees</a>
+        <i class="bi bi-chevron-right" style="font-size: 10px;"></i>
+        <span>{{ title }}</span>
     </div>
 
-    <div class="card p-4 p-md-5">
+    <div class="page-heading">
+        <div class="heading-content">
+            <div class="heading-icon">
+                {% if title == 'Edit Employee' %}
+                    <i class="bi bi-person-gear"></i>
+                {% else %}
+                    <i class="bi bi-person-plus"></i>
+                {% endif %}
+            </div>
+
+            <div>
+                <h1 class="page-title">{{ title }}</h1>
+                <p class="page-subtitle">
+                    {% if title == 'Edit Employee' %}
+                        Update the employee's details and compensation information.
+                    {% else %}
+                        Add a new employee to your organization and enter their details below.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card">
+
+        <div class="form-card-header">
+            <h2 class="form-card-title">
+                <i class="bi bi-card-text me-2"></i>Employee Information
+            </h2>
+            <p class="form-card-description">
+                Enter the employee details in the relevant fields.
+                Fields marked with <span class="required-star">*</span> may be required by your form.
+            </p>
+        </div>
 
         <form method="POST">
             {% csrf_token %}
 
-            {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
+            <div class="form-card-body">
 
-            <div class="row g-4">
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mb-4" role="alert">
+                        <div class="fw-semibold mb-1">
+                            <i class="bi bi-exclamation-circle me-1"></i>
+                            Please review the following:
+                        </div>
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
 
-                <div class="col-md-6">
-                    <label class="form-label">Employee ID</label>
-                    {{ form.employee_id }}
-                    {% if form.employee_id.errors %}
-                        <div class="text-danger small mt-1">{{ form.employee_id.errors }}</div>
-                    {% endif %}
-                </div>
+                <section aria-labelledby="employee-details-heading">
+                    <h3 class="section-heading" id="employee-details-heading">
+                        <i class="bi bi-person-vcard"></i>
+                        Personal & Employment Details
+                    </h3>
 
-                <div class="col-md-6">
-                    <label class="form-label">Employee Name</label>
-                    {{ form.name }}
-                    {% if form.name.errors %}
-                        <div class="text-danger small mt-1">{{ form.name.errors }}</div>
-                    {% endif %}
-                </div>
+                    <div class="row g-4">
 
-                <div class="col-md-6">
-                    <label class="form-label">Phone Number</label>
-                    {{ form.phone }}
-                    {% if form.phone.errors %}
-                        <div class="text-danger small mt-1">{{ form.phone.errors }}</div>
-                    {% endif %}
-                </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.employee_id.id_for_label }}" class="form-label">
+                                Employee ID
+                            </label>
+                            {{ form.employee_id }}
+                            {% if form.employee_id.errors %}
+                                <div class="field-error">{{ form.employee_id.errors }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Department</label>
-                    {{ form.department }}
-                    {% if form.department.errors %}
-                        <div class="text-danger small mt-1">{{ form.department.errors }}</div>
-                    {% endif %}
-                </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                Employee Name
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="field-error">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Joining Date</label>
-                    {{ form.joining_date }}
-                    {% if form.joining_date.errors %}
-                        <div class="text-danger small mt-1">{{ form.joining_date.errors }}</div>
-                    {% endif %}
-                </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                Phone Number
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="field-error">{{ form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Salary Type</label>
-                    {{ form.salary_type }}
-                    {% if form.salary_type.errors %}
-                        <div class="text-danger small mt-1">{{ form.salary_type.errors }}</div>
-                    {% endif %}
-                </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.department.id_for_label }}" class="form-label">
+                                Department
+                            </label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                                <div class="field-error">{{ form.department.errors }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Basic Salary</label>
-                    {{ form.basic_salary }}
-                    <div class="required-note mt-1">For monthly salary employees</div>
-                    {% if form.basic_salary.errors %}
-                        <div class="text-danger small mt-1">{{ form.basic_salary.errors }}</div>
-                    {% endif %}
-                </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.joining_date.id_for_label }}" class="form-label">
+                                Joining Date
+                            </label>
+                            {{ form.joining_date }}
+                            {% if form.joining_date.errors %}
+                                <div class="field-error">{{ form.joining_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
 
-                <div class="col-md-6">
-                    <label class="form-label">Hourly Rate</label>
-                    {{ form.hourly_rate }}
-                    <div class="required-note mt-1">For hourly salary employees</div>
-                    {% if form.hourly_rate.errors %}
-                        <div class="text-danger small mt-1">{{ form.hourly_rate.errors }}</div>
-                    {% endif %}
-                </div>
+                <hr class="section-divider">
+
+                <section aria-labelledby="salary-details-heading">
+                    <h3 class="section-heading" id="salary-details-heading">
+                        <i class="bi bi-cash-coin"></i>
+                        Salary & Compensation
+                    </h3>
+
+                    <div class="row g-4">
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.salary_type.id_for_label }}" class="form-label">
+                                Salary Type
+                            </label>
+                            {{ form.salary_type }}
+                            {% if form.salary_type.errors %}
+                                <div class="field-error">{{ form.salary_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.basic_salary.id_for_label }}" class="form-label">
+                                Basic Salary
+                            </label>
+                            {{ form.basic_salary }}
+                            <div class="field-help">
+                                <i class="bi bi-info-circle me-1"></i>
+                                For employees on a monthly salary.
+                            </div>
+                            {% if form.basic_salary.errors %}
+                                <div class="field-error">{{ form.basic_salary.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.hourly_rate.id_for_label }}" class="form-label">
+                                Hourly Rate
+                            </label>
+                            {{ form.hourly_rate }}
+                            <div class="field-help">
+                                <i class="bi bi-info-circle me-1"></i>
+                                For employees paid by the hour.
+                            </div>
+                            {% if form.hourly_rate.errors %}
+                                <div class="field-error">{{ form.hourly_rate.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                    <div class="form-tip">
+                        <i class="bi bi-lightbulb"></i>
+                        <div>
+                            <strong>Salary information</strong><br>
+                            Enter the compensation details that match the selected salary type.
+                            Required fields and validation are controlled by your existing Django form.
+                        </div>
+                    </div>
+                </section>
 
             </div>
 
-            <div class="d-flex justify-content-end gap-2 mt-5">
-
-                <a href="/admin-dashboard/employees/" class="btn btn-light border px-4">
+            <div class="form-actions">
+                <a href="/admin-dashboard/employees/" class="btn btn-light border">
+                    <i class="bi bi-arrow-left"></i>
                     Cancel
                 </a>
 
-                <button type="submit" class="btn btn-primary px-4">
+                <button type="submit" class="btn btn-primary">
                     {% if title == 'Edit Employee' %}
+                        <i class="bi bi-check2-circle"></i>
                         Save Changes
                     {% else %}
-                        ➕ Add Employee
+                        <i class="bi bi-person-plus"></i>
+                        Add Employee
                     {% endif %}
                 </button>
-
             </div>
+
         </form>
-
     </div>
-</div>
 
+    <div class="footer-note">
+        WorkEase &middot; Employee Management
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

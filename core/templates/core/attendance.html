@@ -7,226 +7,622 @@
 
     <title>Attendance - WorkEase</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #315ce8;
+            --text: #17233d;
+            --muted: #718096;
+            --border: #e5eaf2;
+            --bg: #f4f7fc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        /* Header */
+        .topbar {
+            min-height: 84px;
+            padding: 14px 5%;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 21px;
+            font-weight: 650;
+        }
+
+        .brand-icon {
+            width: 55px;
+            height: 55px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 17px;
+            background: linear-gradient(145deg, #3568f5, #2448c8);
+            box-shadow: 0 6px 16px rgba(49, 92, 232, .2);
+        }
+
+        .brand-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .employee-name {
+            color: #5f6d83;
+            font-size: 13px;
+        }
+
+        .employee-name strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* Main content */
+        .page-container {
+            width: 100%;
+            max-width: 720px;
+            padding: 34px 20px;
+            margin: 0 auto;
+        }
+
+        .page-heading {
+            margin-bottom: 22px;
+        }
+
+        .eyebrow {
+            margin-bottom: 7px;
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 650;
+            letter-spacing: 1.1px;
+            text-transform: uppercase;
+        }
+
+        .page-heading h1 {
+            margin: 0 0 7px;
+            font-size: clamp(25px, 4vw, 30px);
+            font-weight: 650;
+            letter-spacing: -.5px;
+        }
+
+        .page-heading p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Attendance card */
+        .attendance-card {
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            box-shadow: 0 5px 22px rgba(29, 47, 84, .05);
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-heading-icon {
+            width: 43px;
+            height: 43px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: #edf2ff;
+            font-size: 21px;
+        }
+
+        .card-heading h2 {
+            margin: 0 0 4px;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .card-heading p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .card-content {
+            padding: 25px;
+        }
+
+        /* Date */
+        .date-box {
+            padding: 17px;
+            text-align: center;
+            background: #f8faff;
+            border: 1px solid #edf1f8;
+            border-radius: 11px;
+        }
+
+        .date-label {
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .date-value {
+            margin: 0;
+            font-size: 25px;
+            font-weight: 650;
+            letter-spacing: .2px;
+        }
+
+        /* Location message */
+        #locationMessage {
+            margin: 20px 0 0;
+            padding: 13px 15px;
+            border-radius: 9px;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .alert-danger,
+        .alert-info,
+        .alert-success {
+            border-width: 1px;
+        }
+
+        /* Form */
+        .form-section {
+            margin-top: 24px;
+        }
+
+        .form-label {
+            margin-bottom: 8px;
+            color: #34435b;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            min-height: 46px;
+            padding: 11px 13px;
+            border: 1px solid #d9e1ed;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 15px;
+            box-shadow: none;
+        }
+
+        .form-control:focus {
+            border-color: #8ca7ff;
+            box-shadow: 0 0 0 3px rgba(49, 92, 232, .10);
+        }
+
+        .help-text {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.65;
+        }
+
+        /* Attendance buttons */
+        .attendance-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .attendance-btn {
+            width: 100%;
+            min-height: 49px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 9px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 550;
+            transition: background .2s, transform .2s;
+        }
+
+        .attendance-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .check-in {
+            background: #269765;
+        }
+
+        .check-in:hover:not(:disabled) {
+            background: #1e7e53;
+        }
+
+        .check-out {
+            background: #e45d6d;
+        }
+
+        .check-out:hover:not(:disabled) {
+            background: #cb4657;
+        }
+
+        .attendance-btn:disabled {
+            cursor: not-allowed;
+            opacity: .65;
+        }
+
+        /* Dashboard button */
+        .dashboard-area {
+            display: flex;
+            justify-content: center;
+            padding-top: 23px;
+            margin-top: 23px;
+            border-top: 1px solid var(--border);
+        }
+
+        .dashboard-btn {
+            min-height: 43px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 17px;
+            border: 1px solid #d8e0ec;
+            border-radius: 8px;
+            background: #fff;
+            color: #45546c;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 550;
+            transition: .2s;
+        }
+
+        .dashboard-btn:hover {
+            background: #edf2ff;
+            border-color: #cbd7ff;
+            color: var(--primary);
+        }
+
+        .footer {
+            padding: 20px 0 4px;
+            color: #919caf;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Mobile */
+        @media (max-width: 576px) {
+            .topbar {
+                min-height: 0;
+                padding: 13px 15px;
+                gap: 10px;
+            }
+
+            .brand {
+                gap: 9px;
+                font-size: 19px;
+            }
+
+            .brand-icon {
+                width: 45px;
+                height: 45px;
+                border-radius: 14px;
+            }
+
+            .brand-icon svg {
+                width: 27px;
+                height: 27px;
+            }
+
+            .employee-name {
+                max-width: 45%;
+                font-size: 12px;
+                text-align: right;
+                overflow-wrap: anywhere;
+            }
+
+            .page-container {
+                padding: 23px 12px;
+            }
+
+            .page-heading {
+                margin-bottom: 17px;
+            }
+
+            .page-heading h1 {
+                font-size: 25px;
+            }
+
+            .page-heading p {
+                font-size: 13px;
+            }
+
+            .attendance-card {
+                border-radius: 12px;
+            }
+
+            .card-heading {
+                padding: 16px;
+            }
+
+            .card-heading-icon {
+                width: 39px;
+                height: 39px;
+            }
+
+            .card-content {
+                padding: 17px 15px;
+            }
+
+            .date-box {
+                padding: 15px 10px;
+            }
+
+            .date-value {
+                font-size: 23px;
+            }
+
+            #locationMessage {
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .form-section {
+                margin-top: 21px;
+            }
+
+            .form-control {
+                min-height: 48px;
+                font-size: 16px;
+            }
+
+            .help-text {
+                font-size: 12px;
+            }
+
+            .attendance-actions {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-top: 22px;
+            }
+
+            .attendance-btn {
+                min-height: 50px;
+                font-size: 15px;
+            }
+
+            .dashboard-area {
+                padding-top: 18px;
+                margin-top: 20px;
+            }
+
+            .dashboard-btn {
+                width: 100%;
+                max-width: 260px;
+                min-height: 46px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .topbar {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .brand {
+                font-size: 17px;
+            }
+
+            .brand-icon {
+                width: 40px;
+                height: 40px;
+                flex-basis: 40px;
+            }
+
+            .page-container {
+                padding-left: 9px;
+                padding-right: 9px;
+            }
+
+            .card-content {
+                padding: 14px 12px;
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
+    <!-- Header -->
+    <header class="topbar">
 
-            <a
-                class="navbar-brand fw-bold"
-                href="/dashboard/"
-            >
-                WorkEase
-            </a>
-
-            <span class="text-white">
-                {{ employee.name }}
+        <a class="brand" href="/dashboard/">
+            <span class="brand-icon">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 35H36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M7 35V20L20 14V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M20 35V8L33 3V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M11 24H15M11 29H15M24 12H27M24 18H27M24 24H27M24 29H27"
+                          stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
             </span>
+            <span>WorkEase</span>
+        </a>
 
+        <div class="employee-name">
+            Welcome, <strong>{{ employee.name }}</strong>
         </div>
-    </nav>
 
-    <div class="container mt-5">
+    </header>
 
-        <div class="row justify-content-center">
+    <main class="page-container">
 
-            <div class="col-md-7">
+        <!-- Page heading -->
+        <section class="page-heading">
+            <div class="eyebrow">Employee Portal</div>
+            <h1>Attendance</h1>
+            <p>Mark your attendance using your office location.</p>
+        </section>
 
-                <div class="card shadow-sm">
+        <!-- Attendance card -->
+        <section class="attendance-card">
 
-                    <div class="card-body p-4 text-center">
+            <div class="card-heading">
+                <div class="card-heading-icon">📋</div>
+                <div>
+                    <h2>Daily Attendance</h2>
+                    <p>Check in when you start work and check out when you finish.</p>
+                </div>
+            </div>
 
-                        <h3 class="mb-3">
-                            📋 Attendance
-                        </h3>
+            <div class="card-content">
 
-                        <p class="text-muted">
-                            Mark your attendance using your office location.
-                        </p>
+                <!-- Today's date -->
+                <div class="date-box">
+                    <div class="date-label">Today's Date</div>
+                    <p class="date-value">{% now "d-m-Y" %}</p>
+                </div>
 
-                        <hr>
+                <!-- Location status -->
+                <div id="locationMessage" class="alert alert-info" role="status" aria-live="polite">
+                    📍 Location permission check thashe...
+                </div>
 
-                        <p class="mb-1 text-muted">
-                            Today's Date
-                        </p>
+                {% if error %}
+                    <div class="alert alert-danger mt-3" role="alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
 
-                        <h5>
-                            {% now "d-m-Y" %}
-                        </h5>
+                <form method="POST" id="attendanceForm">
+                    {% csrf_token %}
 
-                        <div
-                            id="locationMessage"
-                            class="alert alert-info mt-4"
+                    <input type="hidden" name="latitude" id="latitude">
+                    <input type="hidden" name="longitude" id="longitude">
+
+                    <!-- Break hours -->
+                    <div class="form-section">
+                        <label for="break_hours" class="form-label">
+                            Break Hours
+                        </label>
+
+                        <input
+                            type="number"
+                            name="break_hours"
+                            id="break_hours"
+                            class="form-control"
+                            min="0"
+                            max="12"
+                            step="0.25"
+                            value="0"
+                            required
                         >
-                            📍 Location permission check thashe...
-                        </div>
 
-                        {% if error %}
-                        <div class="alert alert-danger mt-3">
-                            {{ error }}
-                        </div>
-                        {% endif %}
-
-                        <form
-                            method="POST"
-                            id="attendanceForm"
-                        >
-
-                            {% csrf_token %}
-
-                            <input
-                                type="hidden"
-                                name="latitude"
-                                id="latitude"
-                            >
-
-                            <input
-                                type="hidden"
-                                name="longitude"
-                                id="longitude"
-                            >
-
-                            <!-- Break Hours -->
-                            <div class="mt-4 text-start">
-
-                                <label
-                                    for="break_hours"
-                                    class="form-label fw-bold"
-                                >
-                                    Break Hours
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="break_hours"
-                                    id="break_hours"
-                                    class="form-control"
-                                    min="0"
-                                    max="12"
-                                    step="0.25"
-                                    value="0"
-                                    required
-                                >
-
-                                <small class="text-muted">
-                                    Example: 1 hour break hoy to 1 enter karo.
-                                    30 minutes mate 0.5 enter karo.
-                                </small>
-
-                            </div>
-
-                            <div class="mt-4">
-
-                                <button
-                                    class="btn btn-success btn-lg me-2"
-                                    type="submit"
-                                    name="action"
-                                    value="check_in"
-                                    id="checkInButton"
-                                    disabled
-                                >
-                                    🟢 Check In
-                                </button>
-
-                                <button
-                                    class="btn btn-danger btn-lg"
-                                    type="submit"
-                                    name="action"
-                                    value="check_out"
-                                    id="checkOutButton"
-                                    disabled
-                                >
-                                    🔴 Check Out
-                                </button>
-
-                            </div>
-
-                        </form>
-
-                        <div class="mt-4">
-
-                            <a
-                                href="/dashboard/"
-                                class="btn btn-secondary"
-                            >
-                                Back to Dashboard
-                            </a>
-
-                        </div>
-
+                        <small class="help-text">
+                            Enter 1 for a one-hour break or 0.5 for a 30-minute break.
+                        </small>
                     </div>
 
+                    <!-- Check in / Check out -->
+                    <div class="attendance-actions">
+
+                        <button
+                            class="attendance-btn check-in"
+                            type="submit"
+                            name="action"
+                            value="check_in"
+                            id="checkInButton"
+                            disabled
+                        >
+                            🟢 Check In
+                        </button>
+
+                        <button
+                            class="attendance-btn check-out"
+                            type="submit"
+                            name="action"
+                            value="check_out"
+                            id="checkOutButton"
+                            disabled
+                        >
+                            🔴 Check Out
+                        </button>
+
+                    </div>
+                </form>
+
+                <!-- Dashboard -->
+                <div class="dashboard-area">
+                    <a href="/dashboard/" class="dashboard-btn">
+                        ← Back to Dashboard
+                    </a>
                 </div>
 
             </div>
+        </section>
 
-        </div>
+        <footer class="footer">
+            WorkEase · Employee Attendance
+        </footer>
 
-    </div>
+    </main>
 
     <script>
-
-        const locationMessage =
-            document.getElementById("locationMessage");
-
-        const latitudeInput =
-            document.getElementById("latitude");
-
-        const longitudeInput =
-            document.getElementById("longitude");
-
-        const checkInButton =
-            document.getElementById("checkInButton");
-
-        const checkOutButton =
-            document.getElementById("checkOutButton");
-
+        const locationMessage = document.getElementById("locationMessage");
+        const latitudeInput = document.getElementById("latitude");
+        const longitudeInput = document.getElementById("longitude");
+        const checkInButton = document.getElementById("checkInButton");
+        const checkOutButton = document.getElementById("checkOutButton");
 
         function getLocation() {
-
             if (!navigator.geolocation) {
-
-                locationMessage.className =
-                    "alert alert-danger mt-4";
-
-                locationMessage.innerHTML =
+                locationMessage.className = "alert alert-danger";
+                locationMessage.textContent =
                     "❌ Aa browser location support karto nathi.";
-
                 return;
             }
 
-            locationMessage.className =
-                "alert alert-info mt-4";
-
-            locationMessage.innerHTML =
+            locationMessage.className = "alert alert-info";
+            locationMessage.textContent =
                 "📍 Tamari current location lai rahya chhiye...";
 
             navigator.geolocation.getCurrentPosition(
-
                 function(position) {
+                    latitudeInput.value = position.coords.latitude;
+                    longitudeInput.value = position.coords.longitude;
 
-                    const latitude =
-                        position.coords.latitude;
-
-                    const longitude =
-                        position.coords.longitude;
-
-                    latitudeInput.value =
-                        latitude;
-
-                    longitudeInput.value =
-                        longitude;
-
-                    locationMessage.className =
-                        "alert alert-success mt-4";
-
-                    locationMessage.innerHTML =
+                    locationMessage.className = "alert alert-success";
+                    locationMessage.textContent =
                         "✅ Location successfully detected.";
 
                     checkInButton.disabled = false;
@@ -234,54 +630,35 @@
                 },
 
                 function(error) {
-
-                    locationMessage.className =
-                        "alert alert-danger mt-4";
+                    locationMessage.className = "alert alert-danger";
 
                     if (error.code === 1) {
-
-                        locationMessage.innerHTML =
-                            "❌ Location permission deny kari chhe. Browser ma location Allow karo.";
-
+                        locationMessage.textContent =
+                            "❌ Location permission deny kari chhe. Browser settings ma location Allow karo.";
                     } else if (error.code === 2) {
-
-                        locationMessage.innerHTML =
-                            "❌ Location currently available nathi.";
-
+                        locationMessage.textContent =
+                            "❌ Location currently available nathi. GPS ane location settings check karo.";
                     } else if (error.code === 3) {
-
-                        locationMessage.innerHTML =
-                            "❌ Location request timeout thai gayu.";
-
+                        locationMessage.textContent =
+                            "❌ Location request timeout thai gayu. GPS on kari fari try karo.";
                     } else {
-
-                        locationMessage.innerHTML =
-                            "❌ Location detect thai shaki nahi.";
-
+                        locationMessage.textContent =
+                            "❌ Location detect thai shaki nahi. Fari try karo.";
                     }
-
                 },
 
                 {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+                    enableHighAccuracy: false,
+                    timeout: 20000,
+                    maximumAge: 60000
                 }
-
             );
-
         }
 
-        window.onload = function() {
-            getLocation();
-        };
-
+        window.addEventListener("load", getLocation);
     </script>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-
 </html>

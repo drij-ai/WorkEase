@@ -63,12 +63,369 @@
     .btn-outline-primary{color:var(--blue);border-color:#d2e0f8}.btn-outline-primary:hover{background:var(--blue);border-color:var(--blue)}
     @media(max-width:991.98px){.sidebar{min-height:auto;padding:12px!important}.brand{padding:8px 8px 13px;margin-bottom:8px}.sidebar nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.menu-heading{grid-column:1/-1}.dashboard-content{padding:18px}.topbar{padding:13px 18px}}
     @media(max-width:575.98px){.topbar{align-items:flex-start;flex-direction:column;padding:13px 16px}.dashboard-content{padding:15px}.page-title{font-size:22px}.stat-number{font-size:26px}.user-chip{white-space:normal}.section-card .card-body{padding:16px}.brand{font-size:20px}}
+
+    
+.menu-logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.menu-logout:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-logout .menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Responsive dashboard improvements */
+@media (max-width: 767.98px) {
+    .sidebar nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-content {
+        padding: 14px;
+    }
+
+    .stat-card .card-body {
+        padding: 15px;
+    }
+
+    .stat-number {
+        font-size: 25px;
+        overflow-wrap: anywhere;
+    }
+
+    .section-card {
+        overflow: hidden;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .quick-action {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 400px) {
+    .sidebar nav {
+        grid-template-columns: 1fr;
+    }
+
+    .topbar {
+        gap: 10px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .stat-number {
+        font-size: 23px;
+    }
+}
+
+
+/* Better mobile sidebar spacing */
+@media (max-width: 767.98px) {
+    .sidebar {
+        min-height: auto;
+        padding: 12px !important;
+    }
+
+    .brand {
+        padding: 8px 8px 14px;
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+
+    .sidebar nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+    }
+
+    .menu-heading {
+        grid-column: 1 / -1;
+        padding: 10px 8px 5px;
+    }
+
+    .sidebar a {
+        padding: 10px 8px;
+        margin: 2px 0;
+        gap: 7px;
+        font-size: 12px;
+        min-width: 0;
+    }
+
+    .menu-icon {
+        width: 18px;
+        font-size: 14px;
+    }
+}
+
+
+.mobile-menu-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    color: #102a4c;
+    font-size: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+@media (max-width: 991.98px) {
+    .app-shell > .row {
+        position: relative;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .sidebar.mobile-open {
+        display: block;
+        position: absolute;
+        z-index: 1050;
+        top: 0;
+        left: 0;
+        width: min(300px, 85vw);
+        height: 100%;
+        min-height: 100%;
+        box-shadow: 12px 0 35px rgba(15, 42, 76, .2);
+    }
+
+    .sidebar.mobile-open nav {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar.mobile-open .menu-heading {
+        padding: 13px 10px 7px;
+    }
+
+    .sidebar.mobile-open a,
+    .sidebar.mobile-open .menu-logout {
+        padding: 12px;
+    }
+
+    .mobile-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .topbar {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .topbar > div:last-child {
+        margin-left: auto;
+    }
+}
+
+
+/* Mobile topbar alignment */
+@media (max-width: 575.98px) {
+    .topbar {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .mobile-menu-toggle {
+        grid-column: 1;
+        grid-row: 1;
+        width: 44px;
+        height: 44px;
+    }
+
+    .topbar > div:first-of-type {
+        grid-column: 2;
+        grid-row: 1;
+        min-width: 0;
+    }
+
+    .topbar > div:first-of-type .fw-bold {
+        font-size: 15px;
+    }
+
+    .topbar-subtitle {
+        font-size: 11px;
+        line-height: 1.4;
+        margin-top: 3px;
+    }
+
+    .user-chip {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+        min-width: 0;
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .user-chip > span:last-child {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .user-avatar {
+        flex-shrink: 0;
+    }
+}
+
+/* Final mobile layout polish */
+@media (max-width: 575.98px) {
+    .topbar {
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .user-chip {
+        padding: 10px 12px;
+        border-radius: 14px;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .dashboard-content {
+        padding: 18px 14px;
+    }
+
+    .dashboard-content > .d-flex:first-child {
+        gap: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .page-title {
+        font-size: 23px;
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .dashboard-content .row.g-3 {
+        --bs-gutter-y: 12px;
+    }
+
+    .stat-card .card-body {
+        padding: 16px;
+    }
+
+    .stat-top {
+        margin-bottom: 12px;
+    }
+
+    .stat-number {
+        font-size: 27px;
+        margin-bottom: 7px;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+    }
+
+    .stat-foot {
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    .section-card .card-body {
+        padding: 16px;
+    }
+}
+
+
+
+/* Quick Actions - mobile responsive fix */
+@media (max-width: 575.98px) {
+    .quick-action {
+        padding: 10px !important;
+        gap: 8px !important;
+        font-size: 13px !important;
+        line-height: 1.3;
+    }
+
+    .quick-action .action-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        font-size: 18px;
+    }
+
+    .quick-action > span:last-child {
+        font-size: 13px;
+        overflow-wrap: normal;
+        word-break: normal;
+    }
+}
+
+
+@media (max-width: 575.98px) {
+    .quick-action {
+        box-sizing: border-box;
+        min-width: 0;
+        padding: 10px !important;
+        gap: 8px !important;
+        font-size: 12px !important;
+    }
+
+    .quick-action > span:last-child {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.3;
+    }
+
+    .quick-action .action-icon {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        flex-shrink: 0;
+    }
+}
+
+
   </style>
 </head>
 <body>
 <div class="container-fluid app-shell">
   <div class="row g-0">
-    <aside class="col-lg-2 sidebar">
+   <aside class="col-lg-2 sidebar" id="adminSidebar">
       <div class="brand"><span class="brand-icon">✿</span><span>WorkEase</span></div>
       <nav aria-label="Admin navigation">
         <div class="menu-heading">MAIN MENU</div>
@@ -80,13 +437,29 @@
         <a href="/admin-dashboard/payroll/"><span class="menu-icon">＄</span><span>Payroll</span></a>
         <a href="/admin-dashboard/work-locations/"><span class="menu-icon">⌖</span><span>Work Locations</span></a>
         <div class="menu-heading">SYSTEM</div>
-        <a href="/admin/"><span class="menu-icon">⚙</span><span>Django Admin</span></a>
-        <a href="/admin/logout/"><span class="menu-icon">⇥</span><span>Logout</span></a>
-      </nav>
+        
+<a href="/admin/"><span class="menu-icon">⚙</span><span>Django Admin</span></a>
+
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="menu-logout">
+        <span class="menu-icon">⇥</span><span>Logout</span>
+    </button>
+</form>
+     </nav>
     </aside>
 
     <main class="col-lg-10 main-area">
       <header class="topbar">
+        <button
+    type="button"
+    class="mobile-menu-toggle"
+    id="mobileMenuToggle"
+    aria-label="Toggle navigation"
+    aria-controls="adminSidebar"
+    aria-expanded="false">
+    ☰
+</button>
         <div>
           <div class="fw-bold">WorkEase <span class="text-secondary fw-normal">/ Admin Portal</span></div>
           <div class="topbar-subtitle">Employee Management System</div>
@@ -143,6 +516,44 @@
     </main>
   </div>
 </div>
-<container py-5script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const button = document.getElementById("mobileMenuToggle");
+    const sidebar = document.getElementById("adminSidebar");
+
+    if (!button || !sidebar) return;
+
+    button.addEventListener("click", function () {
+        const isOpen = sidebar.classList.toggle("mobile-open");
+        button.setAttribute("aria-expanded", String(isOpen));
+        button.textContent = isOpen ? "✕" : "☰";
+    });
+
+    document.addEventListener("click", function (event) {
+        if (
+            window.innerWidth <= 991.98 &&
+            sidebar.classList.contains("mobile-open") &&
+            !sidebar.contains(event.target) &&
+            !button.contains(event.target)
+        ) {
+            sidebar.classList.remove("mobile-open");
+            button.setAttribute("aria-expanded", "false");
+            button.textContent = "☰";
+        }
+    });
+
+    window.addEventListener("resize", function () {
+        if (window.innerWidth > 991.98) {
+            sidebar.classList.remove("mobile-open");
+            button.setAttribute("aria-expanded", "false");
+            button.textContent = "☰";
+        }
+    });
+});
+</script>
 </body>
 </html>
+  
+

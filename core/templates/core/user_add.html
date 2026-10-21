@@ -23,7 +23,7 @@
                 {% endfor %}
             {% endif %}
 
-            <form method="POST" action="{% url 'user_add' %}">
+            <form method="POST" action="{% url 'employee_profile' %}">
                 {% csrf_token %}
 
                 <div class="mb-3">

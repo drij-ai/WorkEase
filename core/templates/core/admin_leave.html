@@ -1,403 +1,614 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Management | WorkEase</title>
 
-    <title>Leave Management - WorkEase</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --primary: #315ce8;
+            --primary-light: #edf2ff;
+            --bg: #f5f7fc;
+            --text: #1c2740;
+            --muted: #77839a;
+            --border: #e7ebf3;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            background-color: #f5f7fb;
-        }
-
-        .sidebar {
-            min-height: 100vh;
-            background: #111827;
-        }
-
-        .brand {
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 25px 20px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #d1d5db;
-            text-decoration: none;
-            padding: 13px 20px;
-        }
-
-        .sidebar a:hover {
-            background: #1f2937;
-            color: white;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
         }
 
         .topbar {
-            background: white;
-            padding: 18px 25px;
-            border-bottom: 1px solid #e5e7eb;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 17px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
         }
 
-        .content-card {
-            background: white;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 650;
+            letter-spacing: -.4px;
         }
 
-        .table th {
-            background-color: #f8fafc;
-            white-space: nowrap;
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            width: 39px;
+            height: 39px;
+            border-radius: 11px;
+            color: white;
+            background: var(--primary);
+            font-size: 20px;
         }
 
-        .table td {
-            vertical-align: middle;
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
+        .welcome {
+            color: var(--muted);
             font-size: 13px;
+        }
+
+        .welcome strong {
+            color: var(--text);
             font-weight: 600;
         }
 
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
+        .btn-dashboard {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1px solid #dce3ef;
+            border-radius: 8px;
+            color: #34435c;
+            background: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: .2s;
+            white-space: nowrap;
         }
 
-        .status-approved {
-            background: #d1e7dd;
-            color: #0f5132;
+        .btn-dashboard:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: #cbd7ff;
         }
 
-        .status-rejected {
-            background: #f8d7da;
-            color: #842029;
+        .page-container {
+            width: min(1440px, 100%);
+            margin: auto;
+            padding: 34px 5% 28px;
         }
+
+        .page-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 27px;
+        }
+
+        .eyebrow {
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 650;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .page-heading h1 {
+            font-size: clamp(25px, 3vw, 31px);
+            font-weight: 650;
+            letter-spacing: -.8px;
+            margin: 0 0 7px;
+        }
+
+        .page-heading p {
+            color: var(--muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .heading-decoration {
+            width: 66px;
+            height: 5px;
+            background: var(--primary);
+            border-radius: 8px;
+            margin-top: 17px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 27px;
+        }
+
+        .summary-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 21px 22px;
+            box-shadow: 0 3px 12px rgba(25, 43, 82, .025);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .summary-icon {
+            display: grid;
+            place-items: center;
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            border-radius: 12px;
+            font-size: 23px;
+        }
+
+        .icon-blue { background: #edf2ff; }
+        .icon-orange { background: #fff4df; }
+        .icon-green { background: #e7f7ee; }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            color: var(--text);
+            font-size: 25px;
+            font-weight: 650;
+            line-height: 1.2;
+        }
+
+        .content-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(25, 43, 82, .035);
+            overflow: hidden;
+        }
+
+        .content-header {
+            padding: 22px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-size: 17px;
+            font-weight: 600;
+            margin: 0 0 5px;
+        }
+
+        .section-icon {
+            display: grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            background: var(--primary-light);
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        .section-description {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .table-wrap { padding: 0 20px 8px; }
+
+        .table {
+            margin: 0;
+            color: #40506a;
+            font-size: 13px;
+        }
+
+        .table thead th {
+            background: #f8faff;
+            color: #68758c;
+            font-size: 10px;
+            font-weight: 650;
+            letter-spacing: .65px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            padding: 15px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table tbody td {
+            padding: 16px 12px;
+            vertical-align: middle;
+            border-color: #edf0f6;
+        }
+
+        .table tbody tr:hover td { background: #fafbff; }
+
+        .employee-name {
+            color: var(--text);
+            font-weight: 550;
+        }
+
+        .employee-id {
+            color: #718099;
+            font-size: 12px;
+        }
+
+        .reason-cell {
+            min-width: 130px;
+            max-width: 230px;
+            color: #68758b;
+            overflow-wrap: anywhere;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 550;
+            white-space: nowrap;
+        }
+
+        .status::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .pending { background: #fff4dc; color: #986600; }
+        .approved { background: #e6f7ed; color: #21804a; }
+        .rejected { background: #fdebec; color: #b52c3b; }
+        .other-status { background: #eef1f6; color: #58667d; }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
+        }
+
+        .btn-action {
+            padding: 7px 10px;
+            border-radius: 7px;
+            font-size: 11px;
+            font-weight: 550;
+            transition: .2s;
+        }
+
+        .btn-approve {
+            background: #e7f7ed;
+            border: 1px solid #d2efdc;
+            color: #18794e;
+        }
+
+        .btn-approve:hover {
+            background: #21804a;
+            color: #fff;
+        }
+
+        .btn-reject {
+            background: #fff0f0;
+            border: 1px solid #f4d9dc;
+            color: #b42332;
+        }
+
+        .btn-reject:hover {
+            background: #c93645;
+            color: #fff;
+        }
+
+        .completed-status {
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            padding: 65px 20px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            display: grid;
+            place-items: center;
+            width: 66px;
+            height: 66px;
+            margin: 0 auto 17px;
+            background: var(--primary-light);
+            border-radius: 18px;
+            font-size: 30px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+
+        .empty-state p {
+            color: var(--muted);
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .footer {
+            color: #929caf;
+            font-size: 12px;
+            text-align: center;
+            padding: 23px 0 0;
+        }
+
+        @media (max-width: 900px) {
+            .topbar { padding: 16px 24px; }
+            .page-container { padding: 27px 24px; }
+            .summary-grid { gap: 12px; }
+            .summary-card { padding: 17px; gap: 12px; }
+            .summary-icon { width: 42px; height: 42px; flex-basis: 42px; }
+        }
+
+        @media (max-width: 600px) {
+            .topbar {
+                padding: 15px 17px;
+                flex-wrap: wrap;
+            }
+
+            .brand { font-size: 18px; }
+            .brand-icon { width: 35px; height: 35px; }
+
+            .topbar-right {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .page-container { padding: 24px 13px; }
+
+            .page-heading { margin-bottom: 20px; }
+            .page-heading h1 { font-size: 25px; }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 11px;
+                margin-bottom: 20px;
+            }
+
+            .summary-card { padding: 15px 18px; }
+            .summary-value { font-size: 22px; }
+
+            .content-header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 18px;
+            }
+
+            .table-wrap { padding: 0 12px 8px; }
+        }
+
     </style>
 </head>
 
 <body>
 
-<div class="container-fluid">
-
-    <div class="row">
-
-        <!-- Sidebar -->
-        <div class="col-md-2 sidebar p-0">
-
-            <div class="brand">
-                🏢 WorkEase
-            </div>
-
-            <a href="/admin-dashboard/"> 🏠 Dashboard  </a>
-            <a href="/admin-dashboard/employees/"> 👥 Employees</a>
-            <a href="/admin-dashboard/attendance/">📋 Attendance </a>
-            <a href="/admin-dashboard/leave/">🏖️ Leave</a>
-            <a href="/admin/core/payroll/">💰 Payroll</a>
-            <a href="/admin-dashboard/work-locations/">📍 Work Locations</a>
-            <a href="/admin/">⚙️ Django Admin</a>
-            <a href="/admin/logout/">🚪 Logout</a>
-
-        </div>
-
-
-        <!-- Main Content -->
-        <div class="col-md-10 p-0">
-
-            <!-- Topbar -->
-            <div class="topbar">
-
-                <div class="d-flex justify-content-between align-items-center">
-
-                    <div>
-                        <h4 class="mb-0">
-                            Leave Management
-                        </h4>
-
-                        <small class="text-muted">
-                            Manage employee leave requests
-                        </small>
-                    </div>
-
-                    <div>
-                        <strong>
-                            Welcome, {{ request.user.username }}
-                        </strong>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- Page Content -->
-            <div class="p-4">
-
-                <div class="content-card">
-
-                    <div class="card-body p-4">
-
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-
-                            <div>
-                                <h5 class="mb-1">
-                                    🏖️ Leave Requests
-                                </h5>
-
-                                <small class="text-muted">
-                                    Review and manage employee leave applications
-                                </small>
-                            </div>
-
-                            <a
-                                href="/admin-dashboard/"
-                                class="btn btn-outline-secondary"
-                            >
-                                ← Dashboard
-                            </a>
-
-                        </div>
-
-
-                        {% if leave_requests %}
-
-                        <div class="table-responsive">
-
-                            <table class="table table-hover align-middle">
-
-                                <thead>
-
-                                    <tr>
-
-                                        <th>
-                                            Employee
-                                        </th>
-
-                                        <th>
-                                            Employee ID
-                                        </th>
-
-                                        <th>
-                                            Leave Type
-                                        </th>
-
-                                        <th>
-                                            From Date
-                                        </th>
-
-                                        <th>
-                                            To Date
-                                        </th>
-
-                                        <th>
-                                            Reason
-                                        </th>
-
-                                        <th>
-                                            Status
-                                        </th>
-
-                                        <th>
-                                            Action
-                                        </th>
-
-                                    </tr>
-
-                                </thead>
-
-
-                                <tbody>
-
-                                    {% for leave in leave_requests %}
-
-                                    <tr>
-
-                                        <!-- Employee -->
-                                        <td>
-                                            <strong>
-                                                {{ leave.employee.name }}
-                                            </strong>
-                                        </td>
-
-
-                                        <!-- Employee ID -->
-                                        <td>
-                                            {{ leave.employee.employee_id }}
-                                        </td>
-
-
-                                        <!-- Leave Type -->
-                                        <td>
-                                            {{ leave.leave_type }}
-                                        </td>
-
-
-                                        <!-- From Date -->
-                                        <td>
-                                            {{ leave.from_date }}
-                                        </td>
-
-
-                                        <!-- To Date -->
-                                        <td>
-                                            {{ leave.to_date }}
-                                        </td>
-
-
-                                        <!-- Reason -->
-                                        <td>
-                                            {{ leave.reason }}
-                                        </td>
-
-
-                                        <!-- Status -->
-                                        <td>
-
-                                            {% if leave.status == "Pending" %}
-
-                                                <span class="status-badge status-pending">
-                                                    Pending
-                                                </span>
-
-                                            {% elif leave.status == "Approved" %}
-
-                                                <span class="status-badge status-approved">
-                                                    Approved
-                                                </span>
-
-                                            {% elif leave.status == "Rejected" %}
-
-                                                <span class="status-badge status-rejected">
-                                                    Rejected
-                                                </span>
-
-                                            {% else %}
-
-                                                <span class="status-badge">
-                                                    {{ leave.status }}
-                                                </span>
-
-                                            {% endif %}
-
-                                        </td>
-
-
-                                        <!-- Actions -->
-                                        <td>
-
-                                            {% if leave.status == "Pending" %}
-
-                                                <!-- Approve -->
-                                                <form
-                                                    method="POST"
-                                                    action="{% url 'leave_update_status' leave.id 'Approved' %}"
-                                                    class="d-inline"
-                                                >
-
-                                                    {% csrf_token %}
-
-                                                    <button
-                                                        type="submit"
-                                                        class="btn btn-sm btn-success"
-                                                    >
-                                                        ✓ Approve
-                                                    </button>
-
-                                                </form>
-
-
-                                                <!-- Reject -->
-                                                <form
-                                                    method="POST"
-                                                    action="{% url 'leave_update_status' leave.id 'Rejected' %}"
-                                                    class="d-inline"
-                                                >
-
-                                                    {% csrf_token %}
-
-                                                    <button
-                                                        type="submit"
-                                                        class="btn btn-sm btn-danger"
-                                                    >
-                                                        ✕ Reject
-                                                    </button>
-
-                                                </form>
-
-                                            {% elif leave.status == "Approved" %}
-
-                                                <span class="text-success fw-semibold">
-                                                    ✓ Approved
-                                                </span>
-
-                                            {% elif leave.status == "Rejected" %}
-
-                                                <span class="text-danger fw-semibold">
-                                                    ✕ Rejected
-                                                </span>
-
-                                            {% endif %}
-
-                                        </td>
-
-                                    </tr>
-
-                                    {% endfor %}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                        {% else %}
-
-                        <div class="text-center py-5">
-
-                            <div style="font-size: 50px;">
-                                🏖️
-                            </div>
-
-                            <h5 class="mt-3">
-                                No Leave Requests
-                            </h5>
-
-                            <p class="text-muted">
-                                There are currently no leave applications.
-                            </p>
-
-                        </div>
-
-                        {% endif %}
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
+    <!-- Header -->
+    <header class="topbar">
+        <div class="brand">
+    <span class="brand-icon">
+        <svg viewBox="0 0 40 40" width="30" height="30"
+             fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 34H35" stroke="white" stroke-width="2"
+                  stroke-linecap="round"/>
+            <path d="M8 34V19L20 13V34"
+                  stroke="white" stroke-width="2"
+                  stroke-linejoin="round"/>
+            <path d="M20 34V8L33 3V34"
+                  stroke="white" stroke-width="2"
+                  stroke-linejoin="round"/>
+            <path d="M12 23H15M12 28H15M24 12H27M24 18H27M24 24H27M24 29H27"
+                  stroke="white" stroke-width="2"
+                  stroke-linecap="round"/>
+        </svg>
+    </span>
+    <span>WorkEase</span>
 </div>
+    </header>
 
+    <main class="page-container">
 
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-</script>
+        <!-- Page Heading -->
+        <section class="page-heading">
+            <div>
+                <div class="eyebrow">HR Management</div>
+                <h1>Leave Management</h1>
+                <p>Manage employee leave applications and review requests in one place.</p>
+                <div class="heading-decoration"></div>
+            </div>
+        </section>
+
+        <!-- Summary Cards -->
+        <section class="summary-grid">
+
+            <div class="summary-card">
+                <div class="summary-icon icon-blue">📋</div>
+                <div>
+                    <div class="summary-label">Total Requests</div>
+                    <div class="summary-value">{{ leave_requests|length }}</div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon icon-orange">⏳</div>
+                <div>
+                    <div class="summary-label">Leave Applications</div>
+                    <div class="summary-value">Review</div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-icon icon-green">✓</div>
+                <div>
+                    <div class="summary-label">Request Management</div>
+                    <div class="summary-value">Active</div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Leave Requests -->
+        <section class="content-card">
+
+            <div class="content-header">
+                <div>
+                    <h2 class="section-title">
+                        <span class="section-icon">🏖️</span>
+                        Leave Requests
+                    </h2>
+                    <p class="section-description">
+                        Review employee leave details and update pending requests.
+                    </p>
+                </div>
+            </div>
+
+            {% if leave_requests %}
+
+            <div class="table-responsive table-wrap">
+                <table class="table table-hover align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Employee ID</th>
+                            <th>Leave Type</th>
+                            <th>From Date</th>
+                            <th>To Date</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for leave in leave_requests %}
+                        <tr>
+
+                            <td>
+                                <span class="employee-name">{{ leave.employee.name }}</span>
+                            </td>
+
+                            <td>
+                                <span class="employee-id">{{ leave.employee.employee_id }}</span>
+                            </td>
+
+                            <td>{{ leave.leave_type }}</td>
+
+                            <td class="text-nowrap">{{ leave.from_date }}</td>
+
+                            <td class="text-nowrap">{{ leave.to_date }}</td>
+
+                            <td>
+                                <div class="reason-cell">
+                                    {{ leave.reason|default:"—" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if leave.status == "Pending" %}
+                                    <span class="status pending">Pending</span>
+                                {% elif leave.status == "Approved" %}
+                                    <span class="status approved">Approved</span>
+                                {% elif leave.status == "Rejected" %}
+                                    <span class="status rejected">Rejected</span>
+                                {% else %}
+                                    <span class="status other-status">{{ leave.status }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if leave.status == "Pending" %}
+                                    <div class="action-buttons">
+
+                                        <form method="POST"
+                                              action="{% url 'leave_update_status' leave.id 'Approved' %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-action btn-approve">
+                                                ✓ Approve
+                                            </button>
+                                        </form>
+
+                                        <form method="POST"
+                                              action="{% url 'leave_update_status' leave.id 'Rejected' %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-action btn-reject">
+                                                ✕ Reject
+                                            </button>
+                                        </form>
+
+                                    </div>
+
+                                {% elif leave.status == "Approved" %}
+                                    <span class="text-success completed-status">✓ Approved</span>
+
+                                {% elif leave.status == "Rejected" %}
+                                    <span class="text-danger completed-status">✕ Rejected</span>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+                <div class="empty-icon">🏖️</div>
+                <h3>No Leave Requests</h3>
+                <p>There are currently no leave applications to display.</p>
+            </div>
+
+            {% endif %}
+
+        </section>
+
+        <footer class="footer">
+            WorkEase · HR Management System
+        </footer>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-
 </html>

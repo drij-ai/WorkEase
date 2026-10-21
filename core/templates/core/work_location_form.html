@@ -8,252 +8,563 @@
 
     <title>{{ title }} - WorkEase</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --primary: #315ce8;
+            --primary-light: #edf2ff;
+            --bg: #f5f7fc;
+            --text: #1c2740;
+            --muted: #77839a;
+            --border: #e7ebf3;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: #f5f7fb;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
         }
 
-        .navbar {
-            background: #111827;
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
         }
 
-        .navbar-brand {
-            color: white !important;
-            font-weight: 700;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+            font-size: 21px;
+            font-weight: 650;
+            letter-spacing: -.4px;
         }
 
-        .page-title {
-            font-weight: 700;
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            width: 65px;
+            height: 65px;
+            flex: 0 0 65px;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #3568f5, #2448c8);
+            box-shadow: 0 8px 18px rgba(49, 92, 232, .2);
         }
 
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        .brand-icon svg {
+            width: 34px;
+            height: 34px;
         }
 
-        .form-label {
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .welcome {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .welcome strong {
+            color: var(--text);
             font-weight: 600;
         }
 
-        .btn {
+        .btn-dashboard {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1px solid #dce3ef;
             border-radius: 8px;
+            background: #fff;
+            color: #34435c;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: .2s;
+        }
+
+        .btn-dashboard:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: #cbd7ff;
+        }
+
+        .page-container {
+            width: min(1000px, 100%);
+            margin: auto;
+            padding: 34px 24px 30px;
+        }
+
+        .page-heading {
+            margin-bottom: 25px;
+        }
+
+        .eyebrow {
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 650;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .page-heading h1 {
+            margin: 0 0 7px;
+            font-size: clamp(25px, 3vw, 31px);
+            font-weight: 650;
+            letter-spacing: -.7px;
+        }
+
+        .page-heading p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .heading-decoration {
+            width: 66px;
+            height: 5px;
+            margin-top: 16px;
+            border-radius: 8px;
+            background: var(--primary);
+        }
+
+        .form-card {
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(25, 43, 82, .04);
+        }
+
+        .form-card-header {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 22px 25px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-header-icon {
+            display: grid;
+            place-items: center;
+            width: 43px;
+            height: 43px;
+            flex: 0 0 43px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            font-size: 21px;
+        }
+
+        .form-card-header h2 {
+            margin: 0 0 5px;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .form-card-header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .form-card-body {
+            padding: 25px;
         }
 
         .info-box {
-            background: #f0f6ff;
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 17px;
+            margin-bottom: 26px;
+            border: 1px solid #dce7ff;
+            border-radius: 10px;
+            background: #f5f8ff;
+        }
+
+        .info-icon {
+            font-size: 20px;
+            line-height: 1.3;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #294aa8;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #5e6f91;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34445e;
+            font-size: 13px;
+            font-weight: 550;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 45px;
+            padding: 10px 13px;
+            border: 1px solid #dce3ee;
+            border-radius: 8px;
+            color: var(--text);
+            background-color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            box-shadow: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #88a5ff;
+            box-shadow: 0 0 0 3px rgba(49, 92, 232, .10);
+        }
+
+        .form-control::placeholder {
+            color: #a1aabd;
+        }
+
+        .field-help {
+            display: block;
+            margin-top: 7px;
+            color: #8591a5;
+            font-size: 12px;
+        }
+
+        .field-error {
+            margin-top: 6px;
+            color: #c93645;
+            font-size: 12px;
+        }
+
+        .field-error ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .alert-danger {
+            border: 1px solid #f4d9dc;
+            border-radius: 8px;
+            background: #fff3f3;
+            color: #b42332;
+            font-size: 13px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding-top: 23px;
+            margin-top: 27px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-cancel {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 10px 17px;
+            border: 1px solid #dce3ee;
+            border-radius: 8px;
+            background: #fff;
+            color: #4c5b73;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            background: #f5f7fb;
+            color: var(--text);
+        }
+
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 10px 18px;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            background: var(--primary);
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 550;
+            transition: .2s;
+        }
+
+        .btn-submit:hover {
+            background: #2449c5;
+            border-color: #2449c5;
+        }
+
+        .footer {
+            padding-top: 23px;
+            color: #929caf;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .topbar {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+            }
+
+            .brand {
+                gap: 10px;
+                font-size: 19px;
+            }
+
+            .brand-icon {
+                width: 48px;
+                height: 48px;
+                flex-basis: 48px;
+                border-radius: 15px;
+            }
+
+            .brand-icon svg {
+                width: 29px;
+                height: 29px;
+            }
+
+            .topbar-right {
+                width: 100%;
+                justify-content: space-between;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .page-container {
+                padding: 25px 13px;
+            }
+
+            .page-heading h1 {
+                font-size: 25px;
+            }
+
+            .form-card-header {
+                padding: 18px;
+            }
+
+            .form-card-body {
+                padding: 18px;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+            .btn-cancel,
+            .btn-submit {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<nav class="navbar">
-
-    <div class="container-fluid px-4">
-
-        <a
-            class="navbar-brand"
-            href="/admin-dashboard/"
-        >
-            🏢 WorkEase
-        </a>
-
-        <div class="text-white">
-            Welcome, {{ request.user.username }}
+    <!-- Header -->
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-icon">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 35H36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M7 35V20L20 14V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M20 35V8L33 3V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M11 24H15M11 29H15M24 12H27M24 18H27M24 24H27M24 29H27"
+                          stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <span>WorkEase</span>
         </div>
 
-    </div>
+        <div class="topbar-right">
+            <span class="welcome">
+                Welcome back, <strong>{{ request.user.username }}</strong>
+            </span>
 
-</nav>
-
-
-<div class="container py-5">
-
-    <!-- Page Header -->
-
-    <div class="mb-4">
-
-        <h2 class="page-title mb-1">
-            Add Work Location
-        </h2>
-
-        <p class="text-muted mb-0">
-            Add an office location for attendance geofencing
-        </p>
-
-    </div>
-
-
-    <div class="card p-4 p-md-5">
-
-        <!-- Information -->
-
-        <div class="info-box mb-4">
-
-            <strong>📍 Location information</strong>
-
-            <p class="mb-0 mt-1">
-                Latitude and longitude define the office location.
-                Employees can check in only when they are within
-                the allowed radius.
-            </p>
-
+            <a href="/admin-dashboard/" class="btn-dashboard">
+                ← Back to Dashboard
+            </a>
         </div>
+    </header>
 
+    <main class="page-container">
 
-        <form method="POST">
+        <!-- Page Heading -->
+        <section class="page-heading">
+            <div class="eyebrow">HR Management</div>
+            <h1>{{ title|default:"Add Work Location" }}</h1>
+            <p>Add an office location and configure attendance geofencing.</p>
+            <div class="heading-decoration"></div>
+        </section>
 
-            {% csrf_token %}
+        <!-- Form Card -->
+        <section class="form-card">
 
-
-            {% if form.non_field_errors %}
-
-                <div class="alert alert-danger">
-                    {{ form.non_field_errors }}
+            <div class="form-card-header">
+                <div class="form-header-icon">📍</div>
+                <div>
+                    <h2>Location Details</h2>
+                    <p>Enter the workplace coordinates and allowed attendance radius.</p>
                 </div>
-
-            {% endif %}
-
-
-            <div class="row g-4">
-
-
-                <!-- Location Name -->
-
-                <div class="col-12">
-
-                    <label class="form-label">
-                        Location Name
-                    </label>
-
-                    {{ form.name }}
-
-                    {% if form.name.errors %}
-
-                        <div class="text-danger small mt-1">
-                            {{ form.name.errors }}
-                        </div>
-
-                    {% endif %}
-
-                </div>
-
-
-                <!-- Latitude -->
-
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Latitude
-                    </label>
-
-                    {{ form.latitude }}
-
-                    <div class="text-muted small mt-1">
-                        Example: 22.3072
-                    </div>
-
-                    {% if form.latitude.errors %}
-
-                        <div class="text-danger small mt-1">
-                            {{ form.latitude.errors }}
-                        </div>
-
-                    {% endif %}
-
-                </div>
-
-
-                <!-- Longitude -->
-
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Longitude
-                    </label>
-
-                    {{ form.longitude }}
-
-                    <div class="text-muted small mt-1">
-                        Example: 73.1812
-                    </div>
-
-                    {% if form.longitude.errors %}
-
-                        <div class="text-danger small mt-1">
-                            {{ form.longitude.errors }}
-                        </div>
-
-                    {% endif %}
-
-                </div>
-
-
-                <!-- Allowed Radius -->
-
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Allowed Radius
-                    </label>
-
-                    {{ form.allowed_radius }}
-
-                    <div class="text-muted small mt-1">
-                        Radius in meters. Example: 100
-                    </div>
-
-                    {% if form.allowed_radius.errors %}
-
-                        <div class="text-danger small mt-1">
-                            {{ form.allowed_radius.errors }}
-                        </div>
-
-                    {% endif %}
-
-                </div>
-
-
             </div>
 
+            <div class="form-card-body">
 
-            <!-- Buttons -->
+                <div class="info-box">
+                    <div class="info-icon">ℹ️</div>
+                    <div>
+                        <strong>About work location settings</strong>
+                        <p>
+                            Latitude and longitude identify the office location.
+                            The allowed radius defines the distance employees can be
+                            from the location when checking in.
+                        </p>
+                    </div>
+                </div>
 
-            <div class="d-flex justify-content-end gap-2 mt-5">
+                <form method="POST">
+                    {% csrf_token %}
 
-                <a
-                    href="/admin-dashboard/work-locations/"
-                    class="btn btn-light border px-4"
-                >
-                    Cancel
-                </a>
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-4">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
 
+                    <div class="row g-4">
 
-                <button
-                    type="submit"
-                    class="btn btn-primary px-4"
-                >
-                    📍 Add Work Location
-                </button>
+                        <!-- Location Name -->
+                        <div class="col-12">
+                            <label class="form-label" for="{{ form.name.id_for_label }}">
+                                Location Name
+                            </label>
 
+                            {{ form.name }}
+
+                            {% if form.name.errors %}
+                                <div class="field-error">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Latitude -->
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.latitude.id_for_label }}">
+                                Latitude
+                            </label>
+
+                            {{ form.latitude }}
+
+                            <small class="field-help">
+                                Example: 22.3072
+                            </small>
+
+                            {% if form.latitude.errors %}
+                                <div class="field-error">{{ form.latitude.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Longitude -->
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.longitude.id_for_label }}">
+                                Longitude
+                            </label>
+
+                            {{ form.longitude }}
+
+                            <small class="field-help">
+                                Example: 73.1812
+                            </small>
+
+                            {% if form.longitude.errors %}
+                                <div class="field-error">{{ form.longitude.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Allowed Radius -->
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.allowed_radius.id_for_label }}">
+                                Allowed Radius
+                            </label>
+
+                            {{ form.allowed_radius }}
+
+                            <small class="field-help">
+                                Enter the allowed distance in meters. Example: 100
+                            </small>
+
+                            {% if form.allowed_radius.errors %}
+                                <div class="field-error">{{ form.allowed_radius.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                        <a href="/admin-dashboard/work-locations/" class="btn-cancel">
+                            Cancel
+                        </a>
+
+                        <button type="submit" class="btn-submit">
+                            📍 Save Work Location
+                        </button>
+                    </div>
+
+                </form>
             </div>
 
+        </section>
 
-        </form>
+        <footer class="footer">
+            WorkEase · HR Management System
+        </footer>
 
-    </div>
+    </main>
 
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-
 </html>

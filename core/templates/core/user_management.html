@@ -1,117 +1,547 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users - WorkEase</title>
+    <title>Users Management | WorkEase</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy: #102a4c;
+            --navy-light: #173b66;
+            --blue: #2563eb;
+            --page: #f4f7fc;
+            --text: #172b4d;
+            --muted: #718096;
+            --line: #e7edf5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--page);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .topbar {
+            background: linear-gradient(110deg, var(--navy), var(--navy-light));
+            padding: 15px 0;
+            color: white;
+            box-shadow: 0 3px 14px rgba(16, 42, 76, .12);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 21px;
+            font-weight: 750;
+            letter-spacing: -.4px;
+        }
+
+        .brand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: rgba(255,255,255,.14);
+            font-size: 20px;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .user-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 37px;
+            height: 37px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: var(--navy);
+            font-weight: 800;
+        }
+
+        .page-wrap {
+            max-width: 1600px;
+            margin: auto;
+            padding: 28px 26px;
+        }
+
+        .breadcrumb-line {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .page-title {
+            font-size: clamp(24px, 3vw, 30px);
+            font-weight: 750;
+            letter-spacing: -.6px;
+            margin: 0 0 7px;
+        }
+
+        .page-subtitle {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .btn {
+            border-radius: 9px;
+            padding: 9px 13px;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .btn-warning {
+            background: #fff7df;
+            border-color: #f7df9a;
+            color: #895c00;
+        }
+
+        .btn-warning:hover {
+            background: #ffedb5;
+            border-color: #f0d486;
+            color: #704800;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            box-shadow: 0 5px 18px rgba(15,42,76,.035);
+            overflow: hidden;
+            margin-bottom: 22px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 20px 23px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .panel-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
+            background: #eaf2ff;
+            color: var(--blue);
+            font-size: 20px;
+        }
+
+        .panel-title {
+            margin: 0 0 4px;
+            font-size: 16px;
+            font-weight: 750;
+        }
+
+        .panel-description {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .panel-body { padding: 22px; }
+
+        .table-responsive { min-height: 100px; }
+
+        .table {
+            margin: 0;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .table thead th {
+            padding: 14px 17px;
+            background: #f8fafd;
+            color: #718096;
+            border-bottom: 1px solid var(--line);
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .45px;
+            text-transform: uppercase;
+        }
+
+        .table tbody td {
+            padding: 15px 17px;
+            border-color: #edf1f7;
+            color: #334155;
+            font-size: 12px;
+        }
+
+        .table tbody tr:last-child td { border-bottom: 0; }
+
+        .table-hover tbody tr:hover > * { background: #f8fbff; }
+
+        .username {
+            color: #1e293b;
+            font-weight: 750;
+            font-size: 13px;
+        }
+
+        .username-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 33px;
+            height: 33px;
+            margin-right: 9px;
+            border-radius: 10px;
+            background: #edf4ff;
+            color: #315da8;
+            font-weight: 750;
+        }
+
+        .employee-code {
+            display: inline-block;
+            padding: 5px 8px;
+            border-radius: 7px;
+            background: #edf4ff;
+            color: #315da8;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 20px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-no-account {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .role-badge {
+            display: inline-block;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 5px 9px;
+            border-radius: 7px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .action-stack {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-stack form { margin: 0; }
+
+        .reset-panel {
+            width: min(100%, 330px);
+            padding: 15px;
+            margin-top: 12px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #f8fafd;
+            white-space: normal;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .form-control {
+            min-height: 40px;
+            border-color: #dfe7f1;
+            border-radius: 9px;
+            font-size: 13px;
+        }
+
+        .form-control:focus {
+            border-color: #93b4fc;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.09);
+        }
+
+        .empty-state {
+            padding: 32px 15px !important;
+            text-align: center;
+            white-space: normal;
+            color: var(--muted) !important;
+        }
+
+        .empty-state i {
+            display: block;
+            font-size: 27px;
+            margin-bottom: 8px;
+            color: #94a3b8;
+        }
+
+        .alert {
+            border: 0;
+            border-radius: 11px;
+            font-size: 13px;
+        }
+
+        .footer-actions { padding-bottom: 12px; }
+
+        @media (max-width: 767.98px) {
+            .page-wrap { padding: 22px 13px; }
+
+            .page-header {
+                align-items: stretch !important;
+                flex-direction: column;
+            }
+
+            .add-user-btn { width: 100%; }
+
+            .panel-header { padding: 17px; }
+            .panel-body { padding: 15px; }
+
+            .welcome-text { display: none; }
+
+            .table thead th,
+            .table tbody td {
+                padding: 12px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
 
-<div class="container py-5">
+<body>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2>Users Management</h2>
-            <p class="text-muted mb-0">Manage employee login accounts.</p>
+<nav class="topbar">
+    <div class="container-fluid px-3 px-md-4 d-flex align-items-center justify-content-between">
+        <a class="brand" href="{% url 'admin_dashboard' %}">
+            <span class="brand-icon"><i class="bi bi-buildings"></i></span>
+            WorkEase
+        </a>
+
+        <div class="user-area">
+            <span class="user-avatar">
+                {{ request.user.username|slice:":1"|upper }}
+            </span>
+            <span class="welcome-text">
+                <small class="d-block" style="opacity:.75;">Welcome back,</small>
+                <strong>{{ request.user.username }}</strong>
+            </span>
         </div>
-        <a href="{% url 'user_add' %}" class="btn btn-primary">+ Add User</a>
+    </div>
+</nav>
+
+<main class="page-wrap">
+
+    <div class="breadcrumb-line">
+        <i class="bi bi-house-door me-1"></i>
+        <a href="{% url 'admin_dashboard' %}" class="text-decoration-none text-secondary">Dashboard</a>
+        <span class="mx-2">/</span>
+        <span style="color:#334155;">User Management</span>
+    </div>
+
+    <div class="page-header d-flex justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="page-title">Users Management</h1>
+            <p class="page-subtitle">Manage employee login accounts and access permissions.</p>
+        </div>
+
+        <a href="{% url 'user_add' %}" class="btn btn-primary add-user-btn">
+            <i class="bi bi-person-plus me-1"></i> Add User
+        </a>
     </div>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-info">{{ message }}</div>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         {% endfor %}
     {% endif %}
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">Employees Without Login Accounts</h5>
+    <!-- Employees without login accounts -->
+    <section class="panel">
+
+        <div class="panel-header">
+            <div class="panel-icon">
+                <i class="bi bi-person-exclamation"></i>
+            </div>
+            <div>
+                <h2 class="panel-title">Employees Without Login Accounts</h2>
+                <p class="panel-description">Employees who do not yet have a user account.</p>
+            </div>
         </div>
-        <div class="card-body">
+
+        <div class="panel-body">
             {% if employees_without_user %}
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
                                 <th>Employee ID</th>
-                                <th>Name</th>
+                                <th>Employee Name</th>
                                 <th>Department</th>
-                                <th>Status</th>
+                                <th>Account Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for employee in employees_without_user %}
                                 <tr>
-                                    <td>{{ employee.employee_id }}</td>
-                                    <td>{{ employee.name }}</td>
-                                    <td>{{ employee.department }}</td>
-                                    <td><span class="badge bg-warning text-dark">No Login Account</span></td>
+                                    <td>
+                                        <span class="employee-code">{{ employee.employee_id }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="username">{{ employee.name }}</span>
+                                    </td>
+                                    <td>{{ employee.department|default:"—" }}</td>
+                                    <td>
+                                        <span class="status-badge status-no-account">
+                                            <i class="bi bi-exclamation-circle"></i>
+                                            No Login Account
+                                        </span>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted mb-0">All employees already have login accounts.</p>
+                <div class="empty-state">
+                    <i class="bi bi-check-circle"></i>
+                    <strong class="d-block mb-1">All Set!</strong>
+                    All employees already have login accounts.
+                </div>
             {% endif %}
         </div>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">Existing User Accounts</h5>
+    </section>
+
+    <!-- Existing user accounts -->
+    <section class="panel">
+
+        <div class="panel-header">
+            <div class="panel-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <div>
+                <h2 class="panel-title">Existing User Accounts</h2>
+                <p class="panel-description">Review account roles, status and available actions.</p>
+            </div>
         </div>
-        <div class="card-body">
+
+        <div class="panel-body p-0">
             {% if users %}
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
                                 <th>Username</th>
-                                <th>Name</th>
+                                <th>Full Name</th>
                                 <th>Account Type</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {% for user in users %}
                                 <tr>
-                                    <td>{{ user.username }}</td>
+                                    <td>
+                                        <span class="username-icon">
+                                            {{ user.username|slice:":1"|upper }}
+                                        </span>
+                                        <span class="username">{{ user.username }}</span>
+                                    </td>
+
                                     <td>{{ user.get_full_name|default:"—" }}</td>
+
                                     <td>
                                         {% if user.is_superuser %}
-                                            Administrator
+                                            <span class="role-badge">
+                                                <i class="bi bi-shield-lock me-1"></i> Administrator
+                                            </span>
                                         {% elif user.is_staff %}
-                                            Staff
+                                            <span class="role-badge">
+                                                <i class="bi bi-person-gear me-1"></i> Staff
+                                            </span>
                                         {% else %}
-                                            Employee
+                                            <span class="role-badge">
+                                                <i class="bi bi-person me-1"></i> Employee
+                                            </span>
                                         {% endif %}
                                     </td>
+
                                     <td>
                                         {% if user.is_active %}
-                                            <span class="badge bg-success">Active</span>
+                                            <span class="status-badge status-active">
+                                                <i class="bi bi-check-circle-fill"></i> Active
+                                            </span>
                                         {% else %}
-                                            <span class="badge bg-danger">Inactive</span>
+                                            <span class="status-badge status-inactive">
+                                                <i class="bi bi-x-circle-fill"></i> Inactive
+                                            </span>
                                         {% endif %}
                                     </td>
+
                                     <td>
                                         {% if not user.is_superuser %}
-                                            <div class="d-flex flex-wrap gap-2">
 
+                                            <div class="action-stack">
                                                 <form method="POST"
                                                       action="{% url 'toggle_user_status' user.id %}"
                                                       onsubmit="return confirm('Change this account status?');">
                                                     {% csrf_token %}
+
                                                     {% if user.is_active %}
-                                                        <button type="submit" class="btn btn-sm btn-danger">
-                                                            Deactivate
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="bi bi-person-dash me-1"></i> Deactivate
                                                         </button>
                                                     {% else %}
-                                                        <button type="submit" class="btn btn-sm btn-success">
-                                                            Activate
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                                            <i class="bi bi-person-check me-1"></i> Activate
                                                         </button>
                                                     {% endif %}
                                                 </form>
@@ -119,44 +549,63 @@
                                                 <button type="button"
                                                         class="btn btn-sm btn-warning"
                                                         data-bs-toggle="collapse"
-                                                        data-bs-target="#reset-{{ user.id }}">
-                                                    Reset Password
+                                                        data-bs-target="#reset-{{ user.id }}"
+                                                        aria-expanded="false"
+                                                        aria-controls="reset-{{ user.id }}">
+                                                    <i class="bi bi-key me-1"></i> Reset Password
                                                 </button>
                                             </div>
 
-                                            <div class="collapse mt-3" id="reset-{{ user.id }}">
-                                                <div class="card card-body">
+                                            <div class="collapse" id="reset-{{ user.id }}">
+                                                <div class="reset-panel">
+                                                    <h6 class="fw-bold mb-1">Reset Password</h6>
+                                                    <p class="text-secondary small mb-3">
+                                                        Set a new password for {{ user.username }}.
+                                                    </p>
+
                                                     <form method="POST"
                                                           action="{% url 'reset_user_password' user.id %}"
                                                           onsubmit="return confirm('Reset this user password?');">
                                                         {% csrf_token %}
 
-                                                        <div class="mb-2">
-                                                            <label class="form-label">New Password</label>
+                                                        <div class="mb-3">
+                                                            <label class="form-label" for="password-{{ user.id }}">
+                                                                New Password
+                                                            </label>
                                                             <input type="password"
+                                                                   id="password-{{ user.id }}"
                                                                    name="password"
                                                                    class="form-control"
                                                                    minlength="8"
+                                                                   autocomplete="new-password"
                                                                    required>
                                                         </div>
 
-                                                        <div class="mb-2">
-                                                            <label class="form-label">Confirm Password</label>
+                                                        <div class="mb-3">
+                                                            <label class="form-label" for="confirm-password-{{ user.id }}">
+                                                                Confirm Password
+                                                            </label>
                                                             <input type="password"
+                                                                   id="confirm-password-{{ user.id }}"
                                                                    name="confirm_password"
                                                                    class="form-control"
                                                                    minlength="8"
+                                                                   autocomplete="new-password"
                                                                    required>
                                                         </div>
 
-                                                        <button type="submit" class="btn btn-primary btn-sm">
+                                                        <button type="submit" class="btn btn-primary w-100">
+                                                            <i class="bi bi-check2-circle me-1"></i>
                                                             Save New Password
                                                         </button>
                                                     </form>
                                                 </div>
                                             </div>
+
                                         {% else %}
-                                            <span class="text-muted">Protected</span>
+                                            <span class="text-secondary small">
+                                                <i class="bi bi-shield-lock me-1"></i> Protected
+                                            </span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -165,18 +614,23 @@
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted mb-0">No user accounts found.</p>
+                <div class="empty-state">
+                    <i class="bi bi-people"></i>
+                    <strong class="d-block mb-1">No User Accounts Found</strong>
+                    User accounts will appear here when available.
+                </div>
             {% endif %}
         </div>
-    </div>
 
-    <div class="mt-4">
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
-            ← Back to Dashboard
+    </section>
+
+    <div class="footer-actions">
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
         </a>
     </div>
 
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

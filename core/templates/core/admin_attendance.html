@@ -1,374 +1,582 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management | WorkEase</title>
 
-    <title>Attendance Management - WorkEase</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        :root {
+            --navy: #102a4c;
+            --navy-light: #173b66;
+            --blue: #2563eb;
+            --page: #f4f7fc;
+            --text: #172b4d;
+            --muted: #718096;
+            --line: #e7edf5;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            background: #f5f7fb;
+            margin: 0;
+            background: var(--page);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
         }
 
-        .navbar {
-            background: #111827;
+        .topbar {
+            background: linear-gradient(110deg, var(--navy), var(--navy-light));
+            padding: 15px 0;
+            color: white;
+            box-shadow: 0 3px 14px rgba(16,42,76,.12);
         }
 
-        .navbar-brand {
-            color: white !important;
-            font-weight: 700;
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 21px;
+            font-weight: 750;
+            letter-spacing: -.4px;
+        }
+
+        .brand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: rgba(255,255,255,.14);
+            font-size: 20px;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+        }
+
+        .user-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 37px;
+            height: 37px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: var(--navy);
+            font-weight: 800;
+        }
+
+        .page-wrap {
+            max-width: 1600px;
+            margin: auto;
+            padding: 28px 26px;
+        }
+
+        .breadcrumb-line {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 10px;
         }
 
         .page-title {
-            font-weight: 700;
+            font-size: clamp(24px, 3vw, 30px);
+            font-weight: 750;
+            letter-spacing: -.6px;
+            margin: 0 0 7px;
         }
 
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        .page-subtitle {
+            margin: 0;
+            color: var(--muted);
         }
 
-        .table th {
-            background: #f8fafc;
+        .btn {
+            border-radius: 9px;
+            padding: 9px 13px;
             font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
+            font-weight: 600;
         }
 
-        .table td {
+        .btn-primary {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .filter-card,
+        .summary-card,
+        .records-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            box-shadow: 0 5px 18px rgba(15,42,76,.035);
+        }
+
+        .filter-card {
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .section-heading {
+            font-size: 16px;
+            font-weight: 750;
+            margin: 0 0 5px;
+        }
+
+        .section-description {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .form-label {
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+
+        .form-select,
+        .form-control {
+            min-height: 42px;
+            border-color: #dfe7f1;
+            border-radius: 9px;
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .form-select:focus,
+        .form-control:focus {
+            border-color: #93b4fc;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.09);
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 19px;
+            height: 100%;
+        }
+
+        .summary-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            background: #eaf2ff;
+            color: var(--blue);
+            font-size: 21px;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 25px;
+            line-height: 1.15;
+            font-weight: 750;
+            color: var(--text);
+            overflow-wrap: anywhere;
+        }
+
+        .records-card {
+            overflow: hidden;
+        }
+
+        .records-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 21px 23px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .records-title {
+            font-size: 16px;
+            font-weight: 750;
+            margin: 0 0 5px;
+        }
+
+        .records-description {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .table-responsive { min-height: 140px; }
+
+        .table {
+            margin: 0;
             vertical-align: middle;
             white-space: nowrap;
         }
 
-        .badge {
-            padding: 7px 10px;
+        .table thead th {
+            padding: 14px 17px;
+            background: #f8fafd;
+            color: #718096;
+            border-bottom: 1px solid var(--line);
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+        }
+
+        .table tbody td {
+            padding: 15px 17px;
+            border-color: #edf1f7;
+            color: #334155;
+            font-size: 12px;
+        }
+
+        .table tbody tr:last-child td { border-bottom: 0; }
+
+        .table-hover tbody tr:hover > * { background: #f8fbff; }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover { color: var(--blue); }
+
+        .sort-icon {
+            margin-left: 4px;
+            opacity: .6;
+        }
+
+        .employee-name {
+            color: #1e293b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .employee-id {
+            display: inline-block;
+            padding: 5px 8px;
+            border-radius: 7px;
+            background: #edf4ff;
+            color: #315da8;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .working-hours {
+            color: #147d54;
+            font-weight: 750;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             border-radius: 20px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-present {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-late {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-absent {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .empty-state {
-            padding: 50px 20px;
+            padding: 45px 15px !important;
             text-align: center;
-            color: #6b7280;
+            color: var(--muted) !important;
+            white-space: normal;
+        }
+
+        .empty-state i {
+            display: block;
+            font-size: 30px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+
+        .records-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 22px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        @media (max-width: 767.98px) {
+            .page-wrap { padding: 22px 13px; }
+
+            .header-row {
+                align-items: flex-start !important;
+                flex-direction: column;
+            }
+
+            .header-row .btn { width: 100%; }
+
+            .filter-card { padding: 17px; }
+
+            .records-header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 18px;
+            }
+
+            .records-footer {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 17px;
+            }
+
+            .summary-card { padding: 15px; }
+            .summary-icon { width: 40px; height: 40px; }
+            .welcome-text { display: none; }
         }
     </style>
 </head>
 
 <body>
 
-<nav class="navbar">
-    <div class="container-fluid px-4">
-
-        <a
-            class="navbar-brand"
-            href="/admin-dashboard/"
-        >
-            🏢 WorkEase
+<nav class="topbar">
+    <div class="container-fluid px-3 px-md-4 d-flex align-items-center justify-content-between">
+        <a class="brand" href="/admin-dashboard/">
+            <span class="brand-icon"><i class="bi bi-buildings"></i></span>
+            WorkEase
         </a>
 
-        <div class="text-white">
-            Welcome, {{ request.user.username }}
+        <div class="user-area">
+            <span class="user-avatar">
+                {{ request.user.username|slice:":1"|upper }}
+            </span>
+            <span class="welcome-text">
+                <small class="d-block" style="opacity:.75;">Welcome back,</small>
+                <strong>{{ request.user.username }}</strong>
+            </span>
         </div>
-
     </div>
 </nav>
 
+<main class="page-wrap">
 
-<div class="container-fluid px-4 px-md-5 py-5">
+    <div class="breadcrumb-line">
+        <i class="bi bi-house-door me-1"></i>
+        <a href="/admin-dashboard/" class="text-decoration-none text-secondary">Dashboard</a>
+        <span class="mx-2">/</span>
+        <span style="color:#334155;">Attendance</span>
+    </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
+    <div class="header-row d-flex justify-content-between align-items-center gap-3 mb-4">
         <div>
-            <h2 class="page-title mb-1">
-                Attendance Management
-            </h2>
-
-            <p class="text-muted mb-0">
-                View and monitor employee attendance
-            </p>
+            <h1 class="page-title">Attendance Management</h1>
+            <p class="page-subtitle">Monitor attendance records and working hours.</p>
         </div>
 
-        <a
-            href="/admin-dashboard/"
-            class="btn btn-light border"
-        >
-            ← Dashboard
+        <a href="/admin-dashboard/" class="btn btn-light border d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i>
+            Dashboard
         </a>
-
     </div>
 
-
-    <div class="card">
-
-        <div class="p-4 border-bottom">
-
-    <form method="GET" class="row g-3 align-items-end">
-
-        <div class="col-md-4">
-
-            <label class="form-label fw-semibold">
-                Filter by Employee
-            </label>
-
-            <select
-                name="employee"
-                class="form-select"
-            >
-
-                <option value="">
-                    All Employees
-                </option>
-
-                {% for employee in employees %}
-
-                <option
-                    value="{{ employee.id }}"
-                    {% if selected_employee == employee.id|stringformat:"s" %}
-                        selected
-                    {% endif %}
-                >
-                    {{ employee.name }} - {{ employee.employee_id }}
-                </option>
-
-                {% endfor %}
-
-            </select>
-
+    <!-- Filters: existing GET parameter names are preserved -->
+    <section class="filter-card">
+        <div class="mb-3">
+            <h2 class="section-heading">
+                <i class="bi bi-funnel me-2" style="color:#2563eb;"></i>Filter Attendance
+            </h2>
+            <p class="section-description">Choose employee, date range and attendance status.</p>
         </div>
 
-        <div class="col-md-auto">
+        <form method="GET" action="/admin-dashboard/">
+            <div class="row g-3 align-items-end">
 
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                🔍 Filter
-            </button>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label" for="employeeFilter">Filter by Employee</label>
+                    <select name="employee" id="employeeFilter" class="form-select">
+                        <option value="">All Employees</option>
+                        {% for employee in employees %}
+                        <option
+                            value="{{ employee.id }}"
+                            {% if selected_employee == employee.id|stringformat:"s" %}selected{% endif %}
+                        >
+                            {{ employee.name }} - {{ employee.employee_id }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-        </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="fromDate">From Date</label>
+                    <input type="date" name="from_date" id="fromDate"
+                           class="form-control" value="{{ from_date }}">
+                </div>
 
-        <div class="col-md-auto">
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label" for="toDate">To Date</label>
+                    <input type="date" name="to_date" id="toDate"
+                           class="form-control" value="{{ to_date }}">
+                </div>
 
-            <a
-                href="/admin-dashboard/attendance/"
-                class="btn btn-light border"
-            >
-                Reset
-            </a>
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="statusFilter">Status</label>
+                    <select name="status" id="statusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="Present" {% if selected_status == "Present" %}selected{% endif %}>Present</option>
+                        <option value="Late" {% if selected_status == "Late" %}selected{% endif %}>Late</option>
+                        <option value="Absent" {% if selected_status == "Absent" %}selected{% endif %}>Absent</option>
+                    </select>
+                </div>
 
-        </div>
-
-        <div class="col-md-3">
-
-    <label class="form-label fw-semibold">
-        From Date
-    </label>
-
-    <input
-        type="date"
-        name="from_date"
-        class="form-control"
-        value="{{ from_date }}"
-    >
-
-</div>
-
-<div class="col-md-3">
-
-    <label class="form-label fw-semibold">
-        To Date
-    </label>
-
-    <input
-        type="date"
-        name="to_date"
-        class="form-control"
-        value="{{ to_date }}"
-    >
-
-</div>
-<div class="col-md-3">
-
-    <label class="form-label fw-semibold">
-        Status
-    </label>
-
-    <select
-        name="status"
-        class="form-select"
-    >
-
-        <option value="">
-            All Status
-        </option>
-
-        <option
-            value="Present"
-            {% if selected_status == "Present" %}
-                selected
-            {% endif %}
-        >
-            Present
-        </option>
-
-        <option
-            value="Late"
-            {% if selected_status == "Late" %}
-                selected
-            {% endif %}
-        >
-            Late
-        </option>
-
-        <option
-            value="Absent"
-            {% if selected_status == "Absent" %}
-                selected
-            {% endif %}
-        >
-            Absent
-        </option>
-
-    </select>
-
-</div>
-    </form>
-
-</div>
-
-<!-- Attendance Summary -->
-
-<div class="p-4 border-bottom">
-
-    <div class="row g-3">
-
-        <div class="col-md-3">
-
-            <div class="card border shadow-sm h-100">
-
-                <div class="card-body">
-
-                    <p class="text-muted mb-1">
-                        Total Records
-                    </p>
-
-                    <h3 class="mb-0">
-                        {{ total_records }}
-                    </h3>
-
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="filter-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel me-1"></i> Apply Filters
+                        </button>
+                        <a href="/admin-dashboard/attendance/" class="btn btn-light border">
+                            Reset
+                        </a>
+                    </div>
                 </div>
 
             </div>
+        </form>
+    </section>
 
+    <!-- Attendance Summary -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-xl-3">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="bi bi-journal-check"></i>
+                </div>
+                <div>
+                    <div class="summary-label">Total Records</div>
+                    <div class="summary-value">{{ total_records }}</div>
+                </div>
+            </div>
         </div>
 
-
-        <div class="col-md-3">
-
-            <div class="card border shadow-sm h-100">
-
-                <div class="card-body">
-
-                    <p class="text-muted mb-1">
-                        🟢 Present
-                    </p>
-
-                    <h3 class="mb-0 text-success">
-                        {{ present_count }}
-                    </h3>
-
+        <div class="col-6 col-xl-3">
+            <div class="summary-card">
+                <div class="summary-icon" style="background:#dcfce7;color:#15803d;">
+                    <i class="bi bi-person-check"></i>
                 </div>
-
+                <div>
+                    <div class="summary-label">Present</div>
+                    <div class="summary-value">{{ present_count }}</div>
+                </div>
             </div>
-
         </div>
 
-
-        <div class="col-md-3">
-
-            <div class="card border shadow-sm h-100">
-
-                <div class="card-body">
-
-                    <p class="text-muted mb-1">
-                        🟡 Late
-                    </p>
-
-                    <h3 class="mb-0 text-warning">
-                        {{ late_count }}
-                    </h3>
-
+        <div class="col-6 col-xl-3">
+            <div class="summary-card">
+                <div class="summary-icon" style="background:#fef3c7;color:#b45309;">
+                    <i class="bi bi-clock-history"></i>
                 </div>
-
+                <div>
+                    <div class="summary-label">Late</div>
+                    <div class="summary-value">{{ late_count }}</div>
+                </div>
             </div>
-
         </div>
 
-
-        <div class="col-md-3">
-
-            <div class="card border shadow-sm h-100">
-
-                <div class="card-body">
-
-                    <p class="text-muted mb-1">
-                        ⏱️ Working Hours
-                    </p>
-
-                    <h3 class="mb-0">
-                        {{ total_working_hours }} hrs
-                    </h3>
-
+        <div class="col-6 col-xl-3">
+            <div class="summary-card">
+                <div class="summary-icon" style="background:#ede9fe;color:#6d28d9;">
+                    <i class="bi bi-hourglass-split"></i>
                 </div>
-
+                <div>
+                    <div class="summary-label">Total Working Hours</div>
+                    <div class="summary-value">{{ total_working_hours|floatformat:2 }} <span style="font-size:13px;">hrs</span></div>
+                </div>
             </div>
-
         </div>
 
     </div>
 
-</div>
+    <!-- Attendance Records -->
+    <section class="records-card">
+
+        <div class="records-header">
+            <div>
+                <h2 class="records-title">Attendance History</h2>
+                <p class="records-description">Click a column heading to sort the displayed records.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2 text-secondary small">
+                <i class="bi bi-arrow-down-up"></i>
+                <span>Click headers to sort</span>
+            </div>
+        </div>
 
         <div class="table-responsive">
-
-            <table class="table table-hover mb-0">
-
+            <table class="table table-hover" id="attendanceTable">
                 <thead>
                     <tr>
-                        <th>Employee</th>
-                        <th>Employee ID</th>
-                        <th>Date</th>
+                        <th class="sortable" data-type="text">Employee <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="sortable" data-type="text">Employee ID <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="sortable" data-type="date">Date <i class="bi bi-arrow-down-up sort-icon"></i></th>
                         <th>Check In</th>
                         <th>Check Out</th>
-                        <th>Working Hours</th>
-                        <th>Status</th>
+                        <th class="sortable" data-type="number">Working Hours <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="sortable" data-type="text">Status <i class="bi bi-arrow-down-up sort-icon"></i></th>
                     </tr>
                 </thead>
 
-                <tbody>
-
+                <tbody id="attendanceTableBody">
                     {% for attendance in attendance_records %}
-
                     <tr>
-
                         <td>
-                            <strong>
-                                {{ attendance.employee.name }}
-                            </strong>
+                            <span class="employee-name">{{ attendance.employee.name }}</span>
                         </td>
 
                         <td>
-                            {{ attendance.employee.employee_id }}
+                            <span class="employee-id">{{ attendance.employee.employee_id }}</span>
                         </td>
 
-                        <td>
+                        <td data-sort-value="{{ attendance.date|date:'Y-m-d' }}">
                             {{ attendance.date|date:"d M Y" }}
                         </td>
 
@@ -376,7 +584,7 @@
                             {% if attendance.check_in %}
                                 {{ attendance.check_in|time:"h:i A" }}
                             {% else %}
-                                —
+                                <span class="text-secondary">—</span>
                             {% endif %}
                         </td>
 
@@ -384,76 +592,171 @@
                             {% if attendance.check_out %}
                                 {{ attendance.check_out|time:"h:i A" }}
                             {% else %}
-                                —
+                                <span class="text-secondary">—</span>
                             {% endif %}
                         </td>
 
-                        <td>
-                            {{ attendance.working_hours }} hrs
+                        <td data-sort-value="{{ attendance.working_hours|default_if_none:0 }}">
+                            <span class="working-hours">
+                                {{ attendance.working_hours|default_if_none:0|floatformat:2 }} hrs
+                            </span>
                         </td>
 
                         <td>
-
                             {% if attendance.status == "Present" %}
-
-                                <span class="badge bg-success">
-                                    Present
+                                <span class="status-badge status-present">
+                                    <i class="bi bi-check-circle-fill"></i> Present
                                 </span>
-
                             {% elif attendance.status == "Late" %}
-
-                                <span class="badge bg-warning text-dark">
-                                    Late
+                                <span class="status-badge status-late">
+                                    <i class="bi bi-clock-fill"></i> Late
                                 </span>
-
                             {% else %}
-
-                                <span class="badge bg-danger">
-                                    Absent
+                                <span class="status-badge status-absent">
+                                    <i class="bi bi-x-circle-fill"></i> Absent
                                 </span>
-
                             {% endif %}
-
                         </td>
-
                     </tr>
-
                     {% empty %}
-
                     <tr>
-                        <td colspan="7">
-
-                            <div class="empty-state">
-
-                                <div style="font-size: 40px;">
-                                    📋
-                                </div>
-
-                                <h5 class="mt-3">
-                                    No Attendance Records
-                                </h5>
-
-                                <p class="mb-0">
-                                    Attendance records will appear here.
-                                </p>
-
-                            </div>
-
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-calendar2-x"></i>
+                            <strong class="d-block mb-1">No Attendance Records</strong>
+                            <span>Attendance records will appear here when available.</span>
                         </td>
                     </tr>
-
                     {% endfor %}
-
                 </tbody>
-
             </table>
-
         </div>
 
-    </div>
+        <div class="records-footer">
+            <span id="recordsCount">Showing {{ attendance_records|length }} record(s)</span>
+            <span><i class="bi bi-info-circle me-1"></i> Sorting applies to the records currently displayed.</span>
+        </div>
 
-</div>
+    </section>
+
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const table = document.getElementById("attendanceTable");
+    const tbody = document.getElementById("attendanceTableBody");
+    const countLabel = document.getElementById("recordsCount");
+
+    if (!table || !tbody) return;
+
+    const headers = table.querySelectorAll("thead th.sortable");
+    let currentColumn = -1;
+    let ascending = true;
+
+    function getCellValue(row, index, type) {
+        const cell = row.cells[index];
+
+        if (!cell) return "";
+
+        if (cell.dataset.sortValue !== undefined) {
+            const value = cell.dataset.sortValue;
+
+            if (type === "number") {
+                const number = Number(value);
+                return Number.isFinite(number) ? number : 0;
+            }
+
+            if (type === "date") return value;
+
+            return value.toLowerCase();
+        }
+
+        const text = cell.textContent.trim();
+
+        if (type === "number") {
+            const number = parseFloat(text.replace(/[^\d.-]/g, ""));
+            return Number.isFinite(number) ? number : 0;
+        }
+
+        return text.toLowerCase();
+    }
+
+    headers.forEach(function (header) {
+        header.setAttribute("role", "button");
+        header.setAttribute("tabindex", "0");
+        header.setAttribute("aria-label", "Sort by " + header.textContent.trim());
+
+        function sortTable() {
+            const columnIndex = header.cellIndex;
+            const type = header.dataset.type || "text";
+
+            if (currentColumn === columnIndex) {
+                ascending = !ascending;
+            } else {
+                currentColumn = columnIndex;
+                ascending = true;
+            }
+
+            const rows = Array.from(tbody.querySelectorAll("tr"))
+                .filter(function (row) {
+                    return row.cells.length === headers.length + 3;
+                });
+
+            rows.sort(function (a, b) {
+                const valueA = getCellValue(a, columnIndex, type);
+                const valueB = getCellValue(b, columnIndex, type);
+
+                let result;
+
+                if (type === "number") {
+                    result = valueA - valueB;
+                } else {
+                    result = String(valueA).localeCompare(String(valueB), undefined, {
+                        numeric: true,
+                        sensitivity: "base"
+                    });
+                }
+
+                return ascending ? result : -result;
+            });
+
+            rows.forEach(function (row) {
+                tbody.appendChild(row);
+            });
+
+            headers.forEach(function (item) {
+                const icon = item.querySelector(".sort-icon");
+                if (!icon) return;
+
+                icon.className = "bi sort-icon bi-arrow-down-up";
+
+                if (item === header) {
+                    icon.className = ascending
+                        ? "bi sort-icon bi-sort-up"
+                        : "bi sort-icon bi-sort-down";
+                }
+            });
+        }
+
+        header.addEventListener("click", sortTable);
+
+        header.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                sortTable();
+            }
+        });
+    });
+
+    const initialRows = tbody.querySelectorAll("tr");
+    const hasAttendanceRows = Array.from(initialRows).some(function (row) {
+        return row.cells.length === 7;
+    });
+
+    if (countLabel && !hasAttendanceRows) {
+        countLabel.textContent = "No attendance records";
+    }
+});
+</script>
 
 </body>
-
 </html>

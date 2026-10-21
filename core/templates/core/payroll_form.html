@@ -14,162 +14,270 @@
     >
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
+            margin: 0;
             background-color: #f5f7fb;
-        }
-
-        .sidebar {
-            min-height: 100vh;
-            background: #111827;
-        }
-
-        .brand {
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 25px 20px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #d1d5db;
-            text-decoration: none;
-            padding: 13px 20px;
-        }
-
-        .sidebar a:hover {
-            background: #1f2937;
-            color: white;
+            color: #111827;
+            font-family: Arial, sans-serif;
         }
 
         .topbar {
-            background: white;
-            padding: 18px 25px;
+            background: #ffffff;
+            padding: 20px 28px;
             border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topbar h4 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 5px;
+        }
+
+        .topbar small {
+            font-size: 14px;
+        }
+
+        .payroll-container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px;
         }
 
         .form-card {
-            background: white;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .form-card .card-body {
+            padding: 28px;
+        }
+
+        .form-heading {
+            font-size: 21px;
+            font-weight: 700;
+            margin-bottom: 24px;
         }
 
         .form-label {
+            display: block;
             font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        /* Make Django form fields responsive */
+        .form-card input:not([type="checkbox"]):not([type="radio"]),
+        .form-card select,
+        .form-card textarea {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            background-color: #ffffff;
+            font-size: 15px;
+        }
+
+        .form-card input:focus,
+        .form-card select:focus,
+        .form-card textarea:focus {
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        }
+
+        .form-card input[type="checkbox"],
+        .form-card input[type="radio"] {
+            width: auto;
+            max-width: 100%;
+        }
+
+        .form-text {
+            overflow-wrap: anywhere;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .form-actions .btn {
+            min-height: 42px;
+        }
+
+        @media (max-width: 767.98px) {
+            .topbar {
+                padding: 18px;
+            }
+
+            .topbar h4 {
+                font-size: 21px;
+            }
+
+            .payroll-container {
+                padding: 22px 16px;
+            }
+
+            .form-card .card-body {
+                padding: 20px;
+            }
+
+            .form-heading {
+                font-size: 19px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar {
+                align-items: stretch;
+                padding: 16px;
+                gap: 14px;
+            }
+
+            .topbar h4 {
+                font-size: 20px;
+            }
+
+            .topbar .btn {
+                width: 100%;
+            }
+
+            .payroll-container {
+                padding: 16px 12px 24px;
+            }
+
+            .form-card {
+                border-radius: 12px;
+            }
+
+            .form-card .card-body {
+                padding: 16px;
+            }
+
+            .form-heading {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .form-card input:not([type="checkbox"]):not([type="radio"]),
+            .form-card select,
+            .form-card textarea {
+                font-size: 16px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+                margin: 0 !important;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<div class="container-fluid">
-    <div class="row">
-
-        <!-- Sidebar -->
-        <div class="col-md-2 sidebar p-0">
-
-            <div class="brand">🏢 WorkEase</div>
-
-            <a href="/admin-dashboard/">🏠 Dashboard</a>
-            <a href="/admin-dashboard/employees/">👥 Employees</a>
-            <a href="/admin-dashboard/attendance/">📋 Attendance</a>
-            <a href="/admin-dashboard/leave/">🏖️ Leave</a>
-            <a href="/admin-dashboard/payroll/">💰 Payroll</a>
-            <a href="/admin-dashboard/work-locations/">📍 Work Locations</a>
-            <a href="/admin/">⚙️ Django Admin</a>
-            <a href="/admin/logout/">🚪 Logout</a>
-
+    <!-- Header: No Sidebar -->
+    <header class="topbar">
+        <div>
+            <h4>{{ title }}</h4>
+            <small class="text-muted">Create an employee payroll record</small>
         </div>
 
-        <!-- Main Content -->
-        <div class="col-md-10 p-0">
+        <a href="{% url 'admin_dashboard' %}"
+           class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+    </header>
 
-            <div class="topbar">
-                <h4 class="mb-0">{{ title }}</h4>
-                <small class="text-muted">
-                    Create an employee payroll record
-                </small>
-            </div>
+    <!-- Payroll Form -->
+    <main class="payroll-container">
 
-            <div class="p-4">
+        <section class="form-card">
+            <div class="card-body">
 
-                <div class="form-card">
-                    <div class="card-body p-4">
+                <h5 class="form-heading">💰 Payroll Details</h5>
 
-                        <h5 class="mb-4">💰 Payroll Details</h5>
+                <form method="POST">
+                    {% csrf_token %}
 
-                        <form method="POST">
-                            {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
 
-                            {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
-                                    {{ form.non_field_errors }}
-                                </div>
-                            {% endif %}
+                    <div class="row">
+                        {% for field in form %}
+                            <div class="col-12 col-md-6 mb-3">
 
-                            <div class="row">
+                                <label
+                                    for="{{ field.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    {{ field.label }}
+                                </label>
 
-                                {% for field in form %}
-                                    <div class="col-md-6 mb-3">
+                                {{ field }}
 
-                                        <label
-                                            for="{{ field.id_for_label }}"
-                                            class="form-label"
-                                        >
-                                            {{ field.label }}
-                                        </label>
+                                {% if field.help_text %}
+                                    <div class="form-text">
+                                        {{ field.help_text }}
+                                    </div>
+                                {% endif %}
 
-                                        {{ field }}
-
-                                        {% if field.help_text %}
-                                            <div class="form-text">
-                                                {{ field.help_text }}
-                                            </div>
-                                        {% endif %}
-
-                                        {% for error in field.errors %}
-                                            <div class="text-danger small">
-                                                {{ error }}
-                                            </div>
-                                        {% endfor %}
-
+                                {% for error in field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
                                     </div>
                                 {% endfor %}
 
                             </div>
-
-                            <hr class="my-4">
-
-                            <button
-                                type="submit"
-                                class="btn btn-primary px-4"
-                            >
-                                💾 Save Payroll
-                            </button>
-
-                            <a
-                                href="{% url 'admin_payroll_list' %}"
-                                class="btn btn-outline-secondary ms-2"
-                            >
-                                Cancel
-                            </a>
-
-                        </form>
-
+                        {% endfor %}
                     </div>
-                </div>
+
+                    <hr class="my-4">
+
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            class="btn btn-primary px-4"
+                        >
+                            💾 Save Payroll
+                        </button>
+
+                        <a
+                            href="{% url 'admin_payroll_list' %}"
+                            class="btn btn-outline-secondary"
+                        >
+                            Cancel
+                        </a>
+                    </div>
+
+                </form>
 
             </div>
+        </section>
 
-        </div>
+    </main>
 
-    </div>
-</div>
-
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

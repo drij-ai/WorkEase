@@ -3,1021 +3,844 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Management - WorkEase</title>
+    <title>Payroll Management | WorkEase</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        :root {
+            --primary: #2457d6;
+            --primary-dark: #183f9e;
+            --navy: #14213d;
+            --page-bg: #f5f7fb;
+            --text: #172033;
+            --muted: #748096;
+            --border: #e7ebf2;
+            --success: #16845b;
+            --danger: #d83b4b;
+        }
+
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            background: #f3f6fc;
-            color: #111827;
-            font-family: Arial, Helvetica, sans-serif;
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
         }
 
-        .app-layout {
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .topbar-inner {
+            min-height: 76px;
             display: flex;
-            min-height: 100vh;
-            width: 100%;
-        }
-
-        /* Shared WorkEase sidebar */
-        .sidebar {
-            flex: 0 0 315px;
-            width: 315px;
-            min-height: 100vh;
-            padding: 0 22px 25px;
-            background: #0b111d;
-            color: #e5e7eb;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 13px;
-            padding: 30px 12px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #202938;
-            color: #f8fafc;
-            font-size: 32px;
-            font-weight: 700;
-            white-space: nowrap;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--navy);
         }
 
         .brand-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 45px;
-            height: 45px;
-            flex-shrink: 0;
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #3268ec, #2047b7);
+            color: #fff;
             border-radius: 13px;
-            background: #1677ff;
-            color: white;
-            font-size: 30px;
+            font-size: 23px;
+            box-shadow: 0 5px 12px rgba(36, 87, 214, .18);
         }
 
-        .menu-heading {
-            margin: 26px 12px 14px;
-            color: #8d9aaf;
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: .6px;
+        .brand-name {
+            font-size: 21px;
+            line-height: 1.1;
+            font-weight: 750;
+            letter-spacing: -.6px;
         }
 
-        .sidebar a {
+        .brand-subtitle {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .topbar-right {
             display: flex;
             align-items: center;
-            gap: 18px;
-            min-height: 58px;
-            margin-bottom: 7px;
-            padding: 14px 18px;
-            border-radius: 12px;
-            color: #9eafc6;
+            gap: 15px;
+        }
+
+        .welcome-text {
+            color: #d5deeb;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+
+        .welcome-text strong {
+            color: var(--navy);
+            font-weight: 750;
+        }
+
+        .btn-dashboard {
+            background: var(--primary);
+            color: #fff;
+            border: 0;
+            border-radius: 13px;
+            padding: 12px 19px;
+            font-size: 15px;
+            font-weight: 650;
             text-decoration: none;
-            font-size: 18px;
-            transition: background .2s, color .2s;
-        }
-
-        .sidebar a:hover {
-            background: #1c2636;
-            color: white;
-        }
-
-        .sidebar a.active {
-            background: #343d4b;
-            color: white;
-        }
-
-        .menu-icon {
             display: inline-flex;
+            align-items: center;
             justify-content: center;
-            width: 24px;
-            flex-shrink: 0;
-            color: #b7c7e2;
-            font-size: 21px;
+            gap: 9px;
+            white-space: nowrap;
+            transition: .2s ease;
         }
 
-        .secondary-heading {
-            margin-top: 35px;
+        .btn-dashboard:hover {
+            background: var(--primary-dark);
+            color: #fff;
+            transform: translateY(-1px);
         }
 
-        /* Main area */
-        .payroll-main {
-            flex: 1 1 0;
+        .page-container {
+            max-width: 1600px;
+            margin: auto;
+            padding: 30px 28px 42px;
+        }
+
+        .page-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            color: var(--navy);
+            font-size: clamp(24px, 3vw, 30px);
+            font-weight: 750;
+            letter-spacing: -.6px;
+            margin: 0 0 7px;
+        }
+
+        .page-description {
+            color: var(--muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 750;
+            color: #7d879a;
+            text-transform: uppercase;
+            letter-spacing: .9px;
+            margin-bottom: 13px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 21px;
             min-width: 0;
+            box-shadow: 0 3px 12px rgba(22, 35, 65, .025);
+            transition: transform .2s ease, box-shadow .2s ease;
         }
 
-        .topbar {
+        .summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 24px rgba(22, 35, 65, .07);
+        }
+
+        .summary-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            min-height: 120px;
-            padding: 25px 38px;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .topbar h1 {
-            margin: 0 0 6px;
-            font-size: 34px;
-            font-weight: 600;
-        }
-
-        .topbar small {
-            color: #64748b;
-            font-size: 17px;
-        }
-
-        .welcome-user {
-            white-space: nowrap;
-            font-size: 17px;
-        }
-
-        .page-content {
-            padding: 30px 36px;
-            min-width: 0;
-        }
-
-        .content-card {
-            width: 100%;
-            min-width: 0;
-            padding: 25px;
-            background: white;
-            border: 1px solid #e8edf5;
-            border-radius: 22px;
-            box-shadow: 0 8px 25px rgba(15, 23, 42, .05);
-        }
-
-        /* Summary cards */
-        .summary-card {
-            height: 100%;
-            padding: 20px;
-            border: 1px solid #e6ebf3;
-            border-radius: 16px;
-            background: white;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, .04);
+            gap: 10px;
+            margin-bottom: 18px;
         }
 
         .summary-label {
-            margin-bottom: 9px;
-            color: #64748b;
-            font-size: 15px;
-        }
-
-        .summary-value {
-            margin: 0;
-            overflow-wrap: anywhere;
-            font-size: 25px;
-            font-weight: 700;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 400;
         }
 
         .summary-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 13px;
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .icon-blue { background: #eaf0ff; color: #315bd6; }
+        .icon-green { background: #e5f7ee; color: #16845b; }
+        .icon-orange { background: #fff2df; color: #c77b15; }
+        .icon-purple { background: #f0eaff; color: #7652d6; }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 750;
+            line-height: 1.2;
+            letter-spacing: -.6px;
+            color: var(--navy);
+            overflow-wrap: anywhere;
+        }
+
+        .summary-note {
+            color: #8b95a7;
+            font-size: 12px;
+            margin-top: 7px;
+        }
+
+        .content-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 3px 12px rgba(22, 35, 65, .025);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .content-card-header {
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .content-card-title {
+            color: var(--navy);
+            font-size: 16px;
+            font-weight: 750;
+            margin: 0;
+        }
+
+        .content-card-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .filter-body {
+            padding: 23px 24px 25px;
+        }
+
+        .form-label {
+            color: #4c5870;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border: 1px solid #dfe5ef;
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 13px;
+            box-shadow: none !important;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #7296f3;
+            box-shadow: 0 0 0 3px rgba(36, 87, 214, .09) !important;
+        }
+
+        .btn-filter {
+            min-height: 44px;
+            background: var(--primary);
+            color: #fff;
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 19px;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .btn-filter:hover {
+            background: var(--primary-dark);
+            color: #fff;
+        }
+
+        .btn-reset {
+            min-height: 44px;
+            border: 1px solid #dfe5ef;
+            background: #fff;
+            color: #536078;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
-            margin-bottom: 14px;
-            border-radius: 11px;
-            background: #edf4ff;
-            color: #1677ff;
-            font-size: 20px;
+            gap: 7px;
         }
 
-        .section-title {
-            margin: 8px 0 6px;
-            font-size: 25px;
-            font-weight: 650;
-        }
-
-        .section-subtitle {
-            color: #64748b;
-            font-size: 15px;
-        }
-
-        /* Filters */
-        .payroll-filters {
-            width: 100%;
-            padding: 22px;
+        .btn-reset:hover {
             background: #f7f9fc;
-            border: 1px solid #edf0f5;
-            border-radius: 15px;
+            color: var(--navy);
         }
 
-        .payroll-filters .form-label {
-            margin-bottom: 8px;
-            color: #334155;
-            font-weight: 600;
-        }
-
-        .payroll-filters .form-control,
-        .payroll-filters .form-select {
+        .table-responsive {
             width: 100%;
-            min-width: 0;
-            min-height: 46px;
-            border-color: #dce3ed;
-            border-radius: 9px;
         }
 
-        .payroll-filter-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 9px;
-        }
-
-        .payroll-filter-actions .btn {
-            min-height: 44px;
+        .payroll-table {
+            margin: 0;
             white-space: nowrap;
-        }
-
-        .btn-primary {
-            background: #1677ff;
-            border-color: #1677ff;
-        }
-
-        .btn-primary:hover {
-            background: #075fe0;
-            border-color: #075fe0;
-        }
-
-        /* Table: scroll horizontally instead of stretching page */
-        .payroll-table-wrap {
-            width: 100%;
-            max-width: 100%;
-            overflow-x: auto;
-            border: 1px solid #e8edf5;
-            border-radius: 12px;
-        }
-
-        .payroll-table-wrap table {
-            min-width: 1250px;
-            width: 100%;
-            margin-bottom: 0;
-            white-space: nowrap;
-        }
-
-        .payroll-table-wrap thead th {
-            padding: 16px 14px;
-            background: #f1f5f9;
-            color: #334155;
-            font-weight: 650;
-            border-bottom: 1px solid #dce3ed;
-        }
-
-        .payroll-table-wrap tbody td {
-            padding: 16px 14px;
             vertical-align: middle;
         }
 
-        .payroll-table-wrap tbody tr:hover td {
-            background: #f8fafc;
+        .payroll-table thead th {
+            background: #f7f9fc;
+            color: #69758b;
+            border-bottom: 1px solid var(--border);
+            padding: 15px 17px;
+            font-size: 10px;
+            font-weight: 750;
+            text-transform: uppercase;
+            letter-spacing: .55px;
         }
 
-        .salary-badge {
-            display: inline-block;
-            padding: 7px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
+        .payroll-table tbody td {
+            padding: 17px;
+            border-bottom: 1px solid #edf0f5;
+            color: #354158;
+            font-size: 12px;
         }
 
-        .monthly {
-            background: #dbeafe;
-            color: #1d4ed8;
+        .payroll-table tbody tr:last-child td {
+            border-bottom: 0;
         }
 
-        .hourly {
-            background: #ede9fe;
-            color: #6d28d9;
+        .payroll-table tbody tr:hover td {
+            background: #fbfcff;
         }
 
-        .net-salary {
-            color: #15803d;
+        .employee-cell {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .employee-avatar {
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: #eaf0ff;
+            color: #315bd6;
+            font-size: 17px;
+        }
+
+        .employee-name {
+            color: var(--navy);
             font-weight: 700;
+            font-size: 13px;
+        }
+
+        .employee-id {
+            color: #8b95a7;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .salary-type {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 7px;
+            background: #eef2ff;
+            color: #4059bb;
+            font-size: 11px;
+            font-weight: 650;
+        }
+
+        .net-amount {
+            color: var(--success);
+            font-weight: 750;
         }
 
         .action-buttons {
             display: flex;
+            gap: 7px;
             align-items: center;
-            gap: 8px;
         }
 
-        .action-buttons .btn {
-            white-space: nowrap;
+        .action-btn {
+            width: 34px;
+            height: 34px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 9px;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: .15s ease;
+        }
+
+        .edit-btn {
+            background: #eaf0ff;
+            color: #315bd6;
+        }
+
+        .edit-btn:hover {
+            background: #dce6ff;
+            color: #2047b7;
+        }
+
+        .delete-btn {
+            background: #fff0f0;
+            color: var(--danger);
+        }
+
+        .delete-btn:hover {
+            background: #ffe0e0;
+            color: #b42332;
         }
 
         .empty-state {
-            padding: 45px 20px;
+            padding: 55px 20px !important;
             text-align: center;
-            color: #64748b;
+            white-space: normal;
+        }
+
+        .empty-icon {
+            width: 62px;
+            height: 62px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            background: #eef2ff;
+            color: var(--primary);
+            font-size: 27px;
+            margin: 0 auto 16px;
+        }
+
+        .empty-title {
+            font-size: 16px;
+            font-weight: 750;
+            color: var(--navy);
+            margin-bottom: 7px;
+        }
+
+        .empty-description {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            color: #8b95a7;
+            font-size: 12px;
+            padding: 4px 2px;
         }
 
         @media (max-width: 1100px) {
-            .sidebar {
-                flex-basis: 250px;
-                width: 250px;
-                padding-right: 14px;
-                padding-left: 14px;
+            .summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-
-            .brand { font-size: 27px; }
-            .page-content { padding: 22px; }
-            .topbar { padding: 22px; }
         }
 
         @media (max-width: 767px) {
-            .app-layout {
-                display: block;
+            .topbar-inner {
+                min-height: 68px;
             }
 
-            .sidebar {
-                width: 100%;
-                min-height: auto;
-                padding-bottom: 15px;
+            .brand-name { font-size: 19px; }
+            .brand-icon { width: 39px; height: 39px; }
+            .welcome-text { display: none; }
+
+            .page-container {
+                padding: 23px 14px 30px;
             }
 
-            .brand {
-                padding: 18px 10px;
-                margin-bottom: 10px;
+            .page-heading {
+                margin-bottom: 21px;
             }
 
-            .sidebar a {
-                display: inline-flex;
-                min-height: 42px;
-                margin: 3px;
-                padding: 9px 12px;
-                font-size: 14px;
+            .summary-grid {
+                gap: 12px;
+                margin-bottom: 22px;
             }
 
-            .menu-heading {
-                margin: 16px 8px 8px;
+            .summary-card {
+                padding: 15px;
+                border-radius: 13px;
             }
 
-            .secondary-heading {
-                margin-top: 15px;
+            .summary-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 17px;
             }
 
-            .topbar {
-                align-items: flex-start;
+            .summary-value { font-size: 21px; }
+            .summary-top { margin-bottom: 13px; }
+
+            .content-card-header,
+            .filter-body {
+                padding: 18px;
+            }
+
+            .page-footer {
                 flex-direction: column;
-                gap: 10px;
-                padding: 22px 18px;
+                align-items: flex-start;
             }
 
-            .topbar h1 { font-size: 27px; }
-            .welcome-user { white-space: normal; }
-            .page-content { padding: 15px; }
-            .content-card { padding: 15px; border-radius: 15px; }
+            .btn-dashboard {
+                padding: 9px 11px;
+                font-size: 12px;
+            }
         }
 
-        /* Match Payroll page size with Dashboard */
-
-html {
-    font-size: 16px;
-}
-
-body {
-    font-size: 16px;
-    overflow-x: hidden;
-}
-
-.sidebar {
-    flex: 0 0 17%;
-    max-width: 17%;
-    min-height: 100vh;
-    background: #0b111d;
-    padding: 0 14px !important;
-}
-
-.payroll-main {
-    flex: 0 0 83%;
-    max-width: 83%;
-    min-width: 0;
-    overflow-x: hidden;
-}
-
-.sidebar .brand {
-    font-size: 24px;
-    padding: 24px 12px;
-}
-
-.sidebar a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 16px;
-    padding: 13px 12px;
-    border-radius: 10px;
-    margin-bottom: 5px;
-}
-
-.sidebar a.active {
-    background: #374151;
-    color: #ffffff;
-}
-
-.payroll-main .topbar {
-    padding: 22px 25px;
-}
-
-.payroll-main .topbar h4 {
-    font-size: 30px;
-    font-weight: 600;
-}
-
-.payroll-main .p-4 {
-    padding: 24px !important;
-}
-
-.payroll-main .content-card {
-    border-radius: 20px;
-    box-shadow: 0 5px 24px rgba(15, 23, 42, 0.05);
-}
-
-.payroll-main .content-card > .card-body {
-    padding: 24px !important;
-}
-
-.payroll-main .card {
-    border: 1px solid #e5ebf5;
-    border-radius: 18px;
-    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04) !important;
-}
-
-.payroll-main .card-body p {
-    font-size: 16px;
-}
-
-.payroll-main .card-body h4 {
-    font-size: 26px;
-    font-weight: 600;
-    overflow-wrap: normal;
-    word-break: normal;
-}
-
-@media (max-width: 767.98px) {
-    .sidebar,
-    .payroll-main {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-}
-
-/* Match Payroll page with Dashboard sizing */
-
-.sidebar {
-    width: 17% !important;
-    min-height: 100vh;
-    flex: 0 0 17%;
-    max-width: 17%;
-    background: #0b111d !important;
-    padding: 0 14px !important;
-}
-
-.payroll-main {
-    width: 83% !important;
-    flex: 0 0 83%;
-    max-width: 83%;
-    min-width: 0;
-    overflow-x: hidden;
-}
-
-.sidebar .brand {
-    font-size: 21px;
-    padding: 24px 12px;
-    margin-bottom: 16px;
-    color: #f8fafc;
-}
-
-.sidebar a {
-    display: block;
-    color: #9caec3;
-    text-decoration: none;
-    padding: 13px 12px;
-    margin-bottom: 5px;
-    border-radius: 10px;
-    font-size: 16px;
-}
-
-.sidebar a:hover,
-.sidebar a.active {
-    background: #343d4b;
-    color: #ffffff;
-}
-
-.payroll-main .topbar {
-    padding: 18px 25px;
-}
-
-.payroll-main .topbar h4 {
-    font-size: 30px;
-    font-weight: 600;
-}
-
-.payroll-main > .p-4 {
-    padding: 24px !important;
-}
-
-.payroll-main .content-card {
-    border-radius: 20px;
-}
-
-.payroll-main .content-card > .card-body {
-    padding: 24px !important;
-}
-
-.payroll-main .card-body h4 {
-    font-size: 26px;
-}
-
-.payroll-main .payroll-filters {
-    padding: 16px !important;
-}
-
-.payroll-main .payroll-table-wrap table {
-    min-width: 1200px;
-}
-
-@media (max-width: 767.98px) {
-    .sidebar {
-        width: 100% !important;
-        max-width: 100%;
-        flex: 0 0 100%;
-        min-height: auto;
-    }
-
-    .payroll-main {
-        width: 100% !important;
-        max-width: 100%;
-        flex: 0 0 100%;
-    }
-}
-
-
-/* Match Dashboard sizing and sidebar */
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: "Inter", "Segoe UI", sans-serif;
-    background: #f4f7fc;
-    color: #1e293b;
-    margin: 0;
-}
-
-.container-fluid {
-    padding-left: 0;
-    padding-right: 0;
-    overflow-x: hidden;
-}
-
-.container-fluid > .row {
-    margin-left: 0;
-    margin-right: 0;
-}
-
-/* Same sidebar width as Dashboard */
-.sidebar {
-    flex: 0 0 17%;
-    width: 17%;
-    max-width: 17%;
-    min-height: 100vh;
-    background: #0b111d;
-    color: #e5e7eb;
-    padding: 0 14px !important;
-    border-right: 1px solid #202938;
-}
-
-/* Main content takes the remaining width */
-.payroll-main {
-    flex: 0 0 83%;
-    width: 83%;
-    max-width: 83%;
-    min-width: 0;
-    padding: 0 !important;
-    overflow-x: hidden;
-}
-
-.sidebar .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 24px 8px;
-    margin-bottom: 16px;
-    color: #f8fafc;
-    font-size: 21px;
-    font-weight: 700;
-    border-bottom: 1px solid #202938;
-}
-
-.sidebar .brand-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    background: #1677ff;
-    color: white;
-}
-
-.sidebar .menu-heading {
-    padding: 10px 8px 8px;
-    color: #9ca3af;
-    font-size: 11px;
-    letter-spacing: 0.7px;
-    font-weight: 600;
-}
-
-.sidebar .secondary-heading {
-    margin-top: 18px;
-}
-
-.sidebar a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 9px;
-    margin: 3px 0;
-    border-radius: 8px;
-    color: #aeb8c7;
-    font-size: 14px;
-    text-decoration: none;
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
-.sidebar a:hover {
-    background: #202938;
-    color: white;
-}
-
-.sidebar a.active {
-    background: #343c49;
-    color: white;
-}
-
-.sidebar .menu-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    flex-shrink: 0;
-    font-size: 16px;
-}
-
-.topbar {
-    width: 100%;
-    background: white;
-    padding: 18px 25px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.payroll-main > .p-4 {
-    width: 100%;
-    min-width: 0;
-    padding: 24px !important;
-}
-
-.payroll-main .content-card {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    border: 1px solid #e8edf5;
-    border-radius: 15px;
-    background: white;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
-}
-
-.payroll-main .card-body {
-    min-width: 0;
-}
-
-.payroll-main .payroll-table-wrap {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-}
-
-.payroll-main .payroll-table-wrap table {
-    min-width: 1200px;
-    width: 100%;
-    white-space: nowrap;
-}
-
-@media (max-width: 767.98px) {
-    .sidebar {
-        flex: 0 0 100%;
-        width: 100%;
-        max-width: 100%;
-        min-height: auto;
-    }
-
-    .payroll-main {
-        flex: 0 0 100%;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .payroll-main > .p-4 {
-        padding: 14px !important;
-    }
-}
-
+        @media (max-width: 420px) {
+            .brand-subtitle { display: none; }
+            .summary-label { font-size: 12px; }
+            .summary-value { font-size: 19px; }
+            .summary-card { padding: 12px; }
+        }
     </style>
 </head>
 
 <body>
 
-<div class="app-layout">
+<header class="topbar">
+    <div class="container-fluid px-3 px-lg-4">
+        <div class="topbar-inner">
+            <a href="/admin-dashboard/" class="brand">
+                <span class="brand-icon">
+                    <i class="bi bi-buildings"></i>
+                </span>
+                <span>
+                    <span class="brand-name d-block">WorkEase</span>
+                    <span class="brand-subtitle d-block">HR Management System</span>
+                </span>
+            </a>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="brand">
-            <span class="brand-icon">✿</span>
-            <span>WorkEase</span>
+            <div class="topbar-right">
+                <div class="welcome-text">
+                    Welcome back, <strong>Admin</strong>
+                </div>
+                <a href="/admin-dashboard/" class="btn-dashboard">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="page-heading">
+        <div>
+            <h1 class="page-title">Payroll Management</h1>
+            <p class="page-description">
+                Manage employee salaries, bonuses, deductions and payroll records.
+            </p>
+        </div>
+    </div>
+
+    <div class="section-label">Payroll Overview</div>
+
+    <section class="summary-grid">
+
+        <div class="summary-card">
+            <div class="summary-top">
+                <span class="summary-label">Total Payroll Records</span>
+                <span class="summary-icon icon-blue">
+                    <i class="bi bi-receipt-cutoff"></i>
+                </span>
+            </div>
+            <div class="summary-value">{{ total_payrolls|default:0 }}</div>
+            <div class="summary-note">Total payroll entries</div>
         </div>
 
-        <div class="menu-heading">MAIN MENU</div>
+        <div class="summary-card">
+            <div class="summary-top">
+                <span class="summary-label">Total Gross Salary</span>
+                <span class="summary-icon icon-green">
+                    <i class="bi bi-cash-stack"></i>
+                </span>
+            </div>
+            <div class="summary-value">₹{{ total_gross|floatformat:2 }}</div>
+            <div class="summary-note">Before deductions</div>
+        </div>
 
-        <a href="/admin-dashboard/">
-            <span class="menu-icon">▦</span>
-            <span>Dashboard</span>
-        </a>
+        <div class="summary-card">
+            <div class="summary-top">
+                <span class="summary-label">Total Bonuses</span>
+                <span class="summary-icon icon-orange">
+                    <i class="bi bi-gift"></i>
+                </span>
+            </div>
+            <div class="summary-value">₹{{ total_bonus|floatformat:2 }}</div>
+            <div class="summary-note">Bonus amount recorded</div>
+        </div>
 
-        <a href="/admin-dashboard/employees/">
-            <span class="menu-icon">♧</span>
-            <span>Employees</span>
-        </a>
+        <div class="summary-card">
+            <div class="summary-top">
+                <span class="summary-label">Total Net Salary</span>
+                <span class="summary-icon icon-purple">
+                    <i class="bi bi-wallet2"></i>
+                </span>
+            </div>
+            <div class="summary-value">₹{{ total_net|floatformat:2 }}</div>
+            <div class="summary-note">After deductions</div>
+        </div>
 
-        <a href="/admin-dashboard/attendance/">
-            <span class="menu-icon">▣</span>
-            <span>Attendance</span>
-        </a>
+    </section>
 
-        <a href="/admin-dashboard/leave/">
-            <span class="menu-icon">◷</span>
-            <span>Leave</span>
-        </a>
-
-        <a href="/admin-dashboard/payroll/" class="active">
-            <span class="menu-icon">$</span>
-            <span>Payroll</span>
-        </a>
-
-        <a href="/admin-dashboard/work-locations/">
-            <span class="menu-icon">⌖</span>
-            <span>Work Locations</span>
-        </a>
-
-        <div class="menu-heading secondary-heading">SYSTEM</div>
-
-        <a href="/admin/">
-            <span class="menu-icon">⚙</span>
-            <span>Django Admin</span>
-        </a>
-
-        <a href="/admin/logout/">
-            <span class="menu-icon">⇥</span>
-            <span>Logout</span>
-        </a>
-    </aside>
-
-    <!-- Main content -->
-    <main class="payroll-main">
-
-        <header class="topbar">
+    <section class="content-card">
+        <div class="content-card-header">
             <div>
-                <h1>Payroll Management</h1>
-                <small>Manage employee salary and payroll records</small>
-            </div>
-
-            <div class="welcome-user">
-                <strong>Welcome, {{ request.user.username }}</strong>
-            </div>
-        </header>
-
-        <div class="page-content">
-            <div class="content-card">
-
-                <!-- Payroll summary -->
-                <div class="row g-3 mb-4">
-
-                    <div class="col-12 col-sm-6 col-xl">
-                        <div class="summary-card">
-                            <div class="summary-icon">▤</div>
-                            <p class="summary-label">Total Payrolls</p>
-                            <h2 class="summary-value">{{ total_payrolls }}</h2>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-xl">
-                        <div class="summary-card">
-                            <div class="summary-icon">₹</div>
-                            <p class="summary-label">Gross Salary</p>
-                            <h2 class="summary-value">₹{{ total_gross|floatformat:2 }}</h2>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-xl">
-                        <div class="summary-card">
-                            <div class="summary-icon">＋</div>
-                            <p class="summary-label">Total Bonus</p>
-                            <h2 class="summary-value">₹{{ total_bonus|floatformat:2 }}</h2>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-xl">
-                        <div class="summary-card">
-                            <div class="summary-icon">−</div>
-                            <p class="summary-label">Total Deductions</p>
-                            <h2 class="summary-value">₹{{ total_deductions|floatformat:2 }}</h2>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-xl">
-                        <div class="summary-card">
-                            <div class="summary-icon">✓</div>
-                            <p class="summary-label">Net Salary</p>
-                            <h2 class="summary-value">₹{{ total_net|floatformat:2 }}</h2>
-                        </div>
-                    </div>
-
+                <h2 class="content-card-title">
+                    <i class="bi bi-funnel me-2 text-primary"></i>Filter Payroll
+                </h2>
+                <div class="content-card-subtitle">
+                    Narrow down records by employee, month, year or salary type.
                 </div>
+            </div>
+        </div>
 
-                <!-- Heading -->
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                    <div>
-                        <h2 class="section-title">💰 Payroll Records</h2>
-                        <div class="section-subtitle">
-                            Employee salary and payment overview
-                        </div>
-                    </div>
+        <div class="filter-body">
+            <form method="GET" action="{% url 'admin_payroll_list' %}">
+                <div class="row g-3 align-items-end">
 
-                    <a href="/admin-dashboard/" class="btn btn-outline-secondary">
-                        ← Dashboard
-                    </a>
-                </div>
-
-                <!-- Filters -->
-                <form method="GET" class="payroll-filters mb-4">
-                    <div class="row g-3 align-items-end">
-
-                        <div class="col-12 col-md-6 col-xl-3">
-                            <label class="form-label">Employee</label>
-                            <select name="employee" class="form-select">
-                                <option value="">All Employees</option>
-                                {% for employee in employees %}
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label" for="employee">Employee</label>
+                        <select class="form-select" name="employee" id="employee">
+                            <option value="">All Employees</option>
+                            {% for employee in employees %}
                                 <option value="{{ employee.id }}"
-                                    {% if selected_employee == employee.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ employee.name }} ({{ employee.employee_id }})
+                                    {% if selected_employee|stringformat:"s" == employee.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ employee.name }}
                                 </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div class="col-12 col-md-6 col-xl-2">
-                            <label class="form-label">Month</label>
-                            <select name="month" class="form-select">
-                                <option value="">All Months</option>
-                                {% for number, name in month_choices %}
-                                <option value="{{ number }}"
-                                    {% if selected_month == number|stringformat:"s" %}selected{% endif %}>
-                                    {{ name }}
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <label class="form-label" for="month">Month</label>
+                        <select class="form-select" name="month" id="month">
+                            <option value="">All Months</option>
+                            {% for month_value, month_label in month_choices %}
+                                <option value="{{ month_value }}"
+                                    {% if selected_month|stringformat:"s" == month_value|stringformat:"s" %}selected{% endif %}>
+                                    {{ month_label }}
                                 </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                        <div class="col-12 col-md-6 col-xl-2">
-                            <label class="form-label">Year</label>
-                            <input type="number"
-                                   name="year"
-                                   class="form-control"
-                                   placeholder="e.g. 2026"
-                                   value="{{ selected_year|default:'' }}">
-                        </div>
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <label class="form-label" for="year">Year</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            name="year"
+                            id="year"
+                            placeholder="e.g. 2026"
+                            value="{{ selected_year|default:'' }}">
+                    </div>
 
-                        <div class="col-12 col-md-6 col-xl-2">
-                            <label class="form-label">Salary Type</label>
-                            <select name="salary_type" class="form-select">
-                                <option value="">All Types</option>
-                                <option value="Monthly"
-                                    {% if selected_salary_type == "Monthly" %}selected{% endif %}>
-                                    Monthly
-                                </option>
-                                <option value="Hourly"
-                                    {% if selected_salary_type == "Hourly" %}selected{% endif %}>
-                                    Hourly
-                                </option>
-                            </select>
-                        </div>
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <label class="form-label" for="salary_type">Salary Type</label>
+                        <select class="form-select" name="salary_type" id="salary_type">
+                            <option value="">All Types</option>
+                            <option value="monthly" {% if selected_salary_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                            <option value="hourly" {% if selected_salary_type == 'hourly' %}selected{% endif %}>Hourly</option>
+                        </select>
+                    </div>
 
-                        <div class="col-12 col-xl-3">
-                            <div class="payroll-filter-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    🔍 Apply Filters
-                                </button>
-                                <a href="{% url 'admin_payroll_list' %}"
-                                   class="btn btn-outline-secondary">
-                                    Reset
+                    <div class="col-6 col-xl-1">
+                        <button type="submit" class="btn-filter">
+                            <i class="bi bi-search me-1"></i> Apply
+                        </button>
+                    </div>
+
+                    <div class="col-6 col-xl-2">
+                        <a href="{% url 'admin_payroll_list' %}" class="btn-reset">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="content-card">
+        <div class="content-card-header">
+            <div>
+                <h2 class="content-card-title">
+                    <i class="bi bi-list-ul me-2 text-primary"></i>Payroll Records
+                </h2>
+                <div class="content-card-subtitle">
+                    Review salary details and manage payroll entries.
+                </div>
+            </div>
+
+            <span class="badge rounded-pill text-bg-light border px-3 py-2">
+                {{ payroll_records|length }} Records
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table payroll-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Period</th>
+                        <th>Salary Type</th>
+                        <th>Total Hours</th>
+                        <th>Basic Salary</th>
+                        <th>Bonus</th>
+                        <th>Deductions</th>
+                        <th>Gross Salary</th>
+                        <th>Net Salary</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for payroll in payroll_records %}
+                    <tr>
+                        <td>
+                            <div class="employee-cell">
+                                <div class="employee-avatar">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="employee-name">{{ payroll.employee.name }}</div>
+                                    <div class="employee-id">ID: {{ payroll.employee.employee_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">{{ payroll.month }}/{{ payroll.year }}</div>
+                        </td>
+
+                        <td>
+                            <span class="salary-type">{{ payroll.salary_type|title }}</span>
+                        </td>
+
+                        <td>{{ payroll.total_hours|default:"—" }}</td>
+
+                        <td>₹{{ payroll.basic_salary|floatformat:2 }}</td>
+
+                        <td class="text-success">
+                            ₹{{ payroll.bonus|floatformat:2 }}
+                        </td>
+
+                        <td class="text-danger">
+                            ₹{{ payroll.deductions|floatformat:2 }}
+                        </td>
+
+                        <td class="fw-semibold">
+                            ₹{{ payroll.gross_salary|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            <span class="net-amount">
+                                ₹{{ payroll.net_salary|floatformat:2 }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'payroll_edit' payroll.id %}"
+                                   class="action-btn edit-btn"
+                                   title="Edit payroll"
+                                   aria-label="Edit payroll">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+                                <a href="{% url 'payroll_delete' payroll.id %}"
+                                   class="action-btn delete-btn"
+                                   title="Delete payroll"
+                                   aria-label="Delete payroll"
+                                   onclick="return confirm('Are you sure you want to delete this payroll record?');">
+                                    <i class="bi bi-trash3"></i>
                                 </a>
                             </div>
-                        </div>
+                        </td>
+                    </tr>
 
-                    </div>
-                </form>
-
-                <!-- Payroll table -->
-                {% if payroll_records %}
-
-                <div class="payroll-table-wrap">
-                    <table class="table table-hover align-middle">
-
-                        <thead>
-                            <tr>
-                                <th>Employee</th>
-                                <th>Employee ID</th>
-                                <th>Month</th>
-                                <th>Salary Type</th>
-                                <th>Total Hours</th>
-                                <th>Basic Salary</th>
-                                <th>Hourly Rate</th>
-                                <th>Bonus</th>
-                                <th>Deductions</th>
-                                <th>Gross Salary</th>
-                                <th>Net Salary</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {% for payroll in payroll_records %}
-                            <tr>
-                                <td><strong>{{ payroll.employee.name }}</strong></td>
-                                <td>{{ payroll.employee.employee_id }}</td>
-                                <td>{{ payroll.month }}/{{ payroll.year }}</td>
-
-                                <td>
-                                    {% if payroll.salary_type == "Monthly" %}
-                                    <span class="salary-badge monthly">Monthly</span>
-                                    {% else %}
-                                    <span class="salary-badge hourly">Hourly</span>
-                                    {% endif %}
-                                </td>
-
-                                <td>{{ payroll.total_hours }}</td>
-                                <td>₹{{ payroll.basic_salary|floatformat:2 }}</td>
-                                <td>₹{{ payroll.hourly_rate|floatformat:2 }}</td>
-                                <td>₹{{ payroll.bonus|floatformat:2 }}</td>
-                                <td>₹{{ payroll.deductions|floatformat:2 }}</td>
-                                <td>₹{{ payroll.gross_salary|floatformat:2 }}</td>
-                                <td class="net-salary">₹{{ payroll.net_salary|floatformat:2 }}</td>
-
-                                <td>
-                                    <div class="action-buttons">
-                                        <a href="{% url 'payroll_edit' payroll.id %}"
-                                           class="btn btn-sm btn-outline-primary"
-                                           title="Edit Payroll">
-                                            ✏️ Edit
-                                        </a>
-
-                                        <a href="{% url 'payroll_delete' payroll.id %}"
-                                           class="btn btn-sm btn-outline-danger"
-                                           title="Delete Payroll">
-                                            🗑️ Delete
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-
-                    </table>
-                </div>
-
-                {% else %}
-
-                <div class="empty-state">
-                    <div style="font-size: 48px;">💰</div>
-                    <h3 class="mt-3">No Payroll Records</h3>
-                    <p>There are currently no payroll records matching your filters.</p>
-                </div>
-
-                {% endif %}
-
-            </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="empty-state">
+                            <div class="empty-icon">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <div class="empty-title">No Payroll Records Found</div>
+                            <div class="empty-description">
+                                No records match your selected filters. Try resetting the filters.
+                            </div>
+                            <a href="{% url 'admin_payroll_list' %}"
+                               class="btn btn-outline-primary btn-sm mt-3 rounded-3 px-3">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </main>
+    </section>
 
-</div>
+    <footer class="page-footer">
+        <span>© {% now "Y" %} WorkEase. All rights reserved.</span>
+        <span><i class="bi bi-shield-check me-1"></i> HR Management System</span>
+    </footer>
+
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>

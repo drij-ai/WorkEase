@@ -1,267 +1,783 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management | WorkEase</title>
 
-    <title>Employees - WorkEase</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        :root {
+            --navy: #102a4c;
+            --blue: #2563eb;
+            --page: #f4f7fc;
+            --text: #172b4d;
+            --muted: #718096;
+            --line: #e7edf5;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            background: #f5f7fb;
+            margin: 0;
+            background: var(--page);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
         }
 
-        .navbar {
-            background: #111827;
+        .topbar {
+            background: linear-gradient(110deg, #102a4c, #173b66);
+            padding: 12px 0;
+            color: #fff;
+            box-shadow: 0 3px 14px rgba(16,42,76,.12);
         }
 
-        .navbar-brand {
-            color: white !important;
-            font-weight: 700;
+        .topbar-inner {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
         }
+
+        .brand {
+            color: #fff;
+            text-decoration: none;
+            font-size: 21px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+
+        .brand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 37px;
+            height: 37px;
+            margin-right: 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.14);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .welcome-text {
+            color: #d5deeb;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+
+        .welcome-text strong {
+            color: #fff;
+            font-weight: 750;
+        }
+
+        .btn-dashboard {
+            background: #2563eb;
+            color: #fff;
+            border: 0;
+            border-radius: 13px;
+            padding: 12px 19px;
+            font-size: 15px;
+            font-weight: 650;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            white-space: nowrap;
+            transition: .2s ease;
+        }
+
+        .btn-dashboard:hover {
+            background: #1d4ed8;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .page-wrap {
+            max-width: 1600px;
+            margin: auto;
+            padding: 30px 26px;
+        }
+
+        .breadcrumb-line {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb-line a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .breadcrumb-line a:hover { color: var(--blue); }
 
         .page-title {
-            font-weight: 700;
+            font-size: clamp(24px, 3vw, 30px);
+            font-weight: 750;
+            letter-spacing: -.6px;
+            margin: 0 0 7px;
         }
 
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
-        }
-
-        .table {
-            vertical-align: middle;
+        .page-subtitle {
+            margin: 0;
+            color: var(--muted);
         }
 
         .btn {
-            border-radius: 8px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 9px 13px;
         }
+
+        .btn-primary {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .summary-card,
+        .employee-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            box-shadow: 0 5px 18px rgba(15,42,76,.035);
+        }
+
+        .summary-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 19px;
+            height: 100%;
+        }
+
+        .summary-icon {
+            width: 46px;
+            height: 46px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            background: #eaf2ff;
+            color: var(--blue);
+            font-size: 21px;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 750;
+            line-height: 1.2;
+        }
+
+        .employee-card { overflow: hidden; }
+
+        .table-card-header {
+            padding: 21px 23px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 750;
+            margin: 0 0 5px;
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .search-wrap {
+            position: relative;
+            width: min(100%, 310px);
+        }
+
+        .search-wrap i {
+            position: absolute;
+            top: 50%;
+            left: 13px;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 37px;
+            border: 1px solid #dfe7f1;
+            border-radius: 9px;
+            outline: none;
+            font-size: 13px;
+        }
+
+        .search-input:focus {
+            border-color: #93b4fc;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.09);
+        }
+
+        .table-responsive { min-height: 130px; }
+
+        .table {
+            margin: 0;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .table thead th {
+            padding: 14px 17px;
+            background: #f8fafd;
+            color: #718096;
+            border-bottom: 1px solid var(--line);
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .55px;
+            text-transform: uppercase;
+        }
+
+        .table tbody td {
+            padding: 15px 17px;
+            border-color: #edf1f7;
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .table tbody tr:last-child td { border-bottom: 0; }
+
+        .table-hover tbody tr:hover > * { background: #f8fbff; }
+
+        .employee-id {
+            display: inline-block;
+            padding: 6px 9px;
+            border-radius: 7px;
+            background: #edf4ff;
+            color: #315da8;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .employee-name {
+            color: #1e293b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .salary-type {
+            display: inline-block;
+            padding: 5px 8px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 650;
+        }
+
+        .salary-value {
+            color: #147d54 !important;
+            font-weight: 750;
+        }
+
+        .muted { color: var(--muted) !important; }
 
         .action-buttons {
             display: flex;
-            gap: 6px;
+            align-items: center;
+            gap: 7px;
         }
+
+        .action-buttons .btn {
+            padding: 7px 9px;
+            font-size: 11px;
+        }
+
+        .delete-form { margin: 0; }
+
+        .table-footer {
+            padding: 14px 22px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .empty-state {
+            padding: 40px 15px !important;
+            text-align: center;
+            color: var(--muted) !important;
+            white-space: normal;
+        }
+
+        .empty-state i {
+            display: block;
+            font-size: 29px;
+            margin-bottom: 9px;
+            color: #94a3b8;
+        }
+
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            color: #8b95a7;
+            font-size: 12px;
+            padding: 18px 2px 0;
+        }
+
+        @media (max-width: 767.98px) {
+            .topbar-inner {
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .brand { font-size: 19px; }
+
+            .topbar-right {
+                gap: 10px;
+            }
+
+            .welcome-text {
+                font-size: 12px;
+            }
+
+            .btn-dashboard {
+                padding: 9px 11px;
+                border-radius: 9px;
+                font-size: 12px;
+                gap: 6px;
+            }
+
+            .page-wrap { padding: 22px 13px; }
+
+            .header-row {
+                align-items: stretch !important;
+                flex-direction: column;
+            }
+
+            .add-employee-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .table-card-header {
+                align-items: stretch;
+                flex-direction: column;
+                padding: 17px;
+            }
+
+            .search-wrap { width: 100%; }
+
+            .summary-card { padding: 15px; }
+            .summary-icon { width: 40px; height: 40px; }
+
+            .table-footer {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 17px;
+            }
+
+            .page-footer {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar-inner {
+                flex-wrap: nowrap;
+            }
+
+            .brand {
+                font-size: 17px;
+            }
+
+            .brand-icon {
+                width: 33px;
+                height: 33px;
+                margin-right: 5px;
+            }
+
+            .welcome-text {
+                display: none;
+            }
+
+            .summary-value { font-size: 21px; }
+        }
+
+
+        body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+}
+
+.brand-name {
+    font-size: 21px;
+    font-weight: 750;
+}
+
+.welcome-text {
+    font-size: 16px;
+}
+
+.welcome-text strong {
+    font-weight: 750;
+}
+
+.btn-dashboard {
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.page-title {
+    font-size: clamp(24px, 3vw, 30px);
+    font-weight: 750;
+    letter-spacing: -.6px;
+}
+
+.page-description {
+    font-size: 14px;
+}
+
+.section-label {
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.summary-label {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.summary-value {
+    font-size: 24px;
+    font-weight: 750;
+}
+
+.content-card-title {
+    font-size: 16px;
+    font-weight: 750;
+}
+
+.content-card-subtitle {
+    font-size: 12px;
+}
+
+.form-label {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.form-control,
+.form-select {
+    font-size: 13px;
+}
+
+.btn-filter,
+.btn-reset {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.payroll-table thead th {
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .55px;
+}
+
+.payroll-table tbody td {
+    font-size: 12px;
+}
+
+.employee-name {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.employee-id {
+    font-size: 11px;
+}
+
+.salary-type {
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.page-footer {
+    font-size: 12px;
+}
     </style>
 </head>
 
 <body>
 
-<nav class="navbar navbar-expand-lg">
+<nav class="topbar">
+    <div class="container-fluid px-3 px-md-4">
+        <div class="topbar-inner">
 
-    <div class="container-fluid px-4">
+            <a class="brand" href="/admin-dashboard/">
+                <span class="brand-icon">
+                    <i class="bi bi-buildings"></i>
+                </span>
+                WorkEase
+            </a>
 
-        <a
-            class="navbar-brand"
-            href="/admin-dashboard/"
-        >
-            🏢 WorkEase
-        </a>
+            <div class="topbar-right">
+                <div class="welcome-text">
+                    Welcome back, <strong>drij@savaj</strong>
+                </div>
 
-        <div class="text-white">
-            Welcome, {{ request.user.username }}
+                <a href="http://127.0.0.1:8000/admin-dashboard/" class="btn-dashboard">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+
         </div>
-
     </div>
-
 </nav>
 
+<main class="page-wrap">
 
-<div class="container-fluid px-4 py-4">
+    <div class="breadcrumb-line">
+        <i class="bi bi-house-door me-1"></i>
+        <a href="/admin-dashboard/">Dashboard</a>
+        <span class="mx-2">/</span>
+        <span style="color:#334155;">Employees</span>
+    </div>
 
-
-    <!-- Page Header -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
+    <div class="header-row d-flex justify-content-between align-items-center gap-3 mb-4">
         <div>
-
-            <h2 class="page-title mb-1">
-                Employee Management
-            </h2>
-
-            <p class="text-muted mb-0">
-                Manage your employees
-            </p>
-
+            <h1 class="page-title">Employee Management</h1>
+            <p class="page-subtitle">Manage employee information and salary details in one place.</p>
         </div>
 
-
-        <a
-            href="/admin-dashboard/employees/add/"
-            class="btn btn-primary"
-        >
-            ➕ Add Employee
+        <a href="/admin-dashboard/employees/add/"
+           class="btn btn-primary add-employee-btn d-inline-flex align-items-center gap-2">
+            <i class="bi bi-person-plus"></i>
+            Add Employee
         </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <div class="summary-label">Total Employees</div>
+                    <div class="summary-value">{{ employees|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="summary-card">
+                <div class="summary-icon" style="background:#e7f8ef;color:#168253;">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                <div>
+                    <div class="summary-label">Employee Directory</div>
+                    <div class="summary-value">Records</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="summary-card">
+                <div class="summary-icon" style="background:#fff3df;color:#b7791f;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <div class="summary-label">Management</div>
+                    <div class="summary-value" style="font-size:18px;">All in one place</div>
+                </div>
+            </div>
+        </div>
 
     </div>
 
+    <section class="employee-card">
 
-    <!-- Employee Table -->
+        <div class="table-card-header">
+            <div>
+                <h2 class="section-title">Employee Directory</h2>
+                <p class="section-subtitle">View and manage your employee records.</p>
+            </div>
 
-    <div class="card p-4">
+            <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="search"
+                       id="employeeSearch"
+                       class="search-input"
+                       placeholder="Search by name, ID, phone..."
+                       aria-label="Search employees">
+            </div>
+        </div>
 
         <div class="table-responsive">
-
-            <table class="table table-hover">
-
+            <table class="table table-hover" id="employeeTable">
                 <thead>
-
                     <tr>
-
-                        <th>
-                            Employee ID
-                        </th>
-
-                        <th>
-                            Name
-                        </th>
-
-                        <th>
-                            Phone
-                        </th>
-
-                        <th>
-                            Department
-                        </th>
-
-                        <th>
-                            Salary Type
-                        </th>
-
-                        <th>
-                            Basic Salary
-                        </th>
-
-                        <th>
-                            Joining Date
-                        </th>
-
-                        <th>
-                            Action
-                        </th>
-
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Department</th>
+                        <th>Salary Type</th>
+                        <th>Basic Salary</th>
+                        <th>Joining Date</th>
+                        <th>Actions</th>
                     </tr>
-
                 </thead>
 
-
                 <tbody>
-
                     {% for employee in employees %}
-
-                    <tr>
-
+                    <tr class="employee-row">
                         <td>
-                            <strong>
-                                {{ employee.employee_id }}
-                            </strong>
+                            <span class="employee-id">{{ employee.employee_id }}</span>
                         </td>
 
-
                         <td>
-                            {{ employee.name }}
+                            <span class="employee-name">{{ employee.name }}</span>
                         </td>
 
+                        <td>{{ employee.phone|default:"—" }}</td>
+
+                        <td>{{ employee.department|default:"—" }}</td>
 
                         <td>
-                            {{ employee.phone }}
+                            <span class="salary-type">{{ employee.salary_type|default:"—" }}</span>
                         </td>
 
-
-                        <td>
-                            {{ employee.department }}
+                        <td class="salary-value">
+                            ₹{{ employee.basic_salary|default_if_none:"0" }}
                         </td>
 
-
-                        <td>
-                            {{ employee.salary_type }}
+                        <td class="muted">
+                            {{ employee.joining_date|default:"—" }}
                         </td>
 
-
                         <td>
-                            ₹{{ employee.basic_salary }}
-                        </td>
-
-
-                        <td>
-                            {{ employee.joining_date }}
-                        </td>
-
-
-                        <td>
-
                             <div class="action-buttons">
-
-                                <!-- Edit -->
-
-                                <a
-                                    href="/admin-dashboard/employees/{{ employee.id }}/edit/"
-                                    class="btn btn-sm btn-outline-primary"
-                                >
-                                    ✏️ Edit
+                                <a href="/admin-dashboard/employees/{{ employee.id }}/edit/"
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil-square"></i> Edit
                                 </a>
 
-
-                                <!-- Delete -->
-
-                                <form
-                                    method="POST"
-                                    action="/admin-dashboard/employees/{{ employee.id }}/delete/"
-                                    onsubmit="return confirm('Are you sure you want to delete this employee?');"
-                                >
-
+                                <form method="POST"
+                                      action="/admin-dashboard/employees/{{ employee.id }}/delete/"
+                                      class="delete-form"
+                                      onsubmit="return confirm('Are you sure you want to delete this employee?');">
                                     {% csrf_token %}
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-sm btn-outline-danger"
-                                    >
-                                        🗑️ Delete
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        <i class="bi bi-trash3"></i> Delete
                                     </button>
-
                                 </form>
-
                             </div>
-
                         </td>
-
                     </tr>
-
 
                     {% empty %}
-
-                    <tr>
-
-                        <td
-                            colspan="8"
-                            class="text-center text-muted py-4"
-                        >
-                            No employees found.
+                    <tr id="emptyRow">
+                        <td colspan="8" class="empty-state">
+                            <i class="bi bi-people"></i>
+                            <strong class="d-block mb-1">No employees found</strong>
+                            <span>Add your first employee to get started.</span>
                         </td>
-
                     </tr>
-
                     {% endfor %}
 
+                    <tr id="noSearchResults" style="display:none;">
+                        <td colspan="8" class="empty-state">
+                            <i class="bi bi-search"></i>
+                            <strong class="d-block mb-1">No matching employees</strong>
+                            <span>Try another name, ID, phone or department.</span>
+                        </td>
+                    </tr>
                 </tbody>
-
             </table>
-
         </div>
 
-    </div>
+        <div class="table-footer">
+            <span id="tableSummary">
+                Showing {{ employees|length }} employee record(s)
+            </span>
+            <span>
+                <i class="bi bi-info-circle me-1"></i> Employee records
+            </span>
+        </div>
 
-</div>
+    </section>
+
+    <footer class="page-footer">
+        <span>© {% now "Y" %} WorkEase. All rights reserved.</span>
+        <span><i class="bi bi-shield-check me-1"></i> HR Management System</span>
+    </footer>
+
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("employeeSearch");
+    const rows = Array.from(document.querySelectorAll(".employee-row"));
+    const tableSummary = document.getElementById("tableSummary");
+    const noResults = document.getElementById("noSearchResults");
+
+    if (!searchInput) return;
+
+    function filterEmployees() {
+        const query = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+
+        rows.forEach(function (row) {
+            const matches = row.textContent.toLowerCase().includes(query);
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visible++;
+        });
+
+        tableSummary.textContent =
+            "Showing " + visible + " of " + rows.length + " employee record(s)";
+
+        noResults.style.display =
+            rows.length > 0 && visible === 0 ? "" : "none";
+    }
+
+    searchInput.addEventListener("input", filterEmployees);
+});
+</script>
 
 </body>
-
 </html>
-

@@ -20,6 +20,13 @@ from django.contrib.admin.views.decorators import staff_member_required
 from math import radians, sin, cos, sqrt, atan2
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+from .models import Notification
+from django.views.decorators.http import require_POST
+
+
 from .models import Attendance, Payroll, Employee
 from django.shortcuts import render
 from django.db.models import Sum
@@ -51,14 +58,32 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     return earth_radius * c
 
 
+def owner_required(view_func):
+    return user_passes_test(
+        lambda user: user.is_authenticated
+        and user.is_active
+        and user.is_superuser,
+        login_url='login'
+    )(view_func)
+
+
 def home(request):
     return render(request, 'core/home.html')
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect('admin_dashboard')
+
+        if Employee.objects.filter(user=request.user).exists():
+            return redirect('dashboard')
+
+        return redirect('login')
+
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
 
         user = authenticate(
             request,
@@ -66,15 +91,30 @@ def login_view(request):
             password=password
         )
 
-        if user is not None:
+        if user is None:
+            return render(request, 'core/login.html', {
+                'error': 'Username athva password wrong chhe.'
+            })
+
+        if not user.is_active:
+            return render(request, 'core/login.html', {
+                'error': 'Your account is inactive.'
+            })
+
+        if user.is_superuser:
             login(request, user)
-            return redirect('/dashboard/')
+            return redirect('admin_dashboard')
+
+        if Employee.objects.filter(user=user).exists():
+            login(request, user)
+            return redirect('dashboard')
 
         return render(request, 'core/login.html', {
-            'error': 'Username athva password wrong chhe.'
+            'error': 'Aa account mate valid role athva employee record nathi.'
         })
 
     return render(request, 'core/login.html')
+
 
 
 def dashboard(request):
@@ -111,6 +151,11 @@ def dashboard(request):
         month=current_month,
         year=current_year
     ).first()
+    
+    unread_notifications_count = Notification.objects.filter(
+    employee=employee,
+    is_read=False
+    ).count()
 
     return render(request, 'core/dashboard.html', {
         'employee': employee,
@@ -119,6 +164,7 @@ def dashboard(request):
         'monthly_hours': monthly_hours,
         'monthly_salary': monthly_salary,
         'payroll': payroll,
+        'unread_notifications_count': unread_notifications_count,
     })
 
 
@@ -346,7 +392,7 @@ def attendance(request):
         'employee': employee
     })
 
-@staff_member_required
+@owner_required
 def admin_dashboard(request):
     today = timezone.localdate()
 
@@ -678,18 +724,30 @@ def admin_leave_list(request):
         'leave_requests': leave_requests
     })
 
+
 @staff_member_required
 def leave_update_status(request, leave_id, status):
-
     if request.method == 'POST':
-
-        leave = Leave.objects.get(id=leave_id)
+        leave = get_object_or_404(Leave, id=leave_id)
 
         if status in ['Approved', 'Rejected']:
+            old_status = leave.status
             leave.status = status
             leave.save()
 
+            if old_status != status:
+                Notification.objects.create(
+                    employee=leave.employee,
+                    title=f'Leave Request {status}',
+                    message=(
+                        f'Your {leave.leave_type} leave request '
+                        f'from {leave.from_date} to {leave.to_date} '
+                        f'has been {status.lower()}.'
+                    )
+                )
+
     return redirect('/admin-dashboard/leave/')
+
 
 @staff_member_required
 def admin_payroll_list(request):
@@ -946,3 +1004,58 @@ def reset_user_password(request, user_id):
             )
 
     return redirect('user_management')
+
+
+@login_required(login_url='/login/')
+def employee_profile(request):
+    try:
+        employee = request.user.employee
+    except Exception:
+        return redirect('/dashboard/')
+
+    return render(
+        request,
+        'core/profile.html',
+        {'employee': employee}
+    )
+
+
+def employee_notifications(request):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+
+    try:
+        employee = request.user.employee
+    except Employee.DoesNotExist:
+        return redirect('/login/')
+
+    notifications = Notification.objects.filter(
+        employee=employee
+    )
+
+    unread_count = notifications.filter(
+        is_read=False
+    ).count()
+
+    return render(request, 'core/notifications.html', {
+        'notifications': notifications,
+        'unread_count': unread_count,
+    })
+
+
+@require_POST
+def mark_notification_read(request, notification_id):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+
+    try:
+        employee = request.user.employee
+    except Employee.DoesNotExist:
+        return redirect('/login/')
+
+    Notification.objects.filter(
+        id=notification_id,
+        employee=employee
+    ).update(is_read=True)
+
+    return redirect('employee_notifications')

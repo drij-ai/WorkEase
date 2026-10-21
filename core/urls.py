@@ -1,16 +1,29 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login_view, name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-dashboard/employees/', views.employee_list, name='employee_list'),
     path('admin-dashboard/users/', views.user_management, name='user_management'),
     path('admin-dashboard/users/add/', views.user_add, name='user_add'),
+    path('profile/', views.employee_profile, name='employee_profile'),
     
-    
+    path(
+    'notifications/',
+    views.employee_notifications,
+    name='employee_notifications'
+),
+path(
+    'notifications/<int:notification_id>/read/',
+    views.mark_notification_read,
+    name='mark_notification_read'
+),
+
 path(
     'admin-dashboard/users/<int:user_id>/toggle-status/',
     views.toggle_user_status,
@@ -105,3 +118,4 @@ path(
     path('leave/', views.leave_apply, name='leave_apply'),
     path('attendance/', views.attendance, name='attendance'),
 ]
+
