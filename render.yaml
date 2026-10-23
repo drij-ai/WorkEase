@@ -3,7 +3,6 @@ services:
     name: workease
     runtime: python
     buildCommand: "./build.sh"
-    preDeployCommand: "python manage.py migrate --noinput"
     startCommand: "gunicorn workease.wsgi:application --bind 0.0.0.0:$PORT"
     healthCheckPath: /health
     plan: free
