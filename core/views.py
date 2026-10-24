@@ -10,7 +10,10 @@ from django.contrib import messages
 
 import calendar
 
+from datetime import time
+
 from django.shortcuts import get_object_or_404
+
 
 from .forms import EmployeeForm, WorkLocationForm, PayrollForm
 
@@ -157,6 +160,57 @@ def dashboard(request):
     is_read=False
     ).count()
 
+
+    # Current month attendance summary
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+
+    month_attendance = employee.attendance_records.filter(
+        date__gte=month_start,
+        date__lte=today
+    )
+
+    present_days = month_attendance.filter(
+        status='Present'
+    ).count()
+
+    late_days = month_attendance.filter(
+        status='Late'
+    ).count()
+
+    # Approved leave dates: aa dates absent ma count nahi thay
+    approved_leaves = employee.leave_requests.filter(
+        status='Approved',
+        from_date__lte=today,
+        to_date__gte=month_start
+    )
+
+    approved_leave_dates = set()
+    for leave in approved_leaves:
+        start = max(leave.from_date, month_start)
+        end = min(leave.to_date, today)
+        current_date = start
+
+        while current_date <= end:
+            approved_leave_dates.add(current_date)
+            current_date += timedelta(days=1)
+
+    # Monday-Friday working days; weekends absent ma count nahi thay
+    absent_days = 0
+    current_date = month_start
+
+    while current_date <= today:
+        if (
+            current_date.weekday() < 5
+            and current_date not in approved_leave_dates
+            and not month_attendance.filter(date=current_date).exists()
+        ):
+            absent_days += 1
+
+        current_date += timedelta(days=1)
+
+
+
     return render(request, 'core/dashboard.html', {
         'employee': employee,
         'attendance_records': attendance_records,
@@ -165,10 +219,13 @@ def dashboard(request):
         'monthly_salary': monthly_salary,
         'payroll': payroll,
         'unread_notifications_count': unread_notifications_count,
+        'present_days': present_days,
+        'absent_days': absent_days,
+        'late_days': late_days,
     })
 
 
-from datetime import date
+from datetime import date, timedelta, time
 from django.shortcuts import render, redirect
 from .models import Leave
 
@@ -329,12 +386,17 @@ def attendance(request):
             ).first()
 
             if attendance_record is None:
+                check_in_status = (
+                    'Late' if current_time > time(9, 0)
+                    else 'Present'
+                )
+
                 Attendance.objects.create(
                     employee=employee,
                     date=today,
                     check_in=current_time,
                     break_hours=0,
-                    status='Present'
+                    status=check_in_status
                 )
 
             return redirect('/dashboard/')
