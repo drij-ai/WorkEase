@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# Debug mode: defaults to True for local development, False in production (Render / Railway / Back4app)
+# Debug mode: defaults to True for local development, False in production (Render / Railway / Back4app / Vercel)
 is_production = bool(
     os.environ.get('RENDER')
     or os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -29,6 +29,8 @@ is_production = bool(
     or os.environ.get('BACK4APP_CONTAINER')
     or os.environ.get('B4A_APP_NAME')
     or os.environ.get('BACK4APP_APP_NAME')
+    or os.environ.get('VERCEL')
+    or os.environ.get('VERCEL_URL')
 )
 default_debug = 'False' if is_production else 'True'
 DEBUG = os.environ.get('DJANGO_DEBUG', default_debug).lower() in ('true', '1', 't', 'yes')
@@ -45,7 +47,7 @@ if not SECRET_KEY:
         )
 
 # Allowed hosts: configurable via ALLOWED_HOSTS (comma-separated)
-# Automatically includes Render, Railway, and Back4app external hostnames if provided
+# Automatically includes Render, Railway, Back4app, and Vercel external hostnames if provided
 raw_allowed_hosts = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [h.strip() for h in raw_allowed_hosts.split(',') if h.strip()]
 
@@ -62,6 +64,10 @@ if b4a_app_name:
     b4a_hostname = f"{b4a_app_name}.b4a.run"
     if b4a_hostname not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(b4a_hostname)
+
+vercel_hostname = os.environ.get('VERCEL_URL')
+if vercel_hostname and vercel_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(vercel_hostname)
 
 if not ALLOWED_HOSTS and (DEBUG or not is_production):
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
@@ -84,6 +90,11 @@ if b4a_app_name:
     b4a_origin = f"https://{b4a_app_name}.b4a.run"
     if b4a_origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(b4a_origin)
+
+if vercel_hostname:
+    vercel_origin = f"https://{vercel_hostname}"
+    if vercel_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(vercel_origin)
 
 
 # Application definition
