@@ -1,0 +1,31 @@
+# Git and version control
+.git/
+.gitignore
+
+# Python cache and environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Local SQLite databases
+*.sqlite3
+db.sqlite3
+
+# Static files and media (collected during docker build)
+staticfiles/
+media/
+
+# Local deployment scripts
+neon_migrate.ps1
+neon_verify.ps1
+
+# Documentation and tests cache
+.pytest_cache/
+.coverage
+htmlcov/

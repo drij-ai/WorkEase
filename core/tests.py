@@ -434,3 +434,56 @@ class ProductionSettingsIsolatedTest(SimpleTestCase):
 
         proc = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, f"Subprocess failed:\n{proc.stderr}")
+
+    def test_back4app_production_settings_auto_configuration(self):
+        """Verify B4A_APP_NAME automatically configures DEBUG=False, ALLOWED_HOSTS, and CSRF_TRUSTED_ORIGINS."""
+        code = (
+            "import os\n"
+            "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'workease.settings')\n"
+            "from django.conf import settings\n"
+            "assert settings.DEBUG is False, f'DEBUG should be False, got {settings.DEBUG}'\n"
+            "assert 'workease-test.b4a.run' in settings.ALLOWED_HOSTS, f'Host missing from {settings.ALLOWED_HOSTS}'\n"
+            "assert 'https://workease-test.b4a.run' in settings.CSRF_TRUSTED_ORIGINS, f'CSRF missing from {settings.CSRF_TRUSTED_ORIGINS}'\n"
+            "assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https')\n"
+            "assert settings.SECURE_SSL_REDIRECT is True\n"
+            "assert settings.SESSION_COOKIE_SECURE is True\n"
+            "assert settings.CSRF_COOKIE_SECURE is True\n"
+        )
+        env = os.environ.copy()
+        env['B4A_APP_NAME'] = 'workease-test'
+        env['DJANGO_SECRET_KEY'] = 'test-isolated-secret-key-for-back4app-unit-test'
+        env.pop('DJANGO_DEBUG', None)
+        env.pop('ALLOWED_HOSTS', None)
+        env.pop('CSRF_TRUSTED_ORIGINS', None)
+        env.pop('RENDER', None)
+        env.pop('RENDER_EXTERNAL_HOSTNAME', None)
+        env.pop('RAILWAY_ENVIRONMENT', None)
+        env.pop('RAILWAY_PUBLIC_DOMAIN', None)
+
+        proc = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, f"Subprocess failed:\n{proc.stderr}")
+
+    def test_back4app_custom_allowed_hosts_and_csrf_origins(self):
+        """Verify custom ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS merge cleanly with Back4app domain."""
+        code = (
+            "import os\n"
+            "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'workease.settings')\n"
+            "from django.conf import settings\n"
+            "assert 'workease-test.b4a.run' in settings.ALLOWED_HOSTS\n"
+            "assert 'mycustomdomain.com' in settings.ALLOWED_HOSTS\n"
+            "assert 'https://workease-test.b4a.run' in settings.CSRF_TRUSTED_ORIGINS\n"
+            "assert 'https://mycustomdomain.com' in settings.CSRF_TRUSTED_ORIGINS\n"
+        )
+        env = os.environ.copy()
+        env['B4A_APP_NAME'] = 'workease-test'
+        env['DJANGO_SECRET_KEY'] = 'test-isolated-secret-key-for-back4app-unit-test'
+        env['ALLOWED_HOSTS'] = 'mycustomdomain.com'
+        env['CSRF_TRUSTED_ORIGINS'] = 'https://mycustomdomain.com'
+        env.pop('DJANGO_DEBUG', None)
+        env.pop('RENDER', None)
+        env.pop('RENDER_EXTERNAL_HOSTNAME', None)
+        env.pop('RAILWAY_ENVIRONMENT', None)
+        env.pop('RAILWAY_PUBLIC_DOMAIN', None)
+
+        proc = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, f"Subprocess failed:\n{proc.stderr}")
