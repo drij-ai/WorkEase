@@ -383,3 +383,54 @@ class ProductionSettingsIsolatedTest(SimpleTestCase):
         proc = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True)
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("DJANGO_SECRET_KEY environment variable is required in production", proc.stderr)
+
+    def test_railway_production_settings_auto_configuration(self):
+        """Verify RAILWAY_ENVIRONMENT and RAILWAY_PUBLIC_DOMAIN automatically configure DEBUG=False, ALLOWED_HOSTS, and CSRF_TRUSTED_ORIGINS."""
+        code = (
+            "import os\n"
+            "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'workease.settings')\n"
+            "from django.conf import settings\n"
+            "assert settings.DEBUG is False, f'DEBUG should be False, got {settings.DEBUG}'\n"
+            "assert 'workease-production.up.railway.app' in settings.ALLOWED_HOSTS, f'Host missing from {settings.ALLOWED_HOSTS}'\n"
+            "assert 'https://workease-production.up.railway.app' in settings.CSRF_TRUSTED_ORIGINS, f'CSRF missing from {settings.CSRF_TRUSTED_ORIGINS}'\n"
+            "assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https')\n"
+            "assert settings.SECURE_SSL_REDIRECT is True\n"
+            "assert settings.SESSION_COOKIE_SECURE is True\n"
+            "assert settings.CSRF_COOKIE_SECURE is True\n"
+        )
+        env = os.environ.copy()
+        env['RAILWAY_ENVIRONMENT'] = 'production'
+        env['RAILWAY_PUBLIC_DOMAIN'] = 'workease-production.up.railway.app'
+        env['DJANGO_SECRET_KEY'] = 'test-isolated-secret-key-for-railway-unit-test'
+        env.pop('DJANGO_DEBUG', None)
+        env.pop('ALLOWED_HOSTS', None)
+        env.pop('CSRF_TRUSTED_ORIGINS', None)
+        env.pop('RENDER', None)
+        env.pop('RENDER_EXTERNAL_HOSTNAME', None)
+
+        proc = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, f"Subprocess failed:\n{proc.stderr}")
+
+    def test_railway_custom_allowed_hosts_and_csrf_origins(self):
+        """Verify custom ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS merge cleanly with Railway domain."""
+        code = (
+            "import os\n"
+            "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'workease.settings')\n"
+            "from django.conf import settings\n"
+            "assert 'workease-production.up.railway.app' in settings.ALLOWED_HOSTS\n"
+            "assert 'custom.workease.com' in settings.ALLOWED_HOSTS\n"
+            "assert 'https://workease-production.up.railway.app' in settings.CSRF_TRUSTED_ORIGINS\n"
+            "assert 'https://custom.workease.com' in settings.CSRF_TRUSTED_ORIGINS\n"
+        )
+        env = os.environ.copy()
+        env['RAILWAY_ENVIRONMENT'] = 'production'
+        env['RAILWAY_PUBLIC_DOMAIN'] = 'workease-production.up.railway.app'
+        env['DJANGO_SECRET_KEY'] = 'test-isolated-secret-key-for-railway-unit-test'
+        env['ALLOWED_HOSTS'] = 'custom.workease.com'
+        env['CSRF_TRUSTED_ORIGINS'] = 'https://custom.workease.com'
+        env.pop('DJANGO_DEBUG', None)
+        env.pop('RENDER', None)
+        env.pop('RENDER_EXTERNAL_HOSTNAME', None)
+
+        proc = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, f"Subprocess failed:\n{proc.stderr}")
