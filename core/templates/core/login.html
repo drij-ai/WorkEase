@@ -1,93 +1,1205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>WorkEase Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Sign In | WorkEase - Workforce & Payroll Intelligence</title>
+    <meta name="description" content="Secure portal login for WorkEase employee attendance, leave management, and payroll operations.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3.3 & Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
     <style>
+        :root {
+            --brand-primary: #1d4ed8;
+            --brand-primary-hover: #1e40af;
+            --brand-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 60%, #0f172a 100%);
+            --navy-dark: #071326;
+            --navy-deep: #0b1d38;
+            --navy-card: #0e2447;
+            --surface-bg: #f8fafc;
+            --card-border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --radius-card: 24px;
+            --radius-control: 12px;
+            --touch-target: 50px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--surface-bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+        }
+
+        /* Ambient Lighting Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
             height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
 
-        .login-box {
-            background: white;
-            padding: 30px;
-            width: 350px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.55;
+            animation: orbFloat 14s ease-in-out infinite alternate;
         }
 
-        h1 {
-            text-align: center;
-            color: #333;
+        .orb-1 {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, rgba(37, 99, 235, 0) 70%);
+            top: -120px;
+            left: -100px;
         }
 
-        input {
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.18) 0%, rgba(14, 165, 233, 0) 70%);
+            bottom: -150px;
+            right: -100px;
+            animation-duration: 18s;
+        }
+
+        .orb-3 {
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+            top: 40%;
+            left: 45%;
+            animation-duration: 22s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -25px) scale(1.06); }
+            100% { transform: translate(-25px, 30px) scale(0.96); }
+        }
+
+        .bg-grid-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+            background-size: 36px 36px;
+            mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.7) 0%, transparent 75%);
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.7) 0%, transparent 75%);
+        }
+
+        /* Main Container */
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
             width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            box-sizing: border-box;
+            max-width: 1140px;
+            margin: auto;
+            padding: 24px 16px;
         }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #1976d2;
-            color: white;
+        .login-card-container {
+            background: #ffffff;
+            border-radius: var(--radius-card);
+            box-shadow: 
+                0 4px 6px -1px rgba(15, 23, 42, 0.05),
+                0 25px 50px -12px rgba(15, 23, 42, 0.12),
+                0 0 0 1px rgba(226, 232, 240, 0.9);
+            overflow: hidden;
+            display: flex;
+            min-height: 640px;
+            transition: all 0.3s ease;
+        }
+
+        /* Left Hero Showcase (Desktop/Tablet) */
+        .hero-panel {
+            flex: 1.05;
+            background: linear-gradient(145deg, #071326 0%, #0d2342 45%, #102a4c 100%);
+            color: #ffffff;
+            padding: 48px 42px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.28) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(14, 165, 233, 0.2) 0%, transparent 45%);
+            pointer-events: none;
+        }
+
+        .hero-panel-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Brand Badge */
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #ffffff;
+            margin-bottom: 34px;
+        }
+
+        .brand-logo-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .brand-tag {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .hero-title {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            line-height: 1.25;
+            margin-bottom: 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: 14.5px;
+            line-height: 1.6;
+            color: #94a3b8;
+            margin-bottom: 32px;
+            max-width: 440px;
+        }
+
+        /* Feature Badges */
+        .hero-features {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(59, 130, 246, 0.35);
+            transform: translateX(4px);
+        }
+
+        .feature-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            background: rgba(59, 130, 246, 0.16);
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .feature-text h6 {
+            font-size: 13.5px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            color: #f1f5f9;
+        }
+
+        .feature-text p {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 0;
+            line-height: 1.4;
+        }
+
+        /* Hero Footer Stats */
+        .hero-footer {
+            position: relative;
+            z-index: 2;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Right Form Panel */
+        .form-panel {
+            flex: 0.95;
+            background: #ffffff;
+            padding: 48px 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .form-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+
+        .back-home-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            transition: all 0.18s ease;
+        }
+
+        .back-home-link:hover {
+            background: #e2e8f0;
+            color: var(--brand-primary);
+        }
+
+        .portal-badge {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 5px 11px;
+            border-radius: 20px;
+            background: #eff6ff;
+            color: var(--brand-primary);
+            border: 1px solid #dbeafe;
+            white-space: nowrap;
+        }
+
+        /* Mobile Top Branding (Visible on Mobile) */
+        .mobile-brand-banner {
+            display: none;
+        }
+
+        /* Form Header */
+        .form-header {
+            margin-bottom: 22px;
+        }
+
+        .form-header h2 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.6px;
+            margin-bottom: 6px;
+        }
+
+        .form-header p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.45;
+        }
+
+        /* Role Selector Tabs */
+        .role-selector {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            gap: 4px;
+        }
+
+        .role-btn {
+            flex: 1;
             border: none;
+            background: transparent;
+            font-size: 13.5px;
+            font-weight: 600;
+            min-height: 42px;
+            padding: 8px 12px;
+            border-radius: 9px;
+            color: var(--text-muted);
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .role-btn.active {
+            background: #ffffff;
+            color: var(--brand-primary);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+        }
+
+        /* Mobile Quick Highlights (Horizontal Badges) */
+        .mobile-quick-chips {
+            display: none;
+            gap: 8px;
+            margin-bottom: 18px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .mobile-quick-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mobile-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 9px;
+            border-radius: 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        .mobile-chip i {
+            color: var(--brand-primary);
+        }
+
+        /* Alert Styling */
+        .alert-custom-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 13.5px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: fadeInDown 0.25s ease-out;
+        }
+
+        .alert-custom-error .btn-close {
+            margin-left: auto;
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Input Controls */
+        .input-group-custom {
+            margin-bottom: 16px;
+        }
+
+        .input-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .form-label-custom {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0;
+        }
+
+        .input-field-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-lead {
+            position: absolute;
+            left: 14px;
+            color: #94a3b8;
+            font-size: 18px;
+            pointer-events: none;
+            transition: color 0.18s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+        }
+
+        /* Crucial: 16px font-size prevents iOS automatic zoom-in */
+        .form-control-custom {
+            width: 100%;
+            height: var(--touch-target);
+            min-height: var(--touch-target);
+            padding: 10px 44px 10px 44px;
+            font-size: 16px;
+            font-family: inherit;
+            color: #0f172a;
+            background-color: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: var(--radius-control);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .form-control-custom:focus {
+            background-color: #ffffff;
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .input-field-container:focus-within .input-icon-lead {
+            color: var(--brand-primary);
+        }
+
+        .input-toggle-btn {
+            position: absolute;
+            right: 4px;
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: color 0.15s ease;
+            touch-action: manipulation;
+        }
+
+        .input-toggle-btn:hover,
+        .input-toggle-btn:focus-visible {
+            color: #334155;
+            outline: none;
+        }
+
+        /* Checkbox & Forgot */
+        .form-options-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+            font-size: 13px;
+            gap: 10px;
+        }
+
+        .custom-check-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            color: #475569;
+            font-weight: 500;
+            padding: 4px 0;
+            min-height: 36px;
+        }
+
+        .custom-check-container input {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--brand-primary);
             border-radius: 5px;
+            margin: 0;
         }
 
-        button:hover {
-            background: #125ca0;
+        .forgot-link {
+            color: var(--brand-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 0;
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+            transition: text-decoration 0.15s ease;
         }
 
-        .error {
-            color: red;
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Submit Button */
+        .btn-submit-login {
+            width: 100%;
+            height: var(--touch-target);
+            min-height: var(--touch-target);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-control);
+            font-size: 16px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .btn-submit-login:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.42);
+        }
+
+        .btn-submit-login:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-submit-login.loading {
+            pointer-events: none;
+            opacity: 0.88;
+        }
+
+        /* Security Assurance Footer */
+        .security-badge {
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 12px;
             text-align: center;
+            line-height: 1.4;
+        }
+
+        .security-badge i {
+            color: #10b981;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* ==========================================================================
+           RESPONSIVE DESIGN SYSTEM (MOBILE, TABLET & SMALL SCREENS)
+           ========================================================================== */
+
+        /* Tablet View (768px - 991px) */
+        @media (max-width: 991.98px) {
+            .login-wrapper {
+                max-width: 580px;
+                padding: 20px 16px;
+            }
+
+            .login-card-container {
+                flex-direction: column;
+                min-height: auto;
+                border-radius: 20px;
+            }
+
+            .hero-panel {
+                padding: 32px 28px 26px;
+            }
+
+            .hero-title {
+                font-size: 24px;
+            }
+
+            .hero-description {
+                font-size: 13.5px;
+                margin-bottom: 22px;
+            }
+
+            .hero-features {
+                margin-bottom: 22px;
+                gap: 10px;
+            }
+
+            .form-panel {
+                padding: 32px 28px;
+            }
+        }
+
+        /* Mobile Screens (< 768px) */
+        @media (max-width: 767.98px) {
+            body {
+                background: linear-gradient(180deg, #071326 0%, #0d2342 160px, #f1f5f9 160px, #f8fafc 100%);
+                justify-content: flex-start;
+                padding: 0;
+            }
+
+            .login-wrapper {
+                padding: 16px 14px 28px;
+                max-width: 480px;
+            }
+
+            /* Hide heavy desktop hero, reveal app-like mobile header */
+            .hero-panel {
+                display: none;
+            }
+
+            .mobile-brand-banner {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 12px 10px 22px;
+                color: #ffffff;
+            }
+
+            .mobile-brand-banner .brand-badge {
+                margin-bottom: 6px;
+                gap: 10px;
+            }
+
+            .mobile-brand-banner .brand-logo-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 20px;
+            }
+
+            .mobile-brand-banner .brand-name {
+                font-size: 23px;
+            }
+
+            .mobile-brand-banner .status-indicator {
+                font-size: 11.5px;
+                color: #94a3b8;
+                margin-top: 4px;
+                background: rgba(255, 255, 255, 0.08);
+                padding: 4px 10px;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            /* Mobile Card */
+            .login-card-container {
+                border-radius: 20px;
+                box-shadow: 
+                    0 10px 30px -10px rgba(15, 23, 42, 0.15),
+                    0 0 0 1px rgba(226, 232, 240, 0.9);
+                border: none;
+            }
+
+            .form-panel {
+                padding: 24px 20px;
+            }
+
+            .form-topbar {
+                margin-bottom: 18px;
+            }
+
+            .form-header h2 {
+                font-size: 22px;
+            }
+
+            .form-header p {
+                font-size: 13px;
+            }
+
+            /* Mobile chips row */
+            .mobile-quick-chips {
+                display: flex;
+            }
+
+            .role-selector {
+                margin-bottom: 16px;
+            }
+
+            .role-btn {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+
+            .security-badge {
+                font-size: 11px;
+                margin-top: 18px;
+                padding-top: 14px;
+            }
+        }
+
+        /* Extra Small Phones (< 380px) */
+        @media (max-width: 379.98px) {
+            .login-wrapper {
+                padding: 10px 10px 20px;
+            }
+
+            .form-panel {
+                padding: 20px 14px;
+            }
+
+            .form-header h2 {
+                font-size: 20px;
+            }
+
+            .form-options-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<div class="login-box">
+    <!-- Ambient Background Glow & Geometric Pattern -->
+    <div class="ambient-bg" aria-hidden="true">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="bg-grid-pattern"></div>
+    </div>
 
-    <h1>WorkEase</h1>
+    <!-- Main Container -->
+    <main class="login-wrapper">
 
-    <p style="text-align:center;">Employee Login</p>
+        <!-- Mobile Top App Header (Shown on mobile devices) -->
+        <header class="mobile-brand-banner">
+            <a href="/" class="brand-badge" title="WorkEase Homepage">
+                <div class="brand-logo-icon">
+                    <i class="bi bi-briefcase-fill"></i>
+                </div>
+                <div class="text-start">
+                    <div class="brand-name">WorkEase</div>
+                    <div class="brand-tag">Workforce &amp; Payroll</div>
+                </div>
+            </a>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Protected Enterprise Network</span>
+            </div>
+        </header>
 
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
+        <div class="login-card-container">
+            
+            <!-- Left Side: Hero Brand & Feature Showcase (Desktop / Laptop / Tablet) -->
+            <section class="hero-panel" aria-label="WorkEase Overview">
+                <div class="hero-panel-content">
+                    
+                    <!-- Desktop Brand Wordmark -->
+                    <a href="/" class="brand-badge" title="Go to WorkEase Homepage">
+                        <div class="brand-logo-icon">
+                            <i class="bi bi-briefcase-fill"></i>
+                        </div>
+                        <div>
+                            <div class="brand-name">WorkEase</div>
+                            <div class="brand-tag">Workforce &amp; Payroll Intelligence</div>
+                        </div>
+                    </a>
 
-    <form method="POST">
+                    <!-- Value Proposition -->
+                    <h1 class="hero-title">Empower your workplace with precision &amp; ease.</h1>
+                    <p class="hero-description">
+                        Unified platform for GPS geofenced attendance, smart leave approvals, shifts, and automated payroll disbursement.
+                    </p>
 
-        {% csrf_token %}
+                    <!-- Feature Badges -->
+                    <div class="hero-features">
+                        <div class="feature-item">
+                            <div class="feature-icon-box">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <div class="feature-text">
+                                <h6>Geofence Attendance</h6>
+                                <p>Tamper-proof location verification with live radius tracking</p>
+                            </div>
+                        </div>
 
-        <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            required
-        >
+                        <div class="feature-item">
+                            <div class="feature-icon-box">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                            <div class="feature-text">
+                                <h6>Automated Payroll Engine</h6>
+                                <p>Instant salary computations, allowances, deductions &amp; slips</p>
+                            </div>
+                        </div>
 
-        <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-        >
+                        <div class="feature-item">
+                            <div class="feature-icon-box">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="feature-text">
+                                <h6>Role-Based Security</h6>
+                                <p>Dedicated dashboards for Administrators, HR &amp; Employees</p>
+                            </div>
+                        </div>
+                    </div>
 
-        <button type="submit">Login</button>
+                </div>
 
-    </form>
+                <!-- Live System Indicator -->
+                <div class="hero-footer">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>Systems Operational</span>
+                    </div>
+                    <span>v2.4 Enterprise</span>
+                </div>
+            </section>
 
-</div>
+            <!-- Right Side: Login Form Panel (All Devices) -->
+            <section class="form-panel" aria-label="Sign in form">
+                
+                <div>
+                    <!-- Top Navigation Bar -->
+                    <div class="form-topbar">
+                        <a href="/" class="back-home-link">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Website</span>
+                        </a>
+                        <span class="portal-badge" id="roleBadge">
+                            <i class="bi bi-person-circle me-1"></i> Employee Portal
+                        </span>
+                    </div>
 
+                    <!-- Header -->
+                    <div class="form-header">
+                        <h2>Welcome back</h2>
+                        <p>Enter your credentials to securely access your portal</p>
+                    </div>
+
+                    <!-- Role Quick Switcher Pills -->
+                    <div class="role-selector" role="tablist" aria-label="Select Portal Type">
+                        <button type="button" class="role-btn active" id="btnRoleEmployee" onclick="switchPortal('employee')">
+                            <i class="bi bi-person-badge"></i> Employee
+                        </button>
+                        <button type="button" class="role-btn" id="btnRoleAdmin" onclick="switchPortal('admin')">
+                            <i class="bi bi-shield-lock"></i> Admin / HR
+                        </button>
+                    </div>
+
+                    <!-- Mobile Feature Chips (Fast Glance on Phones) -->
+                    <div class="mobile-quick-chips">
+                        <span class="mobile-chip"><i class="bi bi-geo-alt-fill"></i> GPS Geofence</span>
+                        <span class="mobile-chip"><i class="bi bi-cash"></i> Payroll</span>
+                        <span class="mobile-chip"><i class="bi bi-lock-fill"></i> SSL Encrypted</span>
+                    </div>
+
+                    <!-- Error Alert Banner -->
+                    {% if error %}
+                    <div class="alert-custom-error" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill text-danger fs-5 flex-shrink-0 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <strong>Login failed:</strong> {{ error }}
+                        </div>
+                        <button type="button" class="btn-close" onclick="this.parentElement.remove()" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-3 fs-7" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Form -->
+                    <form method="POST" id="loginForm" autocomplete="on">
+                        {% csrf_token %}
+
+                        <!-- Username or Employee ID -->
+                        <div class="input-group-custom">
+                            <div class="input-label-row">
+                                <label for="usernameInput" class="form-label-custom" id="usernameLabel">
+                                    Username or Employee ID
+                                </label>
+                            </div>
+                            <div class="input-field-container">
+                                <span class="input-icon-lead">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    id="usernameInput"
+                                    name="username"
+                                    class="form-control-custom"
+                                    placeholder="e.g. EMP1024 or username"
+                                    required
+                                    autofocus
+                                    autocomplete="username"
+                                    autocapitalize="none"
+                                    spellcheck="false"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="input-group-custom">
+                            <div class="input-label-row">
+                                <label for="passwordInput" class="form-label-custom">
+                                    Password
+                                </label>
+                                <span class="forgot-link" data-bs-toggle="modal" data-bs-target="#forgotModal">
+                                    Forgot?
+                                </span>
+                            </div>
+                            <div class="input-field-container">
+                                <span class="input-icon-lead">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input
+                                    type="password"
+                                    id="passwordInput"
+                                    name="password"
+                                    class="form-control-custom"
+                                    placeholder="Enter your account password"
+                                    required
+                                    autocomplete="current-password"
+                                >
+                                <button
+                                    type="button"
+                                    class="input-toggle-btn"
+                                    id="togglePasswordBtn"
+                                    onclick="togglePasswordVisibility()"
+                                    title="Toggle password visibility"
+                                    aria-label="Toggle password visibility"
+                                >
+                                    <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Options Row: Keep Signed In -->
+                        <div class="form-options-row">
+                            <label class="custom-check-container">
+                                <input type="checkbox" name="remember_me" id="rememberMe">
+                                <span>Keep me signed in</span>
+                            </label>
+                            <span class="text-muted small">Protected session</span>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-submit-login" id="submitBtn">
+                            <span id="btnText">Sign In to WorkEase</span>
+                            <i class="bi bi-arrow-right" id="btnIcon"></i>
+                            <div class="spinner-border spinner-border-sm text-light d-none" id="btnSpinner" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </button>
+                    </form>
+
+                </div>
+
+                <!-- Security Assurance Footer -->
+                <div class="security-badge">
+                    <i class="bi bi-shield-fill-check"></i>
+                    <span>256-Bit SSL Encrypted &bull; ISO/IEC 27001 Security Standard</span>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotModal" tabindex="-1" aria-labelledby="forgotModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered px-3">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 bg-light px-4 pt-4 pb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="d-inline-flex p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-key-fill fs-5"></i>
+                        </div>
+                        <h5 class="modal-title fw-bold" id="forgotModalLabel">Password Recovery</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-3">
+                    <p class="text-secondary small mb-3">
+                        WorkEase accounts are governed by corporate access control policies. If you have forgotten your password or are locked out:
+                    </p>
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex align-items-center gap-2 fw-semibold text-dark mb-1">
+                            <i class="bi bi-person-gear text-primary"></i> Contact Your HR or Workplace Admin
+                        </div>
+                        <div class="text-muted small">
+                            Reach out to your system administrator or HR department. They can issue a verified password reset token or update your credentials directly from the <strong>Admin Dashboard</strong>.
+                        </div>
+                    </div>
+                    <div class="text-secondary small">
+                        <i class="bi bi-info-circle text-info me-1"></i> Administrators can manage access via <strong>Users &gt; Reset Password</strong> in the admin panel.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-1">
+                    <button type="button" class="btn btn-primary w-100 rounded-3 py-2 fw-semibold" data-bs-dismiss="modal">
+                        Understood
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Toggle password visibility
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+
+        // Switch portal tabs (cosmetic guidance & role hint)
+        function switchPortal(role) {
+            const employeeBtn = document.getElementById('btnRoleEmployee');
+            const adminBtn = document.getElementById('btnRoleAdmin');
+            const roleBadge = document.getElementById('roleBadge');
+            const usernameInput = document.getElementById('usernameInput');
+            const usernameLabel = document.getElementById('usernameLabel');
+
+            if (role === 'admin') {
+                employeeBtn.classList.remove('active');
+                adminBtn.classList.add('active');
+                roleBadge.innerHTML = '<i class="bi bi-shield-lock me-1"></i> Admin Portal';
+                roleBadge.style.color = '#b45309';
+                roleBadge.style.backgroundColor = '#fef3c7';
+                roleBadge.style.borderColor = '#fde68a';
+                usernameLabel.innerText = 'Admin Username';
+                usernameInput.placeholder = 'Enter admin username';
+            } else {
+                adminBtn.classList.remove('active');
+                employeeBtn.classList.add('active');
+                roleBadge.innerHTML = '<i class="bi bi-person-circle me-1"></i> Employee Portal';
+                roleBadge.style.color = 'var(--brand-primary)';
+                roleBadge.style.backgroundColor = '#eff6ff';
+                roleBadge.style.borderColor = '#dbeafe';
+                usernameLabel.innerText = 'Username or Employee ID';
+                usernameInput.placeholder = 'e.g. EMP1024 or username';
+            }
+        }
+
+        // Form submit loading state
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnSpinner = document.getElementById('btnSpinner');
+
+            submitBtn.classList.add('loading');
+            btnText.textContent = 'Signing in...';
+            btnIcon.classList.add('d-none');
+            btnSpinner.classList.remove('d-none');
+        });
+    </script>
 </body>
 </html>
