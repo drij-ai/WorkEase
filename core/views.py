@@ -124,7 +124,12 @@ def dashboard(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
 
-    employee = request.user.employee
+    try:
+        employee = request.user.employee
+    except (Employee.DoesNotExist, AttributeError):
+        if request.user.is_superuser or request.user.is_staff:
+            return redirect('admin_dashboard')
+        return redirect('home')
 
     attendance_records = employee.attendance_records.all().order_by(
         '-date',
@@ -809,82 +814,6 @@ def leave_update_status(request, leave_id, status):
                 )
 
     return redirect('/admin-dashboard/leave/')
-
-
-@staff_member_required
-def admin_payroll_list(request):
-
-    payroll_records = Payroll.objects.select_related(
-        'employee'
-    ).all().order_by(
-        '-year',
-        '-month'
-    )
-    
-    employees = Employee.objects.all().order_by('name')
-
-    employee_id = request.GET.get('employee')
-    month = request.GET.get('month')
-    year = request.GET.get('year')
-    salary_type = request.GET.get('salary_type')
-
-    if employee_id:
-        payroll_records = payroll_records.filter(
-            employee_id=employee_id
-        )
-
-    if month:
-        payroll_records = payroll_records.filter(month=month)
-
-    if year:
-        payroll_records = payroll_records.filter(year=year)
-
-    if salary_type:
-        payroll_records = payroll_records.filter(
-            salary_type=salary_type
-        )
-
-    month_choices = [
-        (i, calendar.month_name[i])
-        for i in range(1, 13)
-    ]
-    
-
-    total_payrolls = payroll_records.count()
-    
-
-    total_gross = payroll_records.aggregate(
-        total=Sum('gross_salary')
-    )['total'] or 0
-
-    total_bonus = payroll_records.aggregate(
-        total=Sum('bonus')
-    )['total'] or 0
-
-    total_deductions = payroll_records.aggregate(
-        total=Sum('deductions')
-    )['total'] or 0
-
-    total_net = payroll_records.aggregate(
-        total=Sum('net_salary')
-    )['total'] or 0
-
-    return render(request, 'core/admin_payroll.html', {
-       
-        'payroll_records': payroll_records,
-        'employees': employees,
-        'selected_employee': employee_id,
-        'selected_month': month,
-        'selected_year': year,
-        'selected_salary_type': salary_type,
-        'month_choices': month_choices,
-        'total_payrolls': total_payrolls,
-        'total_gross': total_gross,
-        'total_bonus': total_bonus,
-        'total_deductions': total_deductions,
-        'total_net': total_net,
-})
-    
 
 
 @staff_member_required

@@ -19,8 +19,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# Debug mode: default to False for production safety
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 't', 'yes')
+# Debug mode: defaults to True for local development, False in production (Render)
+is_production = bool(os.environ.get('RENDER') or os.environ.get('RENDER_EXTERNAL_HOSTNAME'))
+default_debug = 'False' if is_production else 'True'
+DEBUG = os.environ.get('DJANGO_DEBUG', default_debug).lower() in ('true', '1', 't', 'yes')
 
 # Secret key: read from DJANGO_SECRET_KEY
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
@@ -42,7 +44,7 @@ render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if render_hostname and render_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_hostname)
 
-if not ALLOWED_HOSTS and DEBUG:
+if not ALLOWED_HOSTS and (DEBUG or not is_production):
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 # CSRF Trusted Origins: required for HTTPS forms in production
