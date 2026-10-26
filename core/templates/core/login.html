@@ -956,24 +956,20 @@
                             <span>Website</span>
                         </a>
                         <span class="portal-badge" id="roleBadge">
-                            <i class="bi bi-person-circle me-1"></i> Employee Portal
+                            <i class="bi bi-shield-check me-1"></i> Unified Access Portal
                         </span>
                     </div>
 
                     <!-- Header -->
                     <div class="form-header">
-                        <h2>Welcome back</h2>
+                        <h2>Sign In</h2>
                         <p>Enter your credentials to securely access your portal</p>
                     </div>
 
-                    <!-- Role Quick Switcher Pills -->
-                    <div class="role-selector" role="tablist" aria-label="Select Portal Type">
-                        <button type="button" class="role-btn active" id="btnRoleEmployee" onclick="switchPortal('employee')">
-                            <i class="bi bi-person-badge"></i> Employee
-                        </button>
-                        <button type="button" class="role-btn" id="btnRoleAdmin" onclick="switchPortal('admin')">
-                            <i class="bi bi-shield-lock"></i> Admin / HR
-                        </button>
+                    <!-- Smart RBAC notice banner -->
+                    <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 12.5px; color: #475569;">
+                        <i class="bi bi-shield-lock-fill text-primary"></i>
+                        <span><strong>Smart RBAC:</strong> Single login for all roles. Automatically routed based on permissions.</span>
                     </div>
 
                     <!-- Mobile Feature Chips (Fast Glance on Phones) -->
@@ -1023,7 +1019,7 @@
                                     id="usernameInput"
                                     name="username"
                                     class="form-control-custom"
-                                    placeholder="e.g. EMP1024 or username"
+                                    placeholder="Enter username or Employee ID"
                                     required
                                     autofocus
                                     autocomplete="username"
@@ -1158,34 +1154,6 @@
             }
         }
 
-        // Switch portal tabs (cosmetic guidance & role hint)
-        function switchPortal(role) {
-            const employeeBtn = document.getElementById('btnRoleEmployee');
-            const adminBtn = document.getElementById('btnRoleAdmin');
-            const roleBadge = document.getElementById('roleBadge');
-            const usernameInput = document.getElementById('usernameInput');
-            const usernameLabel = document.getElementById('usernameLabel');
-
-            if (role === 'admin') {
-                employeeBtn.classList.remove('active');
-                adminBtn.classList.add('active');
-                roleBadge.innerHTML = '<i class="bi bi-shield-lock me-1"></i> Admin Portal';
-                roleBadge.style.color = '#b45309';
-                roleBadge.style.backgroundColor = '#fef3c7';
-                roleBadge.style.borderColor = '#fde68a';
-                usernameLabel.innerText = 'Admin Username';
-                usernameInput.placeholder = 'Enter admin username';
-            } else {
-                adminBtn.classList.remove('active');
-                employeeBtn.classList.add('active');
-                roleBadge.innerHTML = '<i class="bi bi-person-circle me-1"></i> Employee Portal';
-                roleBadge.style.color = 'var(--brand-primary)';
-                roleBadge.style.backgroundColor = '#eff6ff';
-                roleBadge.style.borderColor = '#dbeafe';
-                usernameLabel.innerText = 'Username or Employee ID';
-                usernameInput.placeholder = 'e.g. EMP1024 or username';
-            }
-        }
 
         // Form submit loading state
         const loginForm = document.getElementById('loginForm');

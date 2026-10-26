@@ -76,13 +76,13 @@ def home(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        if request.user.is_superuser:
+        if request.user.is_superuser or request.user.is_staff:
             return redirect('admin_dashboard')
 
         if Employee.objects.filter(user=request.user).exists():
             return redirect('dashboard')
 
-        return redirect('login')
+        return redirect('home')
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
@@ -94,27 +94,52 @@ def login_view(request):
             password=password
         )
 
+        # Allow login via Employee ID as well as username
+        if user is None and username:
+            matched_employee = Employee.objects.filter(
+                employee_id__iexact=username
+            ).select_related('user').first()
+            if matched_employee and matched_employee.user:
+                user = authenticate(
+                    request,
+                    username=matched_employee.user.username,
+                    password=password
+                )
+
+        # Check if account credentials are valid but account is deactivated
+        if user is None and username:
+            lookup_user = User.objects.filter(username=username).first()
+            if not lookup_user:
+                matched_emp = Employee.objects.filter(
+                    employee_id__iexact=username
+                ).select_related('user').first()
+                if matched_emp:
+                    lookup_user = matched_emp.user
+            if lookup_user and lookup_user.check_password(password) and not lookup_user.is_active:
+                return render(request, 'core/login.html', {
+                    'error': 'Your account is currently deactivated. Please contact your administrator.'
+                })
+
         if user is None:
             return render(request, 'core/login.html', {
-                'error': 'Username athva password wrong chhe.'
+                'error': 'Invalid username, employee ID, or password.'
             })
 
         if not user.is_active:
             return render(request, 'core/login.html', {
-                'error': 'Your account is inactive.'
+                'error': 'Your account is currently deactivated. Please contact your administrator.'
             })
 
-        if user.is_superuser:
-            login(request, user)
+        login(request, user)
+
+        # Role-Based Access Control (RBAC) redirection
+        if user.is_superuser or user.is_staff:
             return redirect('admin_dashboard')
 
         if Employee.objects.filter(user=user).exists():
-            login(request, user)
             return redirect('dashboard')
 
-        return render(request, 'core/login.html', {
-            'error': 'Aa account mate valid role athva employee record nathi.'
-        })
+        return redirect('home')
 
     return render(request, 'core/login.html')
 

@@ -182,8 +182,7 @@ class HealthCheckAndCoreViewsTest(TestCase):
             'username': 'someuser',
             'password': 'wrongpassword'
         }, secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Username athva password wrong chhe.')
+        self.assertContains(response, 'Invalid username')
 
     def test_employee_unauthorized_access_to_staff_actions(self):
         """Verify non-staff employees cannot access staff-only admin endpoints."""
@@ -637,3 +636,64 @@ class EmployeeUserFlowTests(TestCase):
         self.client.force_login(self.admin)
         user_add_after = self.client.get(reverse('user_add'), secure=True)
         self.assertNotIn(employee, user_add_after.context['employees'])
+
+
+class UnifiedRBACLoginTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.admin = User.objects.create_superuser(
+            username='admin_boss',
+            password='AdminPass123!',
+            email='boss@example.com'
+        )
+        self.emp_user = User.objects.create_user(
+            username='vikram_user',
+            password='EmpPass123!',
+            first_name='Vikram Mehta'
+        )
+        self.employee = Employee.objects.create(
+            user=self.emp_user,
+            employee_id='EMP555',
+            name='Vikram Mehta',
+            phone='9898989898',
+            department='Sales',
+            joining_date=datetime.date(2026, 1, 1),
+            basic_salary=50000,
+            salary_type='Monthly'
+        )
+
+    def test_admin_login_redirects_to_admin_dashboard(self):
+        """Admin login redirects automatically to admin_dashboard."""
+        response = self.client.post(reverse('login'), {
+            'username': 'admin_boss',
+            'password': 'AdminPass123!'
+        }, secure=True)
+        self.assertRedirects(response, reverse('admin_dashboard'))
+
+    def test_employee_login_with_username_redirects_to_dashboard(self):
+        """Employee login using their username redirects automatically to dashboard."""
+        response = self.client.post(reverse('login'), {
+            'username': 'vikram_user',
+            'password': 'EmpPass123!'
+        }, secure=True)
+        self.assertRedirects(response, reverse('dashboard'))
+
+    def test_employee_login_with_employee_id_redirects_to_dashboard(self):
+        """Employee login using their Employee ID redirects automatically to dashboard."""
+        response = self.client.post(reverse('login'), {
+            'username': 'EMP555',
+            'password': 'EmpPass123!'
+        }, secure=True)
+        self.assertRedirects(response, reverse('dashboard'))
+
+    def test_deactivated_account_login_error(self):
+        """Deactivated user account receives an error message."""
+        self.emp_user.is_active = False
+        self.emp_user.save()
+
+        response = self.client.post(reverse('login'), {
+            'username': 'vikram_user',
+            'password': 'EmpPass123!'
+        }, secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'deactivated')
