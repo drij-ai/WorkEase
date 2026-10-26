@@ -15,10 +15,10 @@ from datetime import time
 from django.shortcuts import get_object_or_404
 
 
-from .forms import EmployeeForm, WorkLocationForm, PayrollForm
+from django.http import HttpResponse, Http404
+from .forms import EmployeeForm, WorkLocationForm, PayrollForm, HolidayForm
 
-from .models import Attendance, Leave, WorkLocation
-from .models import Attendance, Leave, WorkLocation, Employee, Payroll
+from .models import Attendance, Leave, WorkLocation, Employee, Payroll, Holiday
 from django.contrib.admin.views.decorators import staff_member_required
 from math import radians, sin, cos, sqrt, atan2
 
@@ -241,6 +241,12 @@ def dashboard(request):
 
 
 
+    upcoming_holidays = Holiday.objects.filter(
+        date__gte=today
+    ).order_by('date')[:5]
+
+    recent_payrolls = employee.payroll_records.all().order_by('-year', '-month')[:6]
+
     return render(request, 'core/dashboard.html', {
         'employee': employee,
         'attendance_records': attendance_records,
@@ -248,6 +254,8 @@ def dashboard(request):
         'monthly_hours': monthly_hours,
         'monthly_salary': monthly_salary,
         'payroll': payroll,
+        'recent_payrolls': recent_payrolls,
+        'upcoming_holidays': upcoming_holidays,
         'unread_notifications_count': unread_notifications_count,
         'present_days': present_days,
         'absent_days': absent_days,
@@ -515,6 +523,8 @@ def admin_dashboard(request):
     )['total'] or 0
 
     total_locations = WorkLocation.objects.count()
+    upcoming_holidays_count = Holiday.objects.filter(date__gte=today).count()
+    upcoming_holidays = Holiday.objects.filter(date__gte=today).order_by('date')[:5]
 
     return render(request, 'core/admin_dashboard.html', {
         'total_employees': total_employees,
@@ -523,6 +533,8 @@ def admin_dashboard(request):
         'pending_leaves': pending_leaves,
         'monthly_payroll': monthly_payroll,
         'total_locations': total_locations,
+        'upcoming_holidays_count': upcoming_holidays_count,
+        'upcoming_holidays': upcoming_holidays,
     })
 
 @staff_member_required
@@ -828,6 +840,17 @@ def leave_update_status(request, leave_id, status):
                     )
                 )
 
+                # Send email notification to employee if email is set
+                try:
+                    from .email_utils import send_leave_status_email
+                    sent, msg = send_leave_status_email(leave)
+                    if sent:
+                        messages.success(request, f'Leave status updated to {status}. {msg}')
+                    else:
+                        messages.info(request, f'Leave status updated to {status}. ({msg})')
+                except Exception as e:
+                    messages.success(request, f'Leave status updated to {status}.')
+
     return redirect('/admin-dashboard/leave/')
 
 
@@ -1065,3 +1088,124 @@ def mark_notification_read(request, notification_id):
     ).update(is_read=True)
 
     return redirect('employee_notifications')
+
+
+@login_required(login_url='/login/')
+def payroll_pdf_download(request, payroll_id):
+    """
+    Generate and stream salary slip PDF for admin or the employee owner.
+    """
+    payroll = get_object_or_404(
+        Payroll.objects.select_related('employee', 'employee__user'),
+        id=payroll_id
+    )
+
+    is_staff = request.user.is_superuser or request.user.is_staff
+    is_owner = hasattr(request.user, 'employee') and request.user.employee == payroll.employee
+
+    if not (is_staff or is_owner):
+        messages.error(request, 'You do not have permission to access this salary slip.')
+        return redirect('dashboard')
+
+    from .pdf_utils import generate_payroll_pdf
+    pdf_bytes = generate_payroll_pdf(payroll)
+
+    filename = f"payslip_{payroll.employee.employee_id}_{payroll.year}_{payroll.month:02d}.pdf"
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    if request.GET.get('download') == '1':
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    else:
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
+
+
+@staff_member_required
+def payroll_send_email(request, payroll_id):
+    """
+    Send salary slip PDF via email to employee.
+    """
+    payroll = get_object_or_404(
+        Payroll.objects.select_related('employee', 'employee__user'),
+        id=payroll_id
+    )
+    from .email_utils import send_payslip_email
+
+    sent, msg = send_payslip_email(payroll)
+    if sent:
+        messages.success(request, f"Salary slip for {payroll.employee.name} emailed successfully! ({msg})")
+    else:
+        messages.warning(request, f"Could not email payslip for {payroll.employee.name}: {msg}")
+
+    return redirect('admin_payroll_list')
+
+
+@staff_member_required
+def holiday_list(request):
+    """
+    Company holidays calendar for admin.
+    """
+    holidays = Holiday.objects.all().order_by('date')
+    today = timezone.localdate()
+    return render(request, 'core/holidays.html', {
+        'holidays': holidays,
+        'today': today,
+    })
+
+
+@staff_member_required
+def holiday_add(request):
+    """
+    Add a new holiday.
+    """
+    if request.method == 'POST':
+        form = HolidayForm(request.POST)
+        if form.is_valid():
+            holiday = form.save()
+            messages.success(request, f'Holiday "{holiday.title}" added successfully.')
+            return redirect('holiday_list')
+    else:
+        form = HolidayForm()
+
+    return render(request, 'core/holiday_form.html', {
+        'form': form,
+        'title': 'Add Company Holiday',
+    })
+
+
+@staff_member_required
+def holiday_edit(request, holiday_id):
+    """
+    Edit an existing holiday.
+    """
+    holiday = get_object_or_404(Holiday, id=holiday_id)
+    if request.method == 'POST':
+        form = HolidayForm(request.POST, instance=holiday)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Holiday "{holiday.title}" updated successfully.')
+            return redirect('holiday_list')
+    else:
+        form = HolidayForm(instance=holiday)
+
+    return render(request, 'core/holiday_form.html', {
+        'form': form,
+        'holiday': holiday,
+        'title': 'Edit Company Holiday',
+    })
+
+
+@staff_member_required
+def holiday_delete(request, holiday_id):
+    """
+    Delete a holiday.
+    """
+    holiday = get_object_or_404(Holiday, id=holiday_id)
+    if request.method == 'POST':
+        title = holiday.title
+        holiday.delete()
+        messages.success(request, f'Holiday "{title}" deleted successfully.')
+        return redirect('holiday_list')
+
+    return render(request, 'core/holiday_confirm_delete.html', {
+        'holiday': holiday,
+    })

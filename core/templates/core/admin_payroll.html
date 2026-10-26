@@ -429,6 +429,26 @@
             color: #2047b7;
         }
 
+        .pdf-btn {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .pdf-btn:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .email-btn {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .email-btn:hover {
+            background: #d1fae5;
+            color: #047857;
+        }
+
         .delete-btn {
             background: #fff0f0;
             color: var(--danger);
@@ -584,6 +604,18 @@
             </p>
         </div>
     </div>
+
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+            <i class="bi bi-info-circle-fill"></i>
+            <div>{{ message }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <div class="section-label">Payroll Overview</div>
 
@@ -794,6 +826,22 @@
 
                         <td>
                             <div class="action-buttons">
+                                <a href="{% url 'payroll_pdf' payroll.id %}"
+                                   target="_blank"
+                                   class="action-btn pdf-btn"
+                                   title="Download / View PDF Salary Slip"
+                                   aria-label="Download PDF Salary Slip">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </a>
+
+                                <a href="{% url 'payroll_send_email' payroll.id %}"
+                                   class="action-btn email-btn"
+                                   title="Email PDF Salary Slip to Employee{% if payroll.employee.contact_email %} ({{ payroll.employee.contact_email }}){% else %} (No email set){% endif %}"
+                                   aria-label="Email PDF Salary Slip"
+                                   onclick="return confirm('Send PDF salary slip via email to {{ payroll.employee.name }}?');">
+                                    <i class="bi bi-envelope-at-fill"></i>
+                                </a>
+
                                 <a href="{% url 'payroll_edit' payroll.id %}"
                                    class="action-btn edit-btn"
                                    title="Edit payroll"

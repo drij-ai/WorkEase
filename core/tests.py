@@ -6,7 +6,7 @@ import sys
 from django.test import TestCase, Client, SimpleTestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from core.models import Employee, Attendance, WorkLocation, Payroll, Leave, Notification
+from core.models import Employee, Attendance, WorkLocation, Payroll, Leave, Notification, Holiday
 
 
 class HealthCheckAndCoreViewsTest(TestCase):
@@ -697,3 +697,155 @@ class UnifiedRBACLoginTests(TestCase):
         }, secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'deactivated')
+
+
+class NewFeaturesTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.admin = User.objects.create_superuser(
+            username='admin_boss',
+            password='AdminPass123!',
+            email='admin@company.com'
+        )
+        self.emp_user = User.objects.create_user(
+            username='priya_sharma',
+            password='PriyaPass123!',
+            email='priya@company.com'
+        )
+        self.employee = Employee.objects.create(
+            user=self.emp_user,
+            employee_id='EMP888',
+            name='Priya Sharma',
+            email='priya@company.com',
+            phone='9876543210',
+            department='Engineering',
+            joining_date=datetime.date(2025, 6, 1),
+            basic_salary=75000,
+            salary_type='Monthly'
+        )
+        self.payroll = Payroll.objects.create(
+            employee=self.employee,
+            month=10,
+            year=2026,
+            salary_type='Monthly',
+            basic_salary=75000,
+            bonus=5000,
+            deductions=2000
+        )
+        self.holiday = Holiday.objects.create(
+            title='Diwali',
+            date=datetime.date(2026, 11, 8),
+            holiday_type='Festival',
+            description='Festival of Lights'
+        )
+
+    def test_generate_payroll_pdf(self):
+        """Verify generate_payroll_pdf creates valid in-memory PDF bytes."""
+        from core.pdf_utils import generate_payroll_pdf
+        pdf_bytes = generate_payroll_pdf(self.payroll)
+        self.assertIsInstance(pdf_bytes, bytes)
+        self.assertTrue(len(pdf_bytes) > 500)
+        self.assertTrue(pdf_bytes.startswith(b'%PDF'))
+
+    def test_payroll_pdf_download_admin(self):
+        """Admin can download employee payroll PDF slip."""
+        self.client.force_login(self.admin)
+        url = reverse('payroll_pdf', kwargs={'payroll_id': self.payroll.id})
+        response = self.client.get(url, secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('inline', response['Content-Disposition'])
+
+    def test_payroll_pdf_download_employee_owner(self):
+        """Employee can download their own payroll PDF slip."""
+        self.client.force_login(self.emp_user)
+        url = reverse('employee_payroll_pdf', kwargs={'payroll_id': self.payroll.id})
+        response = self.client.get(url, secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_payroll_pdf_download_unauthorized(self):
+        """Another employee cannot download someone else's payroll PDF."""
+        other_user = User.objects.create_user(username='other_emp', password='Pass123!')
+        other_employee = Employee.objects.create(
+            user=other_user,
+            employee_id='EMP999',
+            name='Other Employee',
+            joining_date=datetime.date(2026, 1, 1),
+            basic_salary=40000
+        )
+        self.client.force_login(other_user)
+        url = reverse('employee_payroll_pdf', kwargs={'payroll_id': self.payroll.id})
+        response = self.client.get(url, secure=True)
+        self.assertRedirects(response, reverse('dashboard'))
+
+    def test_payroll_send_email_view(self):
+        """Staff can trigger payroll slip email."""
+        self.client.force_login(self.admin)
+        url = reverse('payroll_send_email', kwargs={'payroll_id': self.payroll.id})
+        response = self.client.get(url, secure=True)
+        self.assertRedirects(response, reverse('admin_payroll_list'))
+
+    def test_leave_update_status_triggers_email(self):
+        """Approving a leave request sends an email notification to employee."""
+        leave = Leave.objects.create(
+            employee=self.employee,
+            leave_type='Sick',
+            from_date=datetime.date(2026, 10, 27),
+            to_date=datetime.date(2026, 10, 28),
+            reason='Flu and fever',
+            status='Pending'
+        )
+        self.client.force_login(self.admin)
+        url = reverse('leave_update_status', kwargs={'leave_id': leave.id, 'status': 'Approved'})
+        response = self.client.post(url, secure=True)
+        self.assertRedirects(response, '/admin-dashboard/leave/')
+        leave.refresh_from_db()
+        self.assertEqual(leave.status, 'Approved')
+
+    def test_holiday_crud(self):
+        """Admin can list, add, edit, and delete holidays."""
+        self.client.force_login(self.admin)
+
+        # List
+        res_list = self.client.get(reverse('holiday_list'), secure=True)
+        self.assertEqual(res_list.status_code, 200)
+        self.assertContains(res_list, 'Diwali')
+
+        # Add
+        res_add = self.client.post(reverse('holiday_add'), {
+            'title': 'Christmas',
+            'date': '2026-12-25',
+            'holiday_type': 'Festival',
+            'description': 'Christmas Day'
+        }, secure=True)
+        self.assertRedirects(res_add, reverse('holiday_list'))
+        self.assertTrue(Holiday.objects.filter(title='Christmas').exists())
+
+        # Edit
+        holiday_to_edit = Holiday.objects.get(title='Christmas')
+        res_edit = self.client.post(reverse('holiday_edit', kwargs={'holiday_id': holiday_to_edit.id}), {
+            'title': 'Christmas Holiday',
+            'date': '2026-12-25',
+            'holiday_type': 'Festival',
+            'description': 'Updated'
+        }, secure=True)
+        self.assertRedirects(res_edit, reverse('holiday_list'))
+        holiday_to_edit.refresh_from_db()
+        self.assertEqual(holiday_to_edit.title, 'Christmas Holiday')
+
+        # Delete
+        res_del = self.client.post(reverse('holiday_delete', kwargs={'holiday_id': holiday_to_edit.id}), secure=True)
+        self.assertRedirects(res_del, reverse('holiday_list'))
+        self.assertFalse(Holiday.objects.filter(title='Christmas Holiday').exists())
+
+    def test_employee_dashboard_context(self):
+        """Employee dashboard context contains upcoming holidays and recent payrolls."""
+        self.client.force_login(self.emp_user)
+        response = self.client.get(reverse('dashboard'), secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('upcoming_holidays', response.context)
+        self.assertIn('recent_payrolls', response.context)
+        self.assertContains(response, 'Diwali')
+        self.assertContains(response, 'Download Salary Slip (PDF)')
+

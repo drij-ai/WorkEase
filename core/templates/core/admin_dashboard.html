@@ -436,6 +436,7 @@
         <a href="/admin-dashboard/leave/"><span class="menu-icon">◷</span><span>Leave</span></a>
         <a href="/admin-dashboard/payroll/"><span class="menu-icon">＄</span><span>Payroll</span></a>
         <a href="/admin-dashboard/work-locations/"><span class="menu-icon">⌖</span><span>Work Locations</span></a>
+        <a href="{% url 'holiday_list' %}"><span class="menu-icon">✦</span><span>Holidays</span></a>
         <div class="menu-heading">SYSTEM</div>
         
 <a href="/admin/"><span class="menu-icon">⚙</span><span>Django Admin</span></a>
@@ -506,10 +507,11 @@
 
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><div><h2 class="section-title">Manage your workforce</h2><div class="section-caption">Open a section to view and manage its records.</div></div></div>
         <div class="row g-3 mb-4">
-          <div class="col-sm-6 col-xl-3"><a href="/admin-dashboard/employees/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-blue mb-3">♧</span><h3 class="section-title">Employees</h3><p class="section-caption mb-3">View employee profiles and manage your team.</p><span class="section-link">Manage employees →</span></div></div></a></div>
-          <div class="col-sm-6 col-xl-3"><a href="/admin-dashboard/attendance/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-green mb-3">▣</span><h3 class="section-title">Attendance</h3><p class="section-caption mb-3">Review daily attendance and working hours.</p><span class="section-link">View attendance →</span></div></div></a></div>
-          <div class="col-sm-6 col-xl-3"><a href="/admin-dashboard/leave/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-amber mb-3">◷</span><h3 class="section-title">Leave Requests</h3><p class="section-caption mb-3">Review leave requests and approval status.</p><span class="section-link">Review requests →</span></div></div></a></div>
-          <div class="col-sm-6 col-xl-3"><a href="/admin-dashboard/payroll/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-purple mb-3">＄</span><h3 class="section-title">Payroll</h3><p class="section-caption mb-3">Open salary records and payroll summaries.</p><span class="section-link">Manage payroll →</span></div></div></a></div>
+          <div class="col-sm-6 col-xl-4"><a href="/admin-dashboard/employees/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-blue mb-3">♧</span><h3 class="section-title">Employees</h3><p class="section-caption mb-3">View employee profiles and manage your team.</p><span class="section-link">Manage employees →</span></div></div></a></div>
+          <div class="col-sm-6 col-xl-4"><a href="/admin-dashboard/attendance/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-green mb-3">▣</span><h3 class="section-title">Attendance</h3><p class="section-caption mb-3">Review daily attendance and working hours.</p><span class="section-link">View attendance →</span></div></div></a></div>
+          <div class="col-sm-6 col-xl-4"><a href="/admin-dashboard/leave/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-amber mb-3">◷</span><h3 class="section-title">Leave Requests</h3><p class="section-caption mb-3">Review leave requests and approval status.</p><span class="section-link">Review requests →</span></div></div></a></div>
+          <div class="col-sm-6 col-xl-6"><a href="/admin-dashboard/payroll/" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-purple mb-3">＄</span><h3 class="section-title">Payroll & Salary Slips</h3><p class="section-caption mb-3">Download PDF salary slips and send email statements to employees.</p><span class="section-link">Manage payroll →</span></div></div></a></div>
+          <div class="col-sm-12 col-xl-6"><a href="{% url 'holiday_list' %}" class="text-decoration-none"><div class="card section-card"><div class="card-body"><span class="stat-icon icon-blue mb-3">✦</span><h3 class="section-title">Company Holiday Calendar</h3><p class="section-caption mb-3">Official national holidays, festivals & off-days ({{ upcoming_holidays_count|default:0 }} upcoming).</p><span class="section-link">Manage holiday calendar →</span></div></div></a></div>
         </div>
         <footer class="text-center text-secondary small py-3">WorkEase · Employee Management System</footer>
       </div>

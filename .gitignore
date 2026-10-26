@@ -17,3 +17,6 @@ db.sqlite3
 # Django generated files
 staticfiles/
 media/
+
+# Migration scripts
+neon_*.ps1

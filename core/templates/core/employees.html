@@ -681,6 +681,9 @@
 
                         <td>
                             <span class="employee-name">{{ employee.name }}</span>
+                            {% if employee.contact_email %}
+                                <div class="text-muted small" style="font-size: 11px;"><i class="bi bi-envelope me-1"></i>{{ employee.contact_email }}</div>
+                            {% endif %}
                         </td>
 
                         <td>{{ employee.phone|default:"—" }}</td>

@@ -1,15 +1,14 @@
 from django import forms
-from .models import Employee
-from .models import Employee, WorkLocation, Payroll
+from .models import Employee, WorkLocation, Payroll, Holiday
 
 
 class EmployeeForm(forms.ModelForm):
-
     class Meta:
         model = Employee
         fields = [
             'employee_id',
             'name',
+            'email',
             'phone',
             'department',
             'joining_date',
@@ -27,6 +26,11 @@ class EmployeeForm(forms.ModelForm):
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Employee Name'
+            }),
+
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'official@company.com'
             }),
 
             'phone': forms.TextInput(attrs={
@@ -59,15 +63,10 @@ class EmployeeForm(forms.ModelForm):
             }),
         }
 
-from django import forms
-from .models import Employee, WorkLocation
-
 
 class WorkLocationForm(forms.ModelForm):
-
     class Meta:
         model = WorkLocation
-
         fields = [
             'name',
             'latitude',
@@ -76,7 +75,6 @@ class WorkLocationForm(forms.ModelForm):
         ]
 
         widgets = {
-
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Office / Location Name'
@@ -99,6 +97,7 @@ class WorkLocationForm(forms.ModelForm):
                 'placeholder': 'Example: 100'
             }),
         }
+
 
 class PayrollForm(forms.ModelForm):
     class Meta:
@@ -151,5 +150,35 @@ class PayrollForm(forms.ModelForm):
             'deductions': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01'
+            }),
+        }
+
+
+class HolidayForm(forms.ModelForm):
+    class Meta:
+        model = Holiday
+        fields = [
+            'title',
+            'date',
+            'holiday_type',
+            'description',
+        ]
+
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. Diwali, Eid, Christmas, Independence Day'
+            }),
+            'date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'holiday_type': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Optional details or notes about the holiday'
             }),
         }

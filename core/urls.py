@@ -69,10 +69,45 @@ path(
 ),
 
     path(
-    'admin-dashboard/payroll/<int:payroll_id>/delete/',
-    views.payroll_delete,
-    name='payroll_delete'
-),
+        'admin-dashboard/payroll/<int:payroll_id>/delete/',
+        views.payroll_delete,
+        name='payroll_delete'
+    ),
+    path(
+        'admin-dashboard/payroll/<int:payroll_id>/pdf/',
+        views.payroll_pdf_download,
+        name='payroll_pdf'
+    ),
+    path(
+        'admin-dashboard/payroll/<int:payroll_id>/send-email/',
+        views.payroll_send_email,
+        name='payroll_send_email'
+    ),
+    path(
+        'my-payroll/<int:payroll_id>/pdf/',
+        views.payroll_pdf_download,
+        name='employee_payroll_pdf'
+    ),
+    path(
+        'admin-dashboard/holidays/',
+        views.holiday_list,
+        name='holiday_list'
+    ),
+    path(
+        'admin-dashboard/holidays/add/',
+        views.holiday_add,
+        name='holiday_add'
+    ),
+    path(
+        'admin-dashboard/holidays/<int:holiday_id>/edit/',
+        views.holiday_edit,
+        name='holiday_edit'
+    ),
+    path(
+        'admin-dashboard/holidays/<int:holiday_id>/delete/',
+        views.holiday_delete,
+        name='holiday_delete'
+    ),
 
    path(
     'admin-dashboard/leave/<int:leave_id>/<str:status>/',

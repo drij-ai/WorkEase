@@ -23,6 +23,12 @@ class Employee(models.Model):
         max_length=15
     )
 
+    email = models.EmailField(
+        max_length=150,
+        blank=True,
+        null=True
+    )
+
     department = models.CharField(
         max_length=100
     )
@@ -48,6 +54,14 @@ class Employee(models.Model):
         ],
         default='Monthly'
     )
+
+    @property
+    def contact_email(self):
+        if self.email:
+            return self.email
+        if self.user and self.user.email:
+            return self.user.email
+        return None
 
     def __str__(self):
         return f"{self.employee_id} - {self.name}"
@@ -322,3 +336,38 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.employee.name} - {self.title}"
+
+
+class Holiday(models.Model):
+    HOLIDAY_TYPES = [
+        ('Festival', 'Festival'),
+        ('National', 'National Holiday'),
+        ('Company', 'Company Off'),
+        ('Optional', 'Optional Holiday'),
+    ]
+
+    title = models.CharField(
+        max_length=150
+    )
+
+    date = models.DateField()
+
+    holiday_type = models.CharField(
+        max_length=30,
+        choices=HOLIDAY_TYPES,
+        default='Festival'
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ['date']
+
+    def __str__(self):
+        return f"{self.date} - {self.title}"
