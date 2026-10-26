@@ -96,29 +96,35 @@ def login_view(request):
 
         # Allow login via Employee ID as well as username
         if user is None and username:
-            matched_employee = Employee.objects.filter(
-                employee_id__iexact=username
-            ).select_related('user').first()
-            if matched_employee and matched_employee.user:
-                user = authenticate(
-                    request,
-                    username=matched_employee.user.username,
-                    password=password
-                )
+            try:
+                matched_employee = Employee.objects.filter(
+                    employee_id__iexact=username
+                ).select_related('user').first()
+                if matched_employee and matched_employee.user:
+                    user = authenticate(
+                        request,
+                        username=matched_employee.user.username,
+                        password=password
+                    )
+            except Exception:
+                pass
 
         # Check if account credentials are valid but account is deactivated
         if user is None and username:
-            lookup_user = User.objects.filter(username=username).first()
-            if not lookup_user:
-                matched_emp = Employee.objects.filter(
-                    employee_id__iexact=username
-                ).select_related('user').first()
-                if matched_emp:
-                    lookup_user = matched_emp.user
-            if lookup_user and lookup_user.check_password(password) and not lookup_user.is_active:
-                return render(request, 'core/login.html', {
-                    'error': 'Your account is currently deactivated. Please contact your administrator.'
-                })
+            try:
+                lookup_user = User.objects.filter(username=username).first()
+                if not lookup_user:
+                    matched_emp = Employee.objects.filter(
+                        employee_id__iexact=username
+                    ).select_related('user').first()
+                    if matched_emp:
+                        lookup_user = matched_emp.user
+                if lookup_user and lookup_user.check_password(password) and not lookup_user.is_active:
+                    return render(request, 'core/login.html', {
+                        'error': 'Your account is currently deactivated. Please contact your administrator.'
+                    })
+            except Exception:
+                pass
 
         if user is None:
             return render(request, 'core/login.html', {
@@ -241,11 +247,17 @@ def dashboard(request):
 
 
 
-    upcoming_holidays = Holiday.objects.filter(
-        date__gte=today
-    ).order_by('date')[:5]
+    try:
+        upcoming_holidays = Holiday.objects.filter(
+            date__gte=today
+        ).order_by('date')[:5]
+    except Exception:
+        upcoming_holidays = []
 
-    recent_payrolls = employee.payroll_records.all().order_by('-year', '-month')[:6]
+    try:
+        recent_payrolls = employee.payroll_records.all().order_by('-year', '-month')[:6]
+    except Exception:
+        recent_payrolls = []
 
     return render(request, 'core/dashboard.html', {
         'employee': employee,
@@ -523,8 +535,13 @@ def admin_dashboard(request):
     )['total'] or 0
 
     total_locations = WorkLocation.objects.count()
-    upcoming_holidays_count = Holiday.objects.filter(date__gte=today).count()
-    upcoming_holidays = Holiday.objects.filter(date__gte=today).order_by('date')[:5]
+
+    try:
+        upcoming_holidays_count = Holiday.objects.filter(date__gte=today).count()
+        upcoming_holidays = Holiday.objects.filter(date__gte=today).order_by('date')[:5]
+    except Exception:
+        upcoming_holidays_count = 0
+        upcoming_holidays = []
 
     return render(request, 'core/admin_dashboard.html', {
         'total_employees': total_employees,
@@ -1209,3 +1226,21 @@ def holiday_delete(request, holiday_id):
     return render(request, 'core/holiday_confirm_delete.html', {
         'holiday': holiday,
     })
+
+
+@staff_member_required
+def run_migrations_view(request):
+    """
+    Allow administrator to apply pending database migrations directly from browser.
+    """
+    import io
+    from django.core.management import call_command
+    out = io.StringIO()
+    try:
+        call_command('migrate', interactive=False, stdout=out)
+        res_output = out.getvalue().strip() or "Database is already up to date."
+        messages.success(request, f"Migration successful: {res_output}")
+    except Exception as e:
+        messages.error(request, f"Migration error: {str(e)}")
+    return redirect('admin_dashboard')
+

@@ -150,6 +150,7 @@ path(
 ),
     
     path('admin-dashboard/employees/add/',views.employee_add, name='employee_add'),
+    path('admin-dashboard/run-migrations/', views.run_migrations_view, name='run_migrations'),
     path('leave/', views.leave_apply, name='leave_apply'),
     path('attendance/', views.attendance, name='attendance'),
 ]
