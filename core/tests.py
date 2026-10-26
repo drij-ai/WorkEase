@@ -521,3 +521,119 @@ class ProductionSettingsIsolatedTest(SimpleTestCase):
 
         proc = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, f"Subprocess failed:\n{proc.stderr}")
+
+
+class EmployeeUserFlowTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.admin = User.objects.create_superuser(
+            username='admin_test',
+            password='adminpassword123',
+            email='admin@example.com'
+        )
+        self.client.force_login(self.admin)
+
+    def test_add_employee_saves_correctly_without_user(self):
+        """Newly created employee should be saved without an auto-created user."""
+        response = self.client.post(reverse('employee_add'), {
+            'employee_id': 'EMP001',
+            'name': 'Rahul Sharma',
+            'phone': '9876543210',
+            'department': 'Operations',
+            'joining_date': '2026-01-15',
+            'basic_salary': '55000.00',
+            'hourly_rate': '0.00',
+            'salary_type': 'Monthly'
+        }, secure=True)
+
+        self.assertEqual(response.status_code, 302)
+        employee = Employee.objects.filter(employee_id='EMP001').first()
+        self.assertIsNotNone(employee)
+        self.assertEqual(employee.name, 'Rahul Sharma')
+        self.assertIsNone(employee.user)
+
+    def test_user_add_dropdown_displays_eligible_employees(self):
+        """Select Employee dropdown on user_add page should display all employees without linked user."""
+        # Employee 1 without user
+        emp1 = Employee.objects.create(
+            employee_id='EMP010',
+            name='Amit Kumar',
+            phone='1111111111',
+            department='HR',
+            joining_date=datetime.date(2026, 2, 1),
+            basic_salary=40000,
+            salary_type='Monthly'
+        )
+        # Employee 2 with user
+        linked_user = User.objects.create_user(username='amit_user', password='password123')
+        emp2 = Employee.objects.create(
+            user=linked_user,
+            employee_id='EMP020',
+            name='Priya Patel',
+            phone='2222222222',
+            department='Tech',
+            joining_date=datetime.date(2026, 2, 1),
+            basic_salary=60000,
+            salary_type='Monthly'
+        )
+
+        response = self.client.get(reverse('user_add'), secure=True)
+        self.assertEqual(response.status_code, 200)
+
+        employees_in_context = list(response.context['employees'])
+        self.assertIn(emp1, employees_in_context)
+        self.assertNotIn(emp2, employees_in_context)
+
+        # Check HTML content
+        content = response.content.decode('utf-8')
+        self.assertIn(f'{emp1.employee_id} - {emp1.name}', content)
+        self.assertNotIn(f'{emp2.employee_id} - {emp2.name}', content)
+
+    def test_full_flow_add_employee_then_add_login_user(self):
+        """Test full flow: Add Employee -> Add Login User -> Select employee -> Create credentials."""
+        # Step 1: Add Employee
+        add_emp_response = self.client.post(reverse('employee_add'), {
+            'employee_id': 'EMP077',
+            'name': 'Sneha Desai',
+            'phone': '9988776655',
+            'department': 'Finance',
+            'joining_date': '2026-03-01',
+            'basic_salary': '65000.00',
+            'hourly_rate': '0.00',
+            'salary_type': 'Monthly'
+        }, secure=True)
+        self.assertEqual(add_emp_response.status_code, 302)
+
+        employee = Employee.objects.get(employee_id='EMP077')
+        self.assertIsNone(employee.user)
+
+        # Step 2: Open Add Login User page and check employee appears in dropdown
+        user_add_get = self.client.get(reverse('user_add'), secure=True)
+        self.assertEqual(user_add_get.status_code, 200)
+        self.assertIn(employee, user_add_get.context['employees'])
+
+        # Step 3: Select the new employee and create login credentials
+        user_add_post = self.client.post(reverse('user_add'), {
+            'employee': employee.id,
+            'username': 'sneha_desai',
+            'password': 'SecurePassword123!',
+            'confirm_password': 'SecurePassword123!'
+        }, secure=True)
+        self.assertEqual(user_add_post.status_code, 302)
+        self.assertRedirects(user_add_post, reverse('user_management'))
+
+        # Step 4: Verify relationship was established
+        employee.refresh_from_db()
+        self.assertIsNotNone(employee.user)
+        self.assertEqual(employee.user.username, 'sneha_desai')
+        self.assertEqual(employee.user.first_name, 'Sneha Desai')
+
+        # Step 5: Verify login works with the new credentials
+        self.client.logout()
+        login_success = self.client.login(username='sneha_desai', password='SecurePassword123!')
+        self.assertTrue(login_success)
+
+        # Step 6: Verify employee is now excluded from Add Login User dropdown
+        self.client.force_login(self.admin)
+        user_add_after = self.client.get(reverse('user_add'), secure=True)
+        self.assertNotIn(employee, user_add_after.context['employees'])

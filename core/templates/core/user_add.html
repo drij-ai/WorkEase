@@ -19,7 +19,10 @@
 
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert alert-info">{{ message }}</div>
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 {% endfor %}
             {% endif %}
 
@@ -31,14 +34,14 @@
                     <select name="employee" class="form-select" required>
                         <option value="">-- Select Employee --</option>
                         {% for employee in employees %}
-                            <option value="{{ employee.id }}">
+                            <option value="{{ employee.id }}" {% if selected_employee == employee.id|stringformat:"s" %}selected{% endif %}>
                                 {{ employee.employee_id }} - {{ employee.name }}
                             </option>
                         {% endfor %}
                     </select>
 
                     {% if not employees %}
-                        <small class="text-danger">
+                        <small class="text-danger d-block mt-1">
                             No employees available without a login account.
                         </small>
                     {% endif %}
@@ -47,7 +50,7 @@
                 <div class="mb-3">
                     <label class="form-label">Username</label>
                     <input type="text" name="username"
-                           class="form-control" required>
+                           class="form-control" value="{{ username|default:'' }}" required>
                 </div>
 
                 <div class="mb-3">
@@ -76,5 +79,6 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -515,37 +515,11 @@ def employee_add(request):
         form = EmployeeForm(request.POST)
 
         if form.is_valid():
-            employee = form.save(commit=False)
-
-            # Generate a unique username
-            base_username = employee.employee_id.strip().lower()
-            username = base_username
-            counter = 1
-
-            while User.objects.filter(username=username).exists():
-                username = f"{base_username}{counter}"
-                counter += 1
-
-            # Generate a temporary password
-            temporary_password = get_random_string(
-                length=12
-            )
-
-            # Create login account
-            user = User.objects.create_user(
-                username=username,
-                password=temporary_password,
-                first_name=employee.name
-            )
-
-            # Link account to employee
-            employee.user = user
-            employee.save()
+            employee = form.save()
 
             messages.success(
                 request,
-                f"Employee added! Username: {username} | "
-                f"Temporary password: {temporary_password}"
+                f"Employee '{employee.name}' added successfully."
             )
 
             return redirect('/admin-dashboard/employees/')
@@ -605,50 +579,66 @@ def user_management(request):
 
 @staff_member_required
 def user_add(request):
+    selected_employee = (
+        request.POST.get('employee')
+        or request.GET.get('employee')
+        or request.GET.get('employee_id')
+        or ''
+    )
+    username = request.POST.get('username', '').strip() if request.method == 'POST' else ''
+
     if request.method == 'POST':
         employee_id = request.POST.get('employee')
-        username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
         confirm_password = request.POST.get('confirm_password', '')
 
-        employee = get_object_or_404(
-            Employee,
-            id=employee_id,
-            user__isnull=True
-        )
-
-        if not username or not password:
-            messages.error(request, 'Username and password are required.')
-
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, 'This username already exists.')
-
-        elif password != confirm_password:
-            messages.error(request, 'Passwords do not match.')
-
-        elif len(password) < 8:
-            messages.error(request, 'Password must be at least 8 characters.')
-
+        if not employee_id:
+            messages.error(request, 'Please select an employee.')
         else:
-            user = User.objects.create_user(
-                username=username,
-                password=password,
-                first_name=employee.name
-            )
+            employee = Employee.objects.filter(
+                id=employee_id,
+                user__isnull=True
+            ).first()
 
-            employee.user = user
-            employee.save(update_fields=['user'])
+            if not employee:
+                messages.error(request, 'Selected employee is invalid or already has a login account.')
 
-            messages.success(
-                request,
-                f'Login account created successfully for {employee.name}.'
-            )
-            return redirect('user_management')
+            elif not username or not password:
+                messages.error(request, 'Username and password are required.')
+
+            elif User.objects.filter(username=username).exists():
+                messages.error(request, 'This username already exists.')
+
+            elif password != confirm_password:
+                messages.error(request, 'Passwords do not match.')
+
+            elif len(password) < 8:
+                messages.error(request, 'Password must be at least 8 characters.')
+
+            else:
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    first_name=employee.name
+                )
+
+                employee.user = user
+                employee.save(update_fields=['user'])
+
+                messages.success(
+                    request,
+                    f'Login account created successfully for {employee.name}.'
+                )
+                return redirect('user_management')
+
+    employees = Employee.objects.filter(
+        user__isnull=True
+    ).order_by('name')
 
     return render(request, 'core/user_add.html', {
-        'employees': Employee.objects.filter(
-            user__isnull=True
-        ).order_by('name')
+        'employees': employees,
+        'selected_employee': selected_employee,
+        'username': username,
     })
 
 

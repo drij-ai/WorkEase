@@ -589,6 +589,16 @@
         </a>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="row g-3 mb-4">
 
         <div class="col-12 col-sm-6 col-xl-4">
@@ -779,5 +789,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
