@@ -41,6 +41,9 @@ if not SECRET_KEY:
     if DEBUG:
         # Fallback key solely for local development
         SECRET_KEY = 'django-insecure-local-dev-key-change-in-production'
+    elif os.environ.get('VERCEL'):
+        # Fallback key on Vercel if DJANGO_SECRET_KEY wasn't explicitly configured in Vercel dashboard
+        SECRET_KEY = 'django-insecure-vercel-prod-key-fallback-workease-app'
     else:
         raise RuntimeError(
             "DJANGO_SECRET_KEY environment variable is required in production (when DEBUG=False)."
@@ -69,6 +72,17 @@ vercel_hostname = os.environ.get('VERCEL_URL')
 if vercel_hostname and vercel_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(vercel_hostname)
 
+vercel_project_prod_url = os.environ.get('VERCEL_PROJECT_PRODUCTION_URL')
+if vercel_project_prod_url and vercel_project_prod_url not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(vercel_project_prod_url)
+
+# Always allow .vercel.app and specific project domain when running on Vercel
+if os.environ.get('VERCEL') or vercel_hostname or vercel_project_prod_url:
+    if '.vercel.app' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('.vercel.app')
+    if 'work-ease-phi.vercel.app' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('work-ease-phi.vercel.app')
+
 if not ALLOWED_HOSTS and (DEBUG or not is_production):
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
@@ -95,6 +109,17 @@ if vercel_hostname:
     vercel_origin = f"https://{vercel_hostname}"
     if vercel_origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(vercel_origin)
+
+if vercel_project_prod_url:
+    vercel_prod_origin = f"https://{vercel_project_prod_url}"
+    if vercel_prod_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(vercel_prod_origin)
+
+if os.environ.get('VERCEL') or vercel_hostname or vercel_project_prod_url:
+    if 'https://*.vercel.app' not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append('https://*.vercel.app')
+    if 'https://work-ease-phi.vercel.app' not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append('https://work-ease-phi.vercel.app')
 
 
 # Application definition
