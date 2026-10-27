@@ -14,7 +14,43 @@
     *{box-sizing:border-box}
     body{margin:0;background:var(--page);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:14px}
     .app-shell{min-height:100vh}
-    .sidebar{background:linear-gradient(180deg,var(--navy),#0b1d35);color:#e8eef8;min-height:100vh;padding:18px 14px!important;border-right:1px solid rgba(255,255,255,.06)}
+    .sidebar {
+      background: linear-gradient(180deg, var(--navy), #0b1d35);
+      color: #e8eef8;
+      padding: 18px 14px !important;
+      border-right: 1px solid rgba(255, 255, 255, .06);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.35) rgba(10, 25, 48, 0.6);
+    }
+    @media (min-width: 992px) {
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        align-self: flex-start;
+      }
+    }
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .sidebar::-webkit-scrollbar-track {
+      background: rgba(10, 25, 48, 0.6);
+      border-radius: 6px;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.28);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .sidebar nav {
+      padding-bottom: 24px;
+    }
     .brand{display:flex;align-items:center;gap:10px;padding:10px 9px 22px;margin-bottom:18px;color:#fff;font-size:22px;font-weight:750;letter-spacing:-.5px;border-bottom:1px solid rgba(255,255,255,.12)}
     .brand-icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3988ff,#1d5ed7);color:#fff;font-size:18px;box-shadow:0 5px 14px rgba(37,99,235,.28)}
     .menu-heading{padding:13px 10px 7px;color:#8fa6c5;font-size:10px;font-weight:750;letter-spacing:1.15px}
@@ -211,14 +247,16 @@
 
     .sidebar.mobile-open {
         display: block;
-        position: absolute;
+        position: fixed;
         z-index: 1050;
         top: 0;
         left: 0;
         width: min(300px, 85vw);
-        height: 100%;
-        min-height: 100%;
-        box-shadow: 12px 0 35px rgba(15, 42, 76, .2);
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        box-shadow: 12px 0 35px rgba(15, 42, 76, .35);
     }
 
     .sidebar.mobile-open nav {

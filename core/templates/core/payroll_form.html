@@ -187,6 +187,10 @@
                 width: 100%;
                 margin: 0 !important;
             }
+        .alert-warning {
+            background-color: #fee2e2;
+            border-color: #fecaca;
+            color: #dc2626;
         }
     </style>
 </head>
@@ -232,6 +236,9 @@
                                     class="form-label"
                                 >
                                     {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
                                 </label>
 
                                 {{ field }}

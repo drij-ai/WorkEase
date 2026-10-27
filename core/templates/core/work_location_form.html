@@ -280,7 +280,8 @@
             padding-left: 18px;
         }
 
-        .alert-danger {
+        .alert-danger,
+        .alert-warning {
             border: 1px solid #f4d9dc;
             border-radius: 8px;
             background: #fff3f3;
@@ -484,7 +485,7 @@
                         <!-- Location Name -->
                         <div class="col-12">
                             <label class="form-label" for="{{ form.name.id_for_label }}">
-                                Location Name
+                                Location Name <span class="text-danger">*</span>
                             </label>
 
                             {{ form.name }}
@@ -497,7 +498,7 @@
                         <!-- Latitude -->
                         <div class="col-md-6">
                             <label class="form-label" for="{{ form.latitude.id_for_label }}">
-                                Latitude
+                                Latitude <span class="text-danger">*</span>
                             </label>
 
                             {{ form.latitude }}
@@ -514,7 +515,7 @@
                         <!-- Longitude -->
                         <div class="col-md-6">
                             <label class="form-label" for="{{ form.longitude.id_for_label }}">
-                                Longitude
+                                Longitude <span class="text-danger">*</span>
                             </label>
 
                             {{ form.longitude }}
@@ -531,7 +532,7 @@
                         <!-- Allowed Radius -->
                         <div class="col-md-6">
                             <label class="form-label" for="{{ form.allowed_radius.id_for_label }}">
-                                Allowed Radius
+                                Allowed Radius <span class="text-danger">*</span>
                             </label>
 
                             {{ form.allowed_radius }}

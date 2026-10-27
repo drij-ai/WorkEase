@@ -463,11 +463,11 @@
             color: var(--brand-primary);
         }
 
-        /* Alert Styling */
-        .alert-custom-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
+        .alert-custom-error,
+        .alert-warning {
+            background: #fef2f2 !important;
+            border: 1px solid #fecaca !important;
+            color: #b91c1c !important;
             border-radius: 12px;
             padding: 12px 14px;
             font-size: 13.5px;
@@ -478,7 +478,8 @@
             animation: fadeInDown 0.25s ease-out;
         }
 
-        .alert-custom-error .btn-close {
+        .alert-custom-error .btn-close,
+        .alert-warning .btn-close {
             margin-left: auto;
             font-size: 10px;
             opacity: 0.7;

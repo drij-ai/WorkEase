@@ -152,6 +152,12 @@
             font-size: 14px;
         }
 
+        .alert-warning {
+            background-color: #fee2e2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
         .section-label {
             font-size: 12px;
             font-weight: 750;
@@ -612,8 +618,8 @@
     {% if messages %}
     <div class="mb-4">
         {% for message in messages %}
-        <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-            <i class="bi bi-info-circle-fill"></i>
+        <div class="alert alert-{% if message.tags == 'error' or message.tags == 'warning' %}danger{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+            <i class="bi bi-{% if message.tags == 'error' or message.tags == 'warning' %}exclamation-triangle-fill text-danger{% elif message.tags == 'success' %}check-circle-fill text-success{% else %}info-circle-fill text-info{% endif %}"></i>
             <div>{{ message }}</div>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>

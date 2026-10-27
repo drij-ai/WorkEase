@@ -254,8 +254,14 @@
         }
 
         .status-no-account {
-            background: #fef3c7;
-            color: #92400e;
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .alert-warning {
+            background-color: #fee2e2;
+            border-color: #fecaca;
+            color: #dc2626;
         }
 
         .role-badge {
@@ -394,8 +400,8 @@
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <i class="bi bi-info-circle me-2"></i>
+            <div class="alert alert-{% if message.tags == 'error' or message.tags == 'warning' %}danger{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{% if message.tags == 'error' or message.tags == 'warning' %}exclamation-triangle-fill text-danger{% elif message.tags == 'success' %}check-circle-fill text-success{% else %}info-circle text-info{% endif %} me-2"></i>
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>

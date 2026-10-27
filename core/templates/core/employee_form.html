@@ -297,7 +297,8 @@
             font-size: 13px;
         }
 
-        .alert-danger {
+        .alert-danger,
+        .alert-warning {
             border-color: #fecaca;
             background: #fef2f2;
             color: #991b1b;
@@ -519,6 +520,16 @@
 
             <div class="form-card-body">
 
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' or message.tags == 'warning' %}danger{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show mb-4" role="alert">
+                            <i class="bi bi-{% if message.tags == 'error' or message.tags == 'warning' %}exclamation-triangle-fill text-danger{% elif message.tags == 'success' %}check-circle-fill text-success{% else %}info-circle text-info{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger mb-4" role="alert">
                         <div class="fw-semibold mb-1">
@@ -539,7 +550,7 @@
 
                         <div class="col-12 col-md-6">
                             <label for="{{ form.employee_id.id_for_label }}" class="form-label">
-                                Employee ID
+                                Employee ID <span class="required-star">*</span>
                             </label>
                             {{ form.employee_id }}
                             {% if form.employee_id.errors %}
@@ -549,7 +560,7 @@
 
                         <div class="col-12 col-md-6">
                             <label for="{{ form.name.id_for_label }}" class="form-label">
-                                Employee Name
+                                Employee Name <span class="required-star">*</span>
                             </label>
                             {{ form.name }}
                             {% if form.name.errors %}
@@ -559,7 +570,7 @@
 
                         <div class="col-12 col-md-6">
                             <label for="{{ form.phone.id_for_label }}" class="form-label">
-                                Phone Number
+                                Phone Number <span class="required-star">*</span>
                             </label>
                             {{ form.phone }}
                             {% if form.phone.errors %}
@@ -575,12 +586,12 @@
                             {% if form.email.errors %}
                                 <div class="field-error">{{ form.email.errors }}</div>
                             {% endif %}
-                            <small class="text-muted d-block mt-1">For receiving leave notifications & PDF payslips.</small>
+                            <small class="text-danger d-block mt-1 fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i>For receiving leave notifications & PDF payslips.</small>
                         </div>
 
                         <div class="col-12 col-md-6">
                             <label for="{{ form.department.id_for_label }}" class="form-label">
-                                Department
+                                Department <span class="required-star">*</span>
                             </label>
                             {{ form.department }}
                             {% if form.department.errors %}
@@ -590,7 +601,7 @@
 
                         <div class="col-12 col-md-6">
                             <label for="{{ form.joining_date.id_for_label }}" class="form-label">
-                                Joining Date
+                                Joining Date <span class="required-star">*</span>
                             </label>
                             {{ form.joining_date }}
                             {% if form.joining_date.errors %}
@@ -612,7 +623,7 @@
 
                         <div class="col-12 col-md-6">
                             <label for="{{ form.salary_type.id_for_label }}" class="form-label">
-                                Salary Type
+                                Salary Type <span class="required-star">*</span>
                             </label>
                             {{ form.salary_type }}
                             {% if form.salary_type.errors %}
@@ -622,7 +633,7 @@
 
                         <div class="col-12 col-md-6">
                             <label for="{{ form.basic_salary.id_for_label }}" class="form-label">
-                                Basic Salary
+                                Basic Salary <span class="required-star">*</span>
                             </label>
                             {{ form.basic_salary }}
                             <div class="field-help">

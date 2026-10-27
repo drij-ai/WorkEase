@@ -242,6 +242,12 @@
             overflow-wrap: anywhere;
         }
 
+        .alert-warning {
+            background-color: #fee2e2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
         /* Buttons */
         .form-actions {
             display: flex;
@@ -489,7 +495,7 @@
                         <!-- Leave Type -->
                         <div class="col-12">
                             <label for="leave_type" class="form-label">
-                                Leave Type
+                                Leave Type <span class="text-danger">*</span>
                             </label>
 
                             <select
@@ -509,7 +515,7 @@
                         <!-- From Date -->
                         <div class="col-md-6 col-12">
                             <label for="from_date" class="form-label">
-                                From Date
+                                From Date <span class="text-danger">*</span>
                             </label>
 
                             <input
@@ -528,7 +534,7 @@
                         <!-- To Date -->
                         <div class="col-md-6 col-12">
                             <label for="to_date" class="form-label">
-                                To Date
+                                To Date <span class="text-danger">*</span>
                             </label>
 
                             <input
@@ -547,7 +553,7 @@
                         <!-- Reason -->
                         <div class="col-12">
                             <label for="reason" class="form-label">
-                                Reason for Leave
+                                Reason for Leave <span class="text-danger">*</span>
                             </label>
 
                             <textarea
