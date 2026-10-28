@@ -1,4 +1,5 @@
 import io
+import os
 import calendar
 from datetime import datetime
 
@@ -9,6 +10,48 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+
+FONTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts')
+
+
+def _init_pdf_fonts():
+    """
+    Registers a Unicode-capable font with Indian Rupee (₹ U+20B9) support.
+    Uses bundled DejaVu Sans fonts so the Rupee symbol renders sharply on all platforms.
+    """
+    font_reg = 'Helvetica'
+    font_bold = 'Helvetica-Bold'
+    font_oblique = 'Helvetica-Oblique'
+
+    dejavu_reg = os.path.join(FONTS_DIR, 'DejaVuSans.ttf')
+    dejavu_bold = os.path.join(FONTS_DIR, 'DejaVuSans-Bold.ttf')
+
+    try:
+        registered = pdfmetrics.getRegisteredFontNames()
+        if os.path.exists(dejavu_reg):
+            if 'DejaVuSans' not in registered:
+                pdfmetrics.registerFont(TTFont('DejaVuSans', dejavu_reg))
+            font_reg = 'DejaVuSans'
+
+        if os.path.exists(dejavu_bold):
+            if 'DejaVuSans-Bold' not in registered:
+                pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', dejavu_bold))
+            font_bold = 'DejaVuSans-Bold'
+        elif font_reg == 'DejaVuSans':
+            font_bold = 'DejaVuSans'
+
+        if font_reg == 'DejaVuSans' and font_bold == 'DejaVuSans-Bold':
+            try:
+                pdfmetrics.registerFontFamily('DejaVuSans', normal='DejaVuSans', bold='DejaVuSans-Bold')
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    return font_reg, font_bold, font_oblique
 
 
 def generate_payroll_pdf(payroll):
@@ -16,6 +59,8 @@ def generate_payroll_pdf(payroll):
     Generate an executive-level, corporate branded salary slip PDF in memory.
     Returns bytes of the generated PDF.
     """
+    font_reg, font_bold, font_oblique = _init_pdf_fonts()
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -28,11 +73,11 @@ def generate_payroll_pdf(payroll):
 
     styles = getSampleStyleSheet()
 
-    # Custom styles
+    # Custom styles using Unicode-capable font
     brand_title_style = ParagraphStyle(
         'BrandTitle',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=20,
         leading=24,
         textColor=colors.HexColor('#142D4E'),
@@ -42,7 +87,7 @@ def generate_payroll_pdf(payroll):
     brand_sub_style = ParagraphStyle(
         'BrandSubtitle',
         parent=styles['Normal'],
-        fontName='Helvetica',
+        fontName=font_reg,
         fontSize=9,
         leading=12,
         textColor=colors.HexColor('#64748B'),
@@ -52,7 +97,7 @@ def generate_payroll_pdf(payroll):
     doc_title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=13,
         leading=16,
         textColor=colors.HexColor('#2563EB'),
@@ -62,7 +107,7 @@ def generate_payroll_pdf(payroll):
     section_header_style = ParagraphStyle(
         'SectionHeader',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=11,
         leading=14,
         textColor=colors.HexColor('#142D4E')
@@ -71,7 +116,7 @@ def generate_payroll_pdf(payroll):
     cell_bold_style = ParagraphStyle(
         'CellBold',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=9,
         leading=12,
         textColor=colors.HexColor('#1E293B')
@@ -80,7 +125,7 @@ def generate_payroll_pdf(payroll):
     cell_normal_style = ParagraphStyle(
         'CellNormal',
         parent=styles['Normal'],
-        fontName='Helvetica',
+        fontName=font_reg,
         fontSize=9,
         leading=12,
         textColor=colors.HexColor('#334155')
@@ -89,7 +134,7 @@ def generate_payroll_pdf(payroll):
     cell_right_style = ParagraphStyle(
         'CellRight',
         parent=styles['Normal'],
-        fontName='Helvetica',
+        fontName=font_reg,
         fontSize=9,
         leading=12,
         textColor=colors.HexColor('#334155'),
@@ -99,7 +144,7 @@ def generate_payroll_pdf(payroll):
     cell_right_bold_style = ParagraphStyle(
         'CellRightBold',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=9,
         leading=12,
         textColor=colors.HexColor('#1E293B'),
@@ -109,7 +154,7 @@ def generate_payroll_pdf(payroll):
     net_pay_label_style = ParagraphStyle(
         'NetPayLabel',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=11,
         leading=14,
         textColor=colors.HexColor('#142D4E')
@@ -118,7 +163,7 @@ def generate_payroll_pdf(payroll):
     net_pay_value_style = ParagraphStyle(
         'NetPayValue',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName=font_bold,
         fontSize=14,
         leading=18,
         textColor=colors.HexColor('#1D4ED8'),
@@ -128,7 +173,7 @@ def generate_payroll_pdf(payroll):
     footer_style = ParagraphStyle(
         'FooterNote',
         parent=styles['Normal'],
-        fontName='Helvetica-Oblique',
+        fontName=font_oblique,
         fontSize=8,
         leading=11,
         textColor=colors.HexColor('#94A3B8'),
@@ -206,8 +251,15 @@ def generate_payroll_pdf(payroll):
     story.append(Paragraph("<b>Salary Breakdown</b>", section_header_style))
     story.append(Spacer(1, 6))
 
-    # Rows
-    basic_label = "Basic Salary (Monthly)" if payroll.salary_type == 'Monthly' else f"Hourly Earnings ({payroll.total_hours} hrs @ ₹{payroll.hourly_rate})"
+    # Rows with Rupee (₹) symbol on all currency amounts
+    if payroll.salary_type == 'Monthly':
+        basic_label = "Basic Salary (Monthly)"
+    else:
+        basic_label = f"Hourly Earnings ({payroll.total_hours} hrs @ ₹{payroll.hourly_rate:,.2f})"
+
+    basic_amount = payroll.gross_salary - payroll.bonus
+    bonus_display = f"₹{payroll.bonus:,.2f}" if payroll.bonus else "—"
+
     table_data = [
         [
             Paragraph("<b>Earnings Component</b>", cell_bold_style),
@@ -217,13 +269,13 @@ def generate_payroll_pdf(payroll):
         ],
         [
             Paragraph(basic_label, cell_normal_style),
-            Paragraph(f"{payroll.gross_salary - payroll.bonus:,.2f}", cell_right_style),
+            Paragraph(f"₹{basic_amount:,.2f}", cell_right_style),
             Paragraph("Statutory / Standard Deductions", cell_normal_style),
-            Paragraph(f"{payroll.deductions:,.2f}", cell_right_style),
+            Paragraph(f"₹{payroll.deductions:,.2f}", cell_right_style),
         ],
         [
             Paragraph("Performance Bonus / Incentives", cell_normal_style),
-            Paragraph(f"{payroll.bonus:,.2f}", cell_right_style),
+            Paragraph(bonus_display, cell_right_style),
             Paragraph("—", cell_normal_style),
             Paragraph("—", cell_right_style),
         ],

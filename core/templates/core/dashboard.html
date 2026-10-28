@@ -49,9 +49,28 @@
 .navbar-brand {
     color: #fff !important;
     font-size: 1.4rem;
-    font-weight: 700;
+    font-weight: 750;
+    letter-spacing: -.5px;
     white-space: nowrap;
     margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.navbar-brand .brand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3988ff, #1d5ed7);
+    color: #fff;
+    font-size: 18px;
+    box-shadow: 0 5px 14px rgba(37, 99, 235, .28);
+    flex-shrink: 0;
 }
 
 .notification-btn,
@@ -86,7 +105,15 @@
     }
 
     .navbar-brand {
-        font-size: 1.35rem;
+        font-size: 1.25rem;
+        gap: 8px;
+    }
+
+    .navbar-brand .brand-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+        border-radius: 8px;
     }
 
     .navbar-right {
@@ -389,6 +416,53 @@
             .page-title {
                 letter-spacing: -.6px;
             }
+
+            .attendance-card {
+                aspect-ratio: 1 / 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                border-radius: 14px;
+            }
+
+            .attendance-card .card-body {
+                padding: 10px 8px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: space-evenly;
+                text-align: center;
+                height: 100%;
+            }
+
+            .attendance-card .metric-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 1.15rem;
+                margin-bottom: 2px;
+                border-radius: 9px;
+            }
+
+            .attendance-card .metric-label {
+                font-size: 0.78rem;
+                margin-bottom: 2px;
+                line-height: 1.2;
+                font-weight: 600;
+                text-align: center;
+            }
+
+            .attendance-card .metric-value {
+                font-size: 1.55rem;
+                margin-bottom: 0;
+                line-height: 1;
+                font-weight: 800;
+            }
+
+            .attendance-card p {
+                font-size: 0.72rem;
+                margin: 0;
+                line-height: 1;
+            }
         }
     </style>
 </head>
@@ -402,7 +476,7 @@
 
         <div class="navbar-top-row">
             <a class="navbar-brand fw-bold" href="/">
-                WorkEase
+                <span class="brand-icon">✿</span><span>WorkEase</span>
             </a>
 
             <a href="{% url 'employee_notifications' %}"
@@ -749,10 +823,10 @@
                 </p>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-2 g-md-4">
 
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <section class="card dashboard-card metric-card h-100">
+                <div class="col-6 col-sm-6 col-lg-3">
+                    <section class="card dashboard-card metric-card attendance-card h-100">
                         <div class="card-body">
                             <span class="metric-icon">✅</span>
                             <h6 class="metric-label">Present Days</h6>
@@ -763,8 +837,8 @@
                     </section>
                 </div>
 
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <section class="card dashboard-card metric-card h-100">
+                <div class="col-6 col-sm-6 col-lg-3">
+                    <section class="card dashboard-card metric-card attendance-card h-100">
                         <div class="card-body">
                             <span class="metric-icon">❌</span>
                             <h6 class="metric-label">Absent Days</h6>
@@ -775,8 +849,8 @@
                     </section>
                 </div>
 
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <section class="card dashboard-card metric-card h-100">
+                <div class="col-6 col-sm-6 col-lg-3">
+                    <section class="card dashboard-card metric-card attendance-card h-100">
                         <div class="card-body">
                             <span class="metric-icon">⏰</span>
                             <h6 class="metric-label">Late Days</h6>
@@ -787,11 +861,11 @@
                     </section>
                 </div>
 
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <section class="card dashboard-card metric-card h-100">
+                <div class="col-6 col-sm-6 col-lg-3">
+                    <section class="card dashboard-card metric-card attendance-card h-100">
                         <div class="card-body">
                             <span class="metric-icon">🕒</span>
-                            <h6 class="metric-label">Total Working Hours</h6>
+                            <h6 class="metric-label">Total Hours</h6>
                             <h2 class="metric-value text-primary">
                                 {{ monthly_hours|floatformat:2 }}
                             </h2>

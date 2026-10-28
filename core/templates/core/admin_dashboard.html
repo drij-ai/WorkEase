@@ -83,11 +83,7 @@
     .section-link{font-size:12px;color:var(--blue);text-decoration:none;font-weight:650;white-space:nowrap}
     .section-link:hover{text-decoration:underline}
     .payroll-amount{font-size:28px;font-weight:800;letter-spacing:-.8px;margin:12px 0 4px;color:#142c4d}
-    .payroll-bar-row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;height:115px;margin-top:20px;padding:0 6px;border-bottom:1px solid var(--line)}
-    .bar-group{height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px}
-    .bar{width:min(28px,70%);background:#b8d4ff;border-radius:5px 5px 0 0;min-height:8px}
-    .bar.current{background:linear-gradient(180deg,#3987ff,#2563eb)}
-    .bar-label{font-size:10px;color:var(--muted);margin-bottom:-18px;transform:translateY(19px)}
+
     .quick-action{display:flex;align-items:center;gap:9px;padding:12px 11px;border:1px solid var(--line);border-radius:11px;color:#30445f;text-decoration:none;background:#fff;font-size:12px;font-weight:650;min-height:48px;transition:all .18s ease}
     .quick-action:hover{border-color:#b8d2ff;background:#f8fbff;color:var(--blue);transform:translateY(-1px)}
     .quick-action .action-icon{width:29px;height:29px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
@@ -141,13 +137,67 @@
         padding: 14px;
     }
 
-    .stat-card .card-body {
-        padding: 15px;
+    .stat-card {
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-radius: 14px;
     }
 
-    .stat-number {
-        font-size: 25px;
+    .stat-card .card-body {
+        padding: 10px 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        text-align: center;
+        height: 100%;
+    }
+
+    .stat-card .stat-top {
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        margin-bottom: 0;
+        width: 100%;
+    }
+
+    .stat-card .stat-label {
+        font-size: 11px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .stat-card .stat-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+        margin: 0;
+        border-radius: 9px;
+    }
+
+    .stat-card .stat-number {
+        font-size: 22px;
+        line-height: 1;
+        margin: 2px 0;
+        font-weight: 800;
         overflow-wrap: anywhere;
+    }
+
+    .stat-card .stat-foot {
+        font-size: 9.5px;
+        line-height: 1.1;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        margin: 0;
     }
 
     .section-card {
@@ -516,19 +566,18 @@
           <div class="text-secondary small">✦ Your workplace at a glance</div>
         </div>
 
-        <div class="row g-3 mb-4">
-          <div class="col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Total Employees</p><span class="stat-icon icon-blue">♧</span></div><div class="stat-number">{{ total_employees }}</div><div class="stat-foot"><span class="text-primary">●</span> Employees in your organization</div></div></div></div>
-          <div class="col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Present Today</p><span class="stat-icon icon-green">▣</span></div><div class="stat-number text-success">{{ present_today }}</div><div class="stat-foot"><span class="text-success">●</span> Marked present today</div></div></div></div>
-          <div class="col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Absent Today</p><span class="stat-icon icon-red">◉</span></div><div class="stat-number text-danger">{{ absent_today }}</div><div class="stat-foot"><span class="text-danger">●</span> Attendance overview</div></div></div></div>
-          <div class="col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Pending Leaves</p><span class="stat-icon icon-amber">◷</span></div><div class="stat-number" style="color:#d98a12">{{ pending_leaves }}</div><div class="stat-foot"><span style="color:#d98a12">●</span> Awaiting approval</div></div></div></div>
+        <div class="row g-2 g-md-3 mb-4">
+          <div class="col-6 col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Total Employees</p><span class="stat-icon icon-blue">♧</span></div><div class="stat-number">{{ total_employees }}</div><div class="stat-foot"><span class="text-primary">●</span> Employees in organization</div></div></div></div>
+          <div class="col-6 col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Present Today</p><span class="stat-icon icon-green">▣</span></div><div class="stat-number text-success">{{ present_today }}</div><div class="stat-foot"><span class="text-success">●</span> Marked present today</div></div></div></div>
+          <div class="col-6 col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Absent Today</p><span class="stat-icon icon-red">◉</span></div><div class="stat-number text-danger">{{ absent_today }}</div><div class="stat-foot"><span class="text-danger">●</span> Attendance overview</div></div></div></div>
+          <div class="col-6 col-sm-6 col-xl-3"><div class="card stat-card"><div class="card-body"><div class="stat-top"><p class="stat-label">Pending Leaves</p><span class="stat-icon icon-amber">◷</span></div><div class="stat-number" style="color:#d98a12">{{ pending_leaves }}</div><div class="stat-foot"><span style="color:#d98a12">●</span> Awaiting approval</div></div></div></div>
         </div>
 
         <div class="row g-3 mb-4">
           <div class="col-xl-6"><section class="card section-card"><div class="card-body">
-            <div class="d-flex justify-content-between align-items-start gap-3"><div><h2 class="section-title">Payroll Overview</h2><div class="section-caption">Current month payroll summary</div></div><a href="/admin-dashboard/payroll/" class="section-link">View payroll →</a></div>
-            <div class="payroll-amount">₹{{ monthly_payroll }}</div><div class="section-caption">Monthly payroll total</div>
-            <div class="payroll-bar-row" aria-label="Illustrative monthly payroll visual"><div class="bar-group"><div class="bar" style="height:42%"></div><span class="bar-label">Jan</span></div><div class="bar-group"><div class="bar" style="height:62%"></div><span class="bar-label">Feb</span></div><div class="bar-group"><div class="bar" style="height:54%"></div><span class="bar-label">Mar</span></div><div class="bar-group"><div class="bar current" style="height:83%"></div><span class="bar-label">Apr</span></div><div class="bar-group"><div class="bar" style="height:68%"></div><span class="bar-label">May</span></div><div class="bar-group"><div class="bar" style="height:74%"></div><span class="bar-label">Jun</span></div></div>
-            <div class="section-caption mt-4">The bars are a visual design element; the payroll figure above comes from your existing Django variable.</div>
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3"><div><h2 class="section-title">Payroll Overview</h2><div class="section-caption">Current month payroll summary</div></div><a href="/admin-dashboard/payroll/" class="section-link">View payroll →</a></div>
+            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#f5f8ff;border:1px solid #e5edfc"><span class="stat-icon icon-purple">＄</span><div><div class="section-caption">Monthly payroll total</div><div class="stat-number mb-0">₹{{ monthly_payroll }}</div></div></div>
+            <p class="section-caption mb-0">Manage employee payrolls, salary slips, and payments from the Payroll section.</p>
           </div></section></div>
           <div class="col-xl-6"><section class="card section-card"><div class="card-body">
             <div class="d-flex justify-content-between align-items-start gap-3 mb-3"><div><h2 class="section-title">Work Locations</h2><div class="section-caption">Configured office and work locations</div></div><a href="/admin-dashboard/work-locations/" class="section-link">Manage →</a></div>
