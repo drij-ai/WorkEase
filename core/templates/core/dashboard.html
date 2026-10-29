@@ -63,14 +63,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #3988ff, #1d5ed7);
-    color: #fff;
-    font-size: 18px;
-    box-shadow: 0 5px 14px rgba(37, 99, 235, .28);
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: linear-gradient(145deg, #3568f5, #2448c8);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .28);
     flex-shrink: 0;
+}
+
+.navbar-brand .brand-icon svg {
+    width: 22px;
+    height: 22px;
 }
 
 .notification-btn,
@@ -110,10 +113,14 @@
     }
 
     .navbar-brand .brand-icon {
-        width: 30px;
-        height: 30px;
-        font-size: 16px;
-        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+    }
+
+    .navbar-brand .brand-icon svg {
+        width: 20px;
+        height: 20px;
     }
 
     .navbar-right {
@@ -476,7 +483,16 @@
 
         <div class="navbar-top-row">
             <a class="navbar-brand fw-bold" href="/">
-                <span class="brand-icon">✿</span><span>WorkEase</span>
+                <span class="brand-icon">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 35H36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 35V20L20 14V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M20 35V8L33 3V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M11 24H15M11 29H15M24 12H27M24 18H27M24 24H27M24 29H27"
+                              stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>WorkEase</span>
             </a>
 
             <a href="{% url 'employee_notifications' %}"
@@ -590,7 +606,7 @@
                             </p>
 
                             <a href="{% url 'leave_apply' %}"
-                               class="btn btn-primary">
+                               class="btn btn-navy">
                                 Leave
                             </a>
                         </div>

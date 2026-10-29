@@ -17,12 +17,41 @@
         .topbar {
             background: #142D4E;
             color: white;
-            padding: 14px 0;
+            padding: 12px 0;
+            box-shadow: 0 2px 10px rgba(11, 31, 58, 0.12);
         }
 
         .topbar a {
             color: white;
             text-decoration: none;
+        }
+
+        .brand-link {
+            color: #fff !important;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            text-decoration: none;
+        }
+
+        .brand-link .brand-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            background: linear-gradient(145deg, #3568f5, #2448c8);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, .28);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .brand-link .brand-icon svg {
+            width: 22px;
+            height: 22px;
         }
 
         .profile-container {
@@ -132,8 +161,19 @@
 <body>
     <nav class="topbar">
         <div class="container d-flex justify-content-between align-items-center gap-3">
-            <a href="/dashboard/" class="fw-bold fs-5">WorkEase</a>
-            <span class="small">My Profile</span>
+            <a href="/dashboard/" class="brand-link">
+                <span class="brand-icon">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 35H36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 35V20L20 14V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M20 35V8L33 3V35" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M11 24H15M11 29H15M24 12H27M24 18H27M24 24H27M24 29H27"
+                              stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>WorkEase</span>
+            </a>
+            <span class="badge bg-white text-dark fw-semibold px-3 py-2 rounded-pill">My Profile</span>
         </div>
     </nav>
 
