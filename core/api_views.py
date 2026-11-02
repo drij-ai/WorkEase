@@ -80,3 +80,4 @@ class PayrollViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payroll.objects.select_related('employee').all().order_by('-year', '-month', '-id')
     serializer_class = PayrollSerializer
     permission_classes = [permissions.IsAuthenticated]
+

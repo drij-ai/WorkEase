@@ -1,0 +1,63 @@
+name: Django CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Build, Validate & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: workease_test
+          POSTGRES_USER: workease
+          POSTGRES_PASSWORD: workease_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SECRET_KEY: test-secret-key-for-github-actions-ci-pipeline
+      DJANGO_DEBUG: "True"
+      DATABASE_URL: postgresql://workease:workease_password@127.0.0.1:5432/workease_test
+      DEFAULT_GATEWAY_API: razorpay
+      RAZORPAY_KEY_ID: rzp_test_mock_ci
+      RAZORPAY_KEY_SECRET: rzp_secret_mock_ci
+      PAYMENT_GATEWAY_CURRENCY: INR
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Django System Check
+        run: |
+          python manage.py check
+
+      - name: Validate OpenAPI Schema
+        run: |
+          python manage.py spectacular --validate
+
+      - name: Run Django Test Suite
+        run: |
+          python manage.py test
