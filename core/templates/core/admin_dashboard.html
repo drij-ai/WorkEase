@@ -594,6 +594,13 @@
             <div class="col-6 col-md-3"><a href="/admin-dashboard/leave/" class="quick-action"><span class="action-icon icon-purple">◷</span><span>Leave Requests</span></a></div>
             <div class="col-6 col-md-3"><a href="/admin-dashboard/payroll/" class="quick-action"><span class="action-icon icon-amber">＄</span><span>Payroll</span></a></div>
           </div>
+          <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <small class="text-muted"><i class="bi bi-database-check me-1"></i> Live Database Schema Sync</small>
+            <a href="{% url 'run_migrations' %}" class="btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-1" onclick="return confirm('Apply latest database migrations now?');">
+              <i class="bi bi-database-fill-gear"></i>
+              <span>Run Database Migrations</span>
+            </a>
+          </div>
         </div></section>
 
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><div><h2 class="section-title">Manage your workforce</h2><div class="section-caption">Open a section to view and manage its records.</div></div></div>

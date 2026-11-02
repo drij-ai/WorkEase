@@ -187,10 +187,24 @@ def dashboard(request):
     else:
         monthly_salary = employee.basic_salary
 
-    payroll = employee.payroll_records.filter(
-        month=current_month,
-        year=current_year
-    ).first()
+    try:
+        payroll = employee.payroll_records.filter(
+            month=current_month,
+            year=current_year
+        ).first()
+    except Exception:
+        try:
+            payroll = employee.payroll_records.defer(
+                'payment_status', 'payment_gateway', 'payment_order_id', 'payment_id', 'paid_at'
+            ).filter(
+                month=current_month,
+                year=current_year
+            ).first()
+            if payroll:
+                payroll.payment_status = 'Pending'
+                payroll.payment_gateway = 'razorpay'
+        except Exception:
+            payroll = None
     
     unread_notifications_count = Notification.objects.filter(
     employee=employee,
@@ -256,9 +270,17 @@ def dashboard(request):
         upcoming_holidays = []
 
     try:
-        recent_payrolls = employee.payroll_records.all().order_by('-year', '-month')[:6]
+        recent_payrolls = list(employee.payroll_records.all().order_by('-year', '-month')[:6])
     except Exception:
-        recent_payrolls = []
+        try:
+            recent_payrolls = list(employee.payroll_records.defer(
+                'payment_status', 'payment_gateway', 'payment_order_id', 'payment_id', 'paid_at'
+            ).all().order_by('-year', '-month')[:6])
+            for p in recent_payrolls:
+                p.payment_status = getattr(p, 'payment_status', 'Pending')
+                p.payment_gateway = getattr(p, 'payment_gateway', 'razorpay')
+        except Exception:
+            recent_payrolls = []
 
     return render(request, 'core/dashboard.html', {
         'employee': employee,
@@ -929,32 +951,67 @@ def payroll_delete(request, payroll_id):
 
 @staff_member_required
 def admin_payroll_list(request):
-    payroll_records = Payroll.objects.select_related(
-        'employee'
-    ).all().order_by('-year', '-month')
+    import logging
+    logger = logging.getLogger(__name__)
 
-    employees = Employee.objects.all().order_by('name')
+    from .gateway import get_gateway_config
+    try:
+        gateway_config = get_gateway_config()
+    except Exception:
+        gateway_config = {'provider': 'razorpay', 'is_configured': False, 'currency': 'INR'}
+
+    schema_pending = False
+    payroll_qs = Payroll.objects.select_related('employee').all().order_by('-year', '-month')
 
     employee_id = request.GET.get('employee')
     month = request.GET.get('month')
     year = request.GET.get('year')
     salary_type = request.GET.get('salary_type')
+    payment_status = request.GET.get('payment_status')
 
     if employee_id:
-        payroll_records = payroll_records.filter(employee_id=employee_id)
-
+        payroll_qs = payroll_qs.filter(employee_id=employee_id)
     if month:
-        payroll_records = payroll_records.filter(month=month)
-
+        payroll_qs = payroll_qs.filter(month=month)
     if year:
-        payroll_records = payroll_records.filter(year=year)
-
+        payroll_qs = payroll_qs.filter(year=year)
     if salary_type:
-        payroll_records = payroll_records.filter(salary_type=salary_type)
+        payroll_qs = payroll_qs.filter(salary_type=salary_type)
 
-    payment_status = request.GET.get('payment_status')
-    if payment_status:
-        payroll_records = payroll_records.filter(payment_status=payment_status)
+    try:
+        if payment_status:
+            payroll_qs = payroll_qs.filter(payment_status=payment_status)
+        payroll_records = list(payroll_qs)
+        if payroll_records:
+            _ = getattr(payroll_records[0], 'payment_status', 'Pending')
+    except Exception as schema_err:
+        logger.warning(f"Schema delay in payroll query: {schema_err}. Attempting auto-migration...")
+        schema_pending = True
+        try:
+            from django.core.management import call_command
+            call_command('migrate', interactive=False)
+            payroll_records = list(payroll_qs)
+            schema_pending = False
+        except Exception as mig_err:
+            logger.error(f"Auto-migration in admin_payroll_list failed: {mig_err}")
+            try:
+                deferred_qs = Payroll.objects.defer(
+                    'payment_status', 'payment_gateway', 'payment_order_id', 'payment_id', 'paid_at'
+                ).select_related('employee').all().order_by('-year', '-month')
+                if employee_id:
+                    deferred_qs = deferred_qs.filter(employee_id=employee_id)
+                if month:
+                    deferred_qs = deferred_qs.filter(month=month)
+                if year:
+                    deferred_qs = deferred_qs.filter(year=year)
+                if salary_type:
+                    deferred_qs = deferred_qs.filter(salary_type=salary_type)
+                payroll_records = list(deferred_qs)
+            except Exception as final_err:
+                logger.error(f"Fatal payroll load error: {final_err}")
+                payroll_records = []
+
+    employees = Employee.objects.all().order_by('name')
 
     month_choices = [
         (i, calendar.month_name[i])
@@ -963,6 +1020,10 @@ def admin_payroll_list(request):
 
     # Attendance mathi selected month na total working hours
     for payroll in payroll_records:
+        if not hasattr(payroll, 'payment_status') or schema_pending:
+            payroll.payment_status = 'Pending'
+            payroll.payment_gateway = getattr(gateway_config, 'provider', 'razorpay')
+
         attendance_total = Attendance.objects.filter(
             employee=payroll.employee,
             date__month=payroll.month,
@@ -971,31 +1032,25 @@ def admin_payroll_list(request):
             check_out__isnull=False,
         ).aggregate(total=Sum('working_hours'))['total']
 
-        payroll.total_hours = attendance_total or 0
+        payroll.total_hours = attendance_total or Decimal('0.00')
 
-        # Updated hours pramane salary calculate karo
+        basic = payroll.basic_salary or Decimal('0.00')
+        hourly_rate = payroll.hourly_rate or Decimal('0.00')
+        bonus = payroll.bonus or Decimal('0.00')
+        deductions = payroll.deductions or Decimal('0.00')
+
         if payroll.salary_type == 'Hourly':
-            payroll.gross_salary = (
-                payroll.total_hours * payroll.hourly_rate
-            )
+            payroll.gross_salary = Decimal(str(payroll.total_hours)) * hourly_rate
         else:
-            payroll.gross_salary = payroll.basic_salary
+            payroll.gross_salary = basic
 
-        payroll.net_salary = (
-            payroll.gross_salary
-            + payroll.bonus
-            - payroll.deductions
-        )
+        payroll.net_salary = payroll.gross_salary + bonus - deductions
 
-    total_payrolls = payroll_records.count()
-
-    total_gross = sum(p.gross_salary for p in payroll_records)
-    total_bonus = sum(p.bonus for p in payroll_records)
-    total_deductions = sum(p.deductions for p in payroll_records)
-    total_net = sum(p.net_salary for p in payroll_records)
-
-    from .gateway import get_gateway_config
-    gateway_config = get_gateway_config()
+    total_payrolls = len(payroll_records)
+    total_gross = sum((p.gross_salary or Decimal('0.00')) for p in payroll_records)
+    total_bonus = sum((p.bonus or Decimal('0.00')) for p in payroll_records)
+    total_deductions = sum((p.deductions or Decimal('0.00')) for p in payroll_records)
+    total_net = sum((p.net_salary or Decimal('0.00')) for p in payroll_records)
 
     return render(request, 'core/admin_payroll.html', {
         'payroll_records': payroll_records,
@@ -1012,6 +1067,7 @@ def admin_payroll_list(request):
         'total_deductions': total_deductions,
         'total_net': total_net,
         'gateway_config': gateway_config,
+        'schema_pending': schema_pending,
     })
 
 
