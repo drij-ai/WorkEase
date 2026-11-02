@@ -240,6 +240,33 @@ Open your browser at:
 
 ---
 
+## 🐳 Running with Docker & Docker Compose
+
+WorkEase is fully containerized with automated PostgreSQL service dependency, persistent data volumes, and source code hot-reloading for local development:
+
+```bash
+# Build images and start web and database services
+docker-compose up --build
+```
+
+In a separate terminal, apply migrations and create an administrator user:
+
+```bash
+# Run migrations inside the container
+docker-compose exec web python manage.py migrate
+
+# Create admin superuser
+docker-compose exec web python manage.py createsuperuser
+```
+
+To stop containers and services:
+```bash
+docker-compose down
+```
+
+
+---
+
 ## 🧪 Automated Testing & CI/CD Pipeline
 
 WorkEase includes a comprehensive test suite covering authentication, geofencing logic, payroll calculation, payment gateway transactions, RESTful API endpoints, and OpenAPI schema generation.

@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: workease_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-workease_db}
+      POSTGRES_USER: ${POSTGRES_USER:-workease}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workease_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workease} -d ${POSTGRES_DB:-workease_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: workease_web
+    restart: unless-stopped
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-docker-dev-secret-key-change-in-prod}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}
+      POSTGRES_DB: ${POSTGRES_DB:-workease_db}
+      POSTGRES_USER: ${POSTGRES_USER:-workease}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workease_password}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-workease}:${POSTGRES_PASSWORD:-workease_password}@db:5432/${POSTGRES_DB:-workease_db}
+      DEFAULT_GATEWAY_API: ${DEFAULT_GATEWAY_API:-razorpay}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      PAYMENT_GATEWAY_CURRENCY: ${PAYMENT_GATEWAY_CURRENCY:-INR}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local

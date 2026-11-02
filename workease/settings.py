@@ -170,10 +170,14 @@ ASGI_APPLICATION = 'workease.asgi.application'
 
 
 # Database
-# Supports PostgreSQL in production via DATABASE_URL; falls back to SQLite locally.
+# Supports PostgreSQL in production and Docker containers (via DATABASE_URL or POSTGRES_* env vars);
+# falls back cleanly to SQLite for local development.
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 database_url = os.environ.get('DATABASE_URL')
+postgres_db = os.environ.get('POSTGRES_DB') or os.environ.get('DB_NAME')
+postgres_host = os.environ.get('POSTGRES_HOST') or os.environ.get('DB_HOST')
+
 if database_url:
     DATABASES = {
         'default': dj_database_url.config(
@@ -181,6 +185,22 @@ if database_url:
             conn_max_age=600,
             conn_health_checks=True,
         )
+    }
+elif postgres_db and postgres_host:
+    postgres_user = os.environ.get('POSTGRES_USER') or os.environ.get('DB_USER', 'postgres')
+    postgres_password = os.environ.get('POSTGRES_PASSWORD') or os.environ.get('DB_PASSWORD', '')
+    postgres_port = os.environ.get('POSTGRES_PORT') or os.environ.get('DB_PORT', '5432')
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': postgres_db,
+            'USER': postgres_user,
+            'PASSWORD': postgres_password,
+            'HOST': postgres_host,
+            'PORT': postgres_port,
+            'CONN_MAX_AGE': 600,
+            'CONN_HEALTH_CHECKS': True,
+        }
     }
 else:
     DATABASES = {
