@@ -15,7 +15,8 @@ from datetime import time
 from django.shortcuts import get_object_or_404
 
 
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .forms import EmployeeForm, WorkLocationForm, PayrollForm, HolidayForm
 
 from .models import Attendance, Leave, WorkLocation, Employee, Payroll, Holiday
@@ -951,6 +952,10 @@ def admin_payroll_list(request):
     if salary_type:
         payroll_records = payroll_records.filter(salary_type=salary_type)
 
+    payment_status = request.GET.get('payment_status')
+    if payment_status:
+        payroll_records = payroll_records.filter(payment_status=payment_status)
+
     month_choices = [
         (i, calendar.month_name[i])
         for i in range(1, 13)
@@ -989,6 +994,9 @@ def admin_payroll_list(request):
     total_deductions = sum(p.deductions for p in payroll_records)
     total_net = sum(p.net_salary for p in payroll_records)
 
+    from .gateway import get_gateway_config
+    gateway_config = get_gateway_config()
+
     return render(request, 'core/admin_payroll.html', {
         'payroll_records': payroll_records,
         'employees': employees,
@@ -996,12 +1004,14 @@ def admin_payroll_list(request):
         'selected_month': month,
         'selected_year': year,
         'selected_salary_type': salary_type,
+        'selected_payment_status': payment_status,
         'month_choices': month_choices,
         'total_payrolls': total_payrolls,
         'total_gross': total_gross,
         'total_bonus': total_bonus,
         'total_deductions': total_deductions,
         'total_net': total_net,
+        'gateway_config': gateway_config,
     })
 
 
@@ -1244,3 +1254,165 @@ def run_migrations_view(request):
         messages.error(request, f"Migration error: {str(e)}")
     return redirect('admin_dashboard')
 
+
+
+# ==============================================================================
+# Payment Gateway API Views (Razorpay Default Integration)
+# ==============================================================================
+
+@staff_member_required
+def payroll_initiate_payment(request, payroll_id):
+    """
+    Gateway API: Initiate Razorpay payment order for specified payroll record.
+    Returns JSON payload with order_id, key_id, amount, currency, and notes.
+    """
+    payroll = get_object_or_404(
+        Payroll.objects.select_related('employee'),
+        id=payroll_id
+    )
+    from .gateway import create_payroll_order
+    order_data = create_payroll_order(payroll)
+    return JsonResponse(order_data)
+
+
+@staff_member_required
+@require_POST
+def payroll_verify_payment(request, payroll_id):
+    """
+    Gateway API: Verify payment callback signature and mark payroll as Paid.
+    """
+    payroll = get_object_or_404(
+        Payroll.objects.select_related('employee'),
+        id=payroll_id
+    )
+    from .gateway import verify_gateway_signature, process_payment_success
+
+    if request.content_type == 'application/json':
+        try:
+            import json
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            data = {}
+    else:
+        data = request.POST
+
+    order_id = data.get('razorpay_order_id') or payroll.payment_order_id or ''
+    payment_id = data.get('razorpay_payment_id') or data.get('payment_id') or ''
+    signature = data.get('razorpay_signature') or data.get('signature') or ''
+
+    is_valid = verify_gateway_signature(order_id, payment_id, signature)
+
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or request.content_type == 'application/json'
+        or request.GET.get('format') == 'json'
+    )
+
+    if not is_valid:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'error': 'Payment signature verification failed.'
+            }, status=400)
+        messages.error(request, 'Payment signature verification failed.')
+        return redirect('admin_payroll_list')
+
+    success, msg = process_payment_success(
+        payroll,
+        payment_id=payment_id,
+        order_id=order_id,
+        gateway='razorpay'
+    )
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'message': msg,
+            'payment_id': payment_id,
+            'payroll_id': payroll.id,
+            'status': payroll.payment_status
+        })
+
+    messages.success(request, f"Salary payment for {payroll.employee.name} confirmed successfully! ({msg})")
+    return redirect('admin_payroll_list')
+
+
+@staff_member_required
+@require_POST
+def payroll_mark_paid(request, payroll_id):
+    """
+    Directly mark a payroll record as Paid (e.g. for offline bank transfer or check).
+    """
+    import uuid
+    payroll = get_object_or_404(
+        Payroll.objects.select_related('employee'),
+        id=payroll_id
+    )
+    from .gateway import process_payment_success
+    manual_id = f"manual_{payroll.id}_{uuid.uuid4().hex[:6]}"
+    success, msg = process_payment_success(
+        payroll,
+        payment_id=manual_id,
+        gateway='manual'
+    )
+    messages.success(request, f"Payroll for {payroll.employee.name} marked as Paid.")
+    return redirect('admin_payroll_list')
+
+
+@csrf_exempt
+def payment_webhook(request):
+    """
+    Public Gateway API Webhook endpoint for async payment notifications.
+    """
+    import json
+    import hmac
+    import hashlib
+    from django.conf import settings
+    from .models import Payroll
+    from .gateway import process_payment_success
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+
+    webhook_secret = getattr(settings, 'RAZORPAY_WEBHOOK_SECRET', '').strip()
+    body = request.body
+
+    if webhook_secret:
+        received_sig = request.headers.get('X-Razorpay-Signature', '')
+        generated_sig = hmac.new(
+            webhook_secret.encode('utf-8'),
+            body,
+            hashlib.sha256
+        ).hexdigest()
+        if not hmac.compare_digest(generated_sig, received_sig):
+            return JsonResponse({'error': 'Invalid webhook signature'}, status=400)
+
+    try:
+        data = json.loads(body.decode('utf-8'))
+        event = data.get('event', '')
+
+        if event in ('payment.captured', 'order.paid'):
+            payload_entity = data.get('payload', {}).get('payment', {}).get('entity', {})
+            order_id = payload_entity.get('order_id')
+            payment_id = payload_entity.get('id')
+
+            payroll = None
+            if order_id:
+                payroll = Payroll.objects.filter(payment_order_id=order_id).first()
+
+            if not payroll:
+                payroll_id = payload_entity.get('notes', {}).get('payroll_id')
+                if payroll_id:
+                    payroll = Payroll.objects.filter(id=payroll_id).first()
+
+            if payroll:
+                process_payment_success(
+                    payroll,
+                    payment_id=payment_id,
+                    order_id=order_id,
+                    gateway='razorpay'
+                )
+
+        return JsonResponse({'status': 'ok', 'event': event})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

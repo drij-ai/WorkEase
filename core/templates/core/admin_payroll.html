@@ -469,6 +469,30 @@
             color: #b42332;
         }
 
+        .pay-btn {
+            background: #eef2ff;
+            color: #4338ca;
+            border-color: #c7d2fe;
+            cursor: pointer;
+        }
+
+        .pay-btn:hover {
+            background: #4338ca;
+            color: #ffffff;
+        }
+
+        .check-btn {
+            background: #ecfdf5;
+            color: #047857;
+            border-color: #a7f3d0;
+            cursor: pointer;
+        }
+
+        .check-btn:hover {
+            background: #047857;
+            color: #ffffff;
+        }
+
         .empty-state {
             padding: 55px 20px !important;
             text-align: center;
@@ -739,6 +763,17 @@
                         </select>
                     </div>
 
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <label class="form-label" for="payment_status">Payment Status</label>
+                        <select class="form-select" name="payment_status" id="payment_status">
+                            <option value="">All Statuses</option>
+                            <option value="Pending" {% if selected_payment_status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Paid" {% if selected_payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                            <option value="Processing" {% if selected_payment_status == 'Processing' %}selected{% endif %}>Processing</option>
+                            <option value="Failed" {% if selected_payment_status == 'Failed' %}selected{% endif %}>Failed</option>
+                        </select>
+                    </div>
+
                     <div class="col-6 col-xl-1">
                         <button type="submit" class="btn-filter">
                             <i class="bi bi-search me-1"></i> Apply
@@ -785,6 +820,7 @@
                         <th>Deductions</th>
                         <th>Gross Salary</th>
                         <th>Net Salary</th>
+                        <th>Payment</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -835,7 +871,50 @@
                         </td>
 
                         <td>
+                            {% if payroll.payment_status == 'Paid' %}
+                                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1"
+                                      title="Paid via {{ payroll.payment_gateway }}{% if payroll.paid_at %} on {{ payroll.paid_at|date:'d M Y' }}{% endif %}">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Paid
+                                </span>
+                            {% elif payroll.payment_status == 'Processing' %}
+                                <span class="badge rounded-pill bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Processing
+                                </span>
+                            {% elif payroll.payment_status == 'Failed' %}
+                                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Failed
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                                    <i class="bi bi-clock-history me-1"></i> Pending
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
                             <div class="action-buttons">
+                                {% if payroll.payment_status != 'Paid' %}
+                                <button type="button"
+                                        class="action-btn pay-btn"
+                                        title="Pay via {{ gateway_config.provider|title }} Gateway"
+                                        aria-label="Pay via {{ gateway_config.provider|title }} Gateway"
+                                        onclick="initiateRazorpayPayment({{ payroll.id }}, '{{ payroll.employee.name|escapejs }}', '{{ payroll.net_salary }}', '{{ payroll.month }}/{{ payroll.year }}');">
+                                    <i class="bi bi-credit-card-2-front-fill"></i>
+                                </button>
+
+                                <form method="POST"
+                                      action="{% url 'payroll_mark_paid' payroll.id %}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Mark payroll of ₹{{ payroll.net_salary }} for {{ payroll.employee.name }} as Paid?');">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="action-btn check-btn"
+                                            title="Mark Paid manually (Offline / Bank Transfer)"
+                                            aria-label="Mark Paid manually">
+                                        <i class="bi bi-check2-all"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
                                 <a href="{% url 'payroll_pdf' payroll.id %}"
                                    target="_blank"
                                    class="action-btn pdf-btn"
@@ -872,7 +951,7 @@
 
                     {% empty %}
                     <tr>
-                        <td colspan="10" class="empty-state">
+                        <td colspan="11" class="empty-state">
                             <div class="empty-icon">
                                 <i class="bi bi-receipt"></i>
                             </div>
@@ -898,6 +977,157 @@
     </footer>
 
 </main>
+
+
+<!-- Payment Simulation Modal for Development & Testing -->
+<div class="modal fade" id="paymentSimModal" tabindex="-1" aria-labelledby="paymentSimModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="paymentSimModalLabel">
+                    <i class="bi bi-credit-card me-2"></i>Razorpay Gateway Payout
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <span class="badge bg-light text-primary border px-3 py-2 mb-2">
+                        <i class="bi bi-shield-check me-1"></i> Default Gateway: {{ gateway_config.provider|upper }}
+                    </span>
+                    <h3 class="fw-bold text-success mb-1" id="simModalAmount">₹ 0.00</h3>
+                    <p class="text-muted mb-0" id="simModalEmployee">Employee Name</p>
+                    <small class="text-secondary" id="simModalPeriod">Period</small>
+                </div>
+                <div class="alert alert-info py-2 px-3 small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    {% if gateway_config.is_configured %}
+                        Live Razorpay credentials detected. Click confirm to simulate/complete transaction.
+                    {% else %}
+                        Running in <strong>Test / Simulation Mode</strong>. Real API keys (<code>RAZORPAY_KEY_ID</code>) can be configured in <code>settings.py</code> or <code>.env</code>.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmSimPaymentBtn">
+                    <i class="bi bi-check-circle-fill me-1"></i> Confirm Payout
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    function getCsrfToken() {
+        const name = 'csrftoken';
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : '{{ csrf_token }}';
+    }
+
+    let activePayrollId = null;
+    let activeOrderId = null;
+
+    async function initiateRazorpayPayment(payrollId, employeeName, amount, period) {
+        try {
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            const response = await fetch(`/admin-dashboard/payroll/${payrollId}/initiate-payment/`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCsrfToken()
+                }
+            });
+
+            const order = await response.json();
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+
+            if (!order.success && !order.order_id) {
+                alert(order.error || 'Failed to initiate payment.');
+                return;
+            }
+
+            activePayrollId = payrollId;
+            activeOrderId = order.order_id;
+
+            // If real live Razorpay checkout is configured and script loaded
+            if (!order.test_mode && window.Razorpay && order.key_id && !order.key_id.startsWith('rzp_test_workease_mock')) {
+                const options = {
+                    key: order.key_id,
+                    amount: order.amount,
+                    currency: order.currency || 'INR',
+                    name: 'WorkEase Payroll',
+                    description: `Salary Payout - ${employeeName} (${period})`,
+                    order_id: order.order_id,
+                    prefill: {
+                        name: order.employee_name,
+                        email: order.employee_email,
+                        contact: order.employee_phone
+                    },
+                    theme: {
+                        color: '#2457d6'
+                    },
+                    handler: async function (paymentResponse) {
+                        await verifyPayment(payrollId, paymentResponse);
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } else {
+                // Friendly simulation modal for instant testing
+                document.getElementById('simModalAmount').textContent = '₹ ' + parseFloat(amount).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                document.getElementById('simModalEmployee').textContent = employeeName;
+                document.getElementById('simModalPeriod').textContent = 'Period: ' + period;
+                const modal = new bootstrap.Modal(document.getElementById('paymentSimModal'));
+                modal.show();
+            }
+        } catch (err) {
+            alert('Error initiating payment: ' + err.message);
+        }
+    }
+
+    document.getElementById('confirmSimPaymentBtn').addEventListener('click', async function () {
+        if (!activePayrollId) return;
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+
+        const paymentData = {
+            razorpay_order_id: activeOrderId || ('order_sim_' + activePayrollId),
+            razorpay_payment_id: 'pay_sim_' + Math.random().toString(36).substr(2, 9),
+            razorpay_signature: 'simulated_signature'
+        };
+
+        await verifyPayment(activePayrollId, paymentData);
+    });
+
+    async function verifyPayment(payrollId, paymentResponse) {
+        try {
+            const res = await fetch(`/admin-dashboard/payroll/${payrollId}/verify-payment/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(paymentResponse)
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                window.location.reload();
+            } else {
+                alert('Payment verification failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Network error during verification: ' + e.message);
+        }
+    }
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </body>

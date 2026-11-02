@@ -22,3 +22,11 @@ services:
         sync: false
       - key: SECURE_SSL_REDIRECT
         value: "True"
+      - key: DEFAULT_GATEWAY_API
+        value: "razorpay"
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: PAYMENT_GATEWAY_CURRENCY
+        value: "INR"

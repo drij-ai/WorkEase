@@ -703,9 +703,21 @@
                                     ₹ {{ payroll.net_salary|floatformat:2 }}
                                 </h2>
 
-                                <p class="text-muted mb-0">
+                                <p class="text-muted mb-1">
                                     Gross: ₹ {{ payroll.gross_salary|floatformat:2 }}
                                 </p>
+
+                                <div class="mb-2">
+                                    {% if payroll.payment_status == 'Paid' %}
+                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Disbursed
+                                        </span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                                            <i class="bi bi-clock-history me-1"></i> Payment Pending
+                                        </span>
+                                    {% endif %}
+                                </div>
 
                                 <div class="mt-2 pt-2 border-top">
                                     <a href="{% url 'employee_payroll_pdf' payroll.id %}" target="_blank" class="btn btn-sm btn-outline-danger w-100">
@@ -752,6 +764,7 @@
                                                 <th>Salary Type</th>
                                                 <th>Gross</th>
                                                 <th>Net Pay</th>
+                                                <th>Status</th>
                                                 <th class="text-end">Download</th>
                                             </tr>
                                         </thead>
@@ -764,6 +777,17 @@
                                                 <td><span class="badge bg-light text-dark border">{{ p.salary_type }}</span></td>
                                                 <td>₹ {{ p.gross_salary|floatformat:2 }}</td>
                                                 <td class="fw-bold text-success">₹ {{ p.net_salary|floatformat:2 }}</td>
+                                                <td>
+                                                    {% if p.payment_status == 'Paid' %}
+                                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">
+                                                            <i class="bi bi-check-circle-fill me-1"></i> Paid
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                                            <i class="bi bi-clock-history me-1"></i> Pending
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
                                                 <td class="text-end">
                                                     <a href="{% url 'employee_payroll_pdf' p.id %}" target="_blank" class="btn btn-sm btn-outline-danger">
                                                         <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF

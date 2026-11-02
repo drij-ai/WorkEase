@@ -7,3 +7,4 @@ gunicorn==26.2.0
 psycopg2-binary==2.9.13
 whitenoise==6.12.0
 reportlab>=4.0.0
+razorpay>=1.4.1

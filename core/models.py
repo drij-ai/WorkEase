@@ -150,6 +150,13 @@ class Attendance(models.Model):
 
 
 class Payroll(models.Model):
+    PAYMENT_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Processing', 'Processing'),
+        ('Paid', 'Paid'),
+        ('Failed', 'Failed'),
+    ]
+
     employee = models.ForeignKey(
         Employee,
         on_delete=models.CASCADE,
@@ -209,6 +216,35 @@ class Payroll(models.Model):
         max_digits=10,
         decimal_places=2,
         default=0
+    )
+
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='Pending'
+    )
+
+    payment_gateway = models.CharField(
+        max_length=50,
+        default='razorpay',
+        blank=True
+    )
+
+    payment_order_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    payment_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    paid_at = models.DateTimeField(
+        blank=True,
+        null=True
     )
 
     generated_at = models.DateTimeField(

@@ -14,59 +14,57 @@ urlpatterns = [
     path('profile/', views.employee_profile, name='employee_profile'),
     
     path(
-    'notifications/',
-    views.employee_notifications,
-    name='employee_notifications'
-),
-path(
-    'notifications/<int:notification_id>/read/',
-    views.mark_notification_read,
-    name='mark_notification_read'
-),
-
-path(
-    'admin-dashboard/users/<int:user_id>/toggle-status/',
-    views.toggle_user_status,
-    name='toggle_user_status'
-),
-
-
-path(
-    'admin-dashboard/users/<int:user_id>/reset-password/',
-    views.reset_user_password,
-    name='reset_user_password'
-),
-
+        'notifications/',
+        views.employee_notifications,
+        name='employee_notifications'
+    ),
+    path(
+        'notifications/<int:notification_id>/read/',
+        views.mark_notification_read,
+        name='mark_notification_read'
+    ),
 
     path(
-    'admin-dashboard/attendance/',
-    views.attendance_list,
-    name='attendance_list'
-),
+        'admin-dashboard/users/<int:user_id>/toggle-status/',
+        views.toggle_user_status,
+        name='toggle_user_status'
+    ),
 
     path(
-    'admin-dashboard/leave/',
-    views.admin_leave_list,
-    name='admin_leave_list'
-),
+        'admin-dashboard/users/<int:user_id>/reset-password/',
+        views.reset_user_password,
+        name='reset_user_password'
+    ),
 
     path(
-    'admin-dashboard/payroll/',
-    views.admin_payroll_list,
-    name='admin_payroll_list'
-),
+        'admin-dashboard/attendance/',
+        views.attendance_list,
+        name='attendance_list'
+    ),
 
     path(
-    'admin-dashboard/payroll/add/',
-    views.payroll_add,
-    name='payroll_add'
-),
+        'admin-dashboard/leave/',
+        views.admin_leave_list,
+        name='admin_leave_list'
+    ),
 
     path(
-    'admin-dashboard/payroll/<int:payroll_id>/edit/',
-    views.payroll_edit,
-    name='payroll_edit'
-),
+        'admin-dashboard/payroll/',
+        views.admin_payroll_list,
+        name='admin_payroll_list'
+    ),
+
+    path(
+        'admin-dashboard/payroll/add/',
+        views.payroll_add,
+        name='payroll_add'
+    ),
+
+    path(
+        'admin-dashboard/payroll/<int:payroll_id>/edit/',
+        views.payroll_edit,
+        name='payroll_edit'
+    ),
 
     path(
         'admin-dashboard/payroll/<int:payroll_id>/delete/',
@@ -82,6 +80,27 @@ path(
         'admin-dashboard/payroll/<int:payroll_id>/send-email/',
         views.payroll_send_email,
         name='payroll_send_email'
+    ),
+    # Payment Gateway API Endpoints
+    path(
+        'admin-dashboard/payroll/<int:payroll_id>/initiate-payment/',
+        views.payroll_initiate_payment,
+        name='payroll_initiate_payment'
+    ),
+    path(
+        'admin-dashboard/payroll/<int:payroll_id>/verify-payment/',
+        views.payroll_verify_payment,
+        name='payroll_verify_payment'
+    ),
+    path(
+        'admin-dashboard/payroll/<int:payroll_id>/mark-paid/',
+        views.payroll_mark_paid,
+        name='payroll_mark_paid'
+    ),
+    path(
+        'api/payment/webhook/',
+        views.payment_webhook,
+        name='payment_webhook'
     ),
     path(
         'my-payroll/<int:payroll_id>/pdf/',
@@ -109,49 +128,48 @@ path(
         name='holiday_delete'
     ),
 
-   path(
-    'admin-dashboard/leave/<int:leave_id>/<str:status>/',
-    views.leave_update_status,
-    name='leave_update_status'
-),
+    path(
+        'admin-dashboard/leave/<int:leave_id>/<str:status>/',
+        views.leave_update_status,
+        name='leave_update_status'
+    ),
 
     path(
-    'admin-dashboard/employees/<int:employee_id>/delete/',
-    views.employee_delete,
-    name='employee_delete'
-),
+        'admin-dashboard/employees/<int:employee_id>/delete/',
+        views.employee_delete,
+        name='employee_delete'
+    ),
     path(
-    'admin-dashboard/employees/<int:employee_id>/edit/',
-    views.employee_edit,
-    name='employee_edit'
-),
+        'admin-dashboard/employees/<int:employee_id>/edit/',
+        views.employee_edit,
+        name='employee_edit'
+    ),
     path(
-    'admin-dashboard/work-locations/',
-    views.work_location_list,
-    name='work_location_list'
-),
+        'admin-dashboard/work-locations/',
+        views.work_location_list,
+        name='work_location_list'
+    ),
 
-path(
-    'admin-dashboard/work-locations/add/',
-    views.work_location_add,
-    name='work_location_add'
-),
+    path(
+        'admin-dashboard/work-locations/add/',
+        views.work_location_add,
+        name='work_location_add'
+    ),
 
-path(
-    'admin-dashboard/work-locations/<int:location_id>/edit/',
-    views.work_location_edit,
-    name='work_location_edit'
-),
+    path(
+        'admin-dashboard/work-locations/<int:location_id>/edit/',
+        views.work_location_edit,
+        name='work_location_edit'
+    ),
 
-path(
-    'admin-dashboard/work-locations/<int:location_id>/delete/',
-    views.work_location_delete,
-    name='work_location_delete'
-),
+    path(
+        'admin-dashboard/work-locations/<int:location_id>/delete/',
+        views.work_location_delete,
+        name='work_location_delete'
+    ),
     
-    path('admin-dashboard/employees/add/',views.employee_add, name='employee_add'),
+    path('admin-dashboard/employees/add/', views.employee_add, name='employee_add'),
     path('admin-dashboard/run-migrations/', views.run_migrations_view, name='run_migrations'),
     path('leave/', views.leave_apply, name='leave_apply'),
     path('attendance/', views.attendance, name='attendance'),
 ]
-

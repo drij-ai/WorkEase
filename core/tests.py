@@ -723,10 +723,11 @@ class NewFeaturesTests(TestCase):
             basic_salary=75000,
             salary_type='Monthly'
         )
+        today_dt = datetime.date.today()
         self.payroll = Payroll.objects.create(
             employee=self.employee,
-            month=10,
-            year=2026,
+            month=today_dt.month,
+            year=today_dt.year,
             salary_type='Monthly',
             basic_salary=75000,
             bonus=5000,
@@ -849,3 +850,156 @@ class NewFeaturesTests(TestCase):
         self.assertContains(response, 'Diwali')
         self.assertContains(response, 'Download Salary Slip (PDF)')
 
+
+
+
+class PaymentGatewayApiTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.admin = User.objects.create_superuser(
+            username='gateway_admin',
+            password='AdminPass123!',
+            email='admin@gateway.com'
+        )
+        self.emp_user = User.objects.create_user(
+            username='gateway_emp',
+            password='EmpPass123!',
+            email='emp@gateway.com'
+        )
+        self.employee = Employee.objects.create(
+            user=self.emp_user,
+            employee_id='GATE001',
+            name='Gateway Employee',
+            email='emp@gateway.com',
+            phone='9876543210',
+            department='Accounts',
+            joining_date=datetime.date(2025, 1, 1),
+            basic_salary=Decimal('50000.00'),
+            salary_type='Monthly'
+        )
+        self.payroll = Payroll.objects.create(
+            employee=self.employee,
+            month=11,
+            year=2026,
+            salary_type='Monthly',
+            basic_salary=Decimal('50000.00'),
+            bonus=Decimal('3000.00'),
+            deductions=Decimal('1000.00'),
+            gross_salary=Decimal('50000.00'),
+            net_salary=Decimal('52000.00')
+        )
+
+    def test_default_gateway_settings_configured(self):
+        """Verify DEFAULT_GATEWAY_API is loaded in settings."""
+        from django.conf import settings
+        self.assertEqual(settings.DEFAULT_GATEWAY_API, 'razorpay')
+        self.assertEqual(settings.PAYMENT_GATEWAY_CURRENCY, 'INR')
+        self.assertTrue(hasattr(settings, 'RAZORPAY_KEY_ID'))
+        self.assertTrue(hasattr(settings, 'RAZORPAY_KEY_SECRET'))
+
+    def test_gateway_create_payroll_order(self):
+        """Verify create_payroll_order creates order with correct subunit amount and currency."""
+        from core.gateway import create_payroll_order
+        order = create_payroll_order(self.payroll)
+        self.assertTrue(order['success'])
+        self.assertTrue(order['order_id'].startswith('order_'))
+        self.assertEqual(order['amount'], 5200000)  # 52000 INR = 5200000 paise
+        self.assertEqual(order['currency'], 'INR')
+        self.payroll.refresh_from_db()
+        self.assertEqual(self.payroll.payment_order_id, order['order_id'])
+
+    def test_gateway_signature_verification(self):
+        """Verify verify_gateway_signature correctly handles simulation mode and signature matching."""
+        from core.gateway import verify_gateway_signature
+        # Simulated test order verification
+        self.assertTrue(verify_gateway_signature('order_sim_123', 'pay_sim_123', 'simulated_signature'))
+        self.assertTrue(verify_gateway_signature('order_sim_123', 'pay_sim_123', 'any_signature'))
+        self.assertFalse(verify_gateway_signature('', '', ''))
+
+    def test_payroll_initiate_payment_view_staff(self):
+        """Staff can initiate payment order and receive JSON payload."""
+        self.client.force_login(self.admin)
+        url = reverse('payroll_initiate_payment', kwargs={'payroll_id': self.payroll.id})
+        response = self.client.get(url, secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['amount'], 5200000)
+
+    def test_payroll_initiate_payment_view_forbidden_for_regular_user(self):
+        """Non-staff user cannot initiate payment."""
+        self.client.force_login(self.emp_user)
+        url = reverse('payroll_initiate_payment', kwargs={'payroll_id': self.payroll.id})
+        response = self.client.get(url, secure=True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_payroll_verify_payment_view_success(self):
+        """Verifying payment marks status as Paid and notifies employee."""
+        self.client.force_login(self.admin)
+        url = reverse('payroll_verify_payment', kwargs={'payroll_id': self.payroll.id})
+        payload = {
+            'razorpay_order_id': 'order_sim_test1',
+            'razorpay_payment_id': 'pay_sim_test1',
+            'razorpay_signature': 'simulated_signature'
+        }
+        response = self.client.post(
+            url,
+            payload,
+            content_type='application/json',
+            headers={'x-requested-with': 'XMLHttpRequest'},
+            secure=True
+        )
+        self.assertEqual(response.status_code, 200)
+        res_data = response.json()
+        self.assertTrue(res_data['success'])
+
+        self.payroll.refresh_from_db()
+        self.assertEqual(self.payroll.payment_status, 'Paid')
+        self.assertEqual(self.payroll.payment_id, 'pay_sim_test1')
+        self.assertIsNotNone(self.payroll.paid_at)
+
+        # Confirm employee received disbursement notification
+        notif = Notification.objects.filter(employee=self.employee).first()
+        self.assertIsNotNone(notif)
+        self.assertIn('Disbursed', notif.title)
+
+    def test_payroll_mark_paid_view(self):
+        """Admin can manually mark payroll as Paid."""
+        self.client.force_login(self.admin)
+        url = reverse('payroll_mark_paid', kwargs={'payroll_id': self.payroll.id})
+        response = self.client.post(url, secure=True)
+        self.assertRedirects(response, reverse('admin_payroll_list'))
+        self.payroll.refresh_from_db()
+        self.assertEqual(self.payroll.payment_status, 'Paid')
+        self.assertEqual(self.payroll.payment_gateway, 'manual')
+
+    def test_payment_webhook_handler(self):
+        """Payment webhook handles order.paid / payment.captured events."""
+        import json
+        url = reverse('payment_webhook')
+        webhook_payload = {
+            'event': 'order.paid',
+            'payload': {
+                'payment': {
+                    'entity': {
+                        'id': 'pay_hook_12345',
+                        'order_id': self.payroll.payment_order_id or 'order_hook_12345',
+                        'notes': {
+                            'payroll_id': str(self.payroll.id)
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            url,
+            json.dumps(webhook_payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'ok')
+
+        self.payroll.refresh_from_db()
+        self.assertEqual(self.payroll.payment_status, 'Paid')
+        self.assertEqual(self.payroll.payment_id, 'pay_hook_12345')

@@ -112,6 +112,7 @@ class PayrollForm(forms.ModelForm):
             'basic_salary',
             'bonus',
             'deductions',
+            'payment_status',
         ]
 
         widgets = {
@@ -150,6 +151,9 @@ class PayrollForm(forms.ModelForm):
             'deductions': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01'
+            }),
+            'payment_status': forms.Select(attrs={
+                'class': 'form-select'
             }),
         }
 

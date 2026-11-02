@@ -164,6 +164,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'workease.wsgi.application'
+ASGI_APPLICATION = 'workease.asgi.application'
 
 
 # Database
@@ -261,3 +262,15 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'WorkEase HR <noreply@workease.com>')
 
 
+# ==============================================================================
+# Default Gateway API Configuration
+# Supported payment providers: 'razorpay' (default), 'stripe', 'cashfree'
+# ==============================================================================
+DEFAULT_GATEWAY_API = os.environ.get('DEFAULT_GATEWAY_API', 'razorpay').strip().lower()
+
+# Razorpay Gateway API Credentials
+# Configure in .env or deployment platform environment variables
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '').strip()
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '').strip()
+RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '').strip()
+PAYMENT_GATEWAY_CURRENCY = os.environ.get('PAYMENT_GATEWAY_CURRENCY', 'INR').strip()
