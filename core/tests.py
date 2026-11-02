@@ -1003,3 +1003,120 @@ class PaymentGatewayApiTests(TestCase):
         self.payroll.refresh_from_db()
         self.assertEqual(self.payroll.payment_status, 'Paid')
         self.assertEqual(self.payroll.payment_id, 'pay_hook_12345')
+
+
+class RestFrameworkAndSwaggerTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.user = User.objects.create_user(
+            username='apiuser',
+            password='Password123!',
+            email='apiuser@example.com'
+        )
+        self.employee = Employee.objects.create(
+            user=self.user,
+            employee_id='EMP_API_01',
+            name='API Test User',
+            phone='9876543210',
+            email='apiuser@example.com',
+            department='Tech',
+            joining_date=datetime.date(2025, 1, 1),
+            basic_salary=Decimal('75000.00'),
+            hourly_rate=Decimal('450.00'),
+            salary_type='Monthly'
+        )
+        self.attendance = Attendance.objects.create(
+            employee=self.employee,
+            date=datetime.date(2025, 2, 1),
+            check_in=datetime.time(9, 0),
+            check_out=datetime.time(17, 0),
+            break_hours=Decimal('1.00'),
+            status='Present'
+        )
+        self.leave = Leave.objects.create(
+            employee=self.employee,
+            leave_type='Sick',
+            from_date=datetime.date(2025, 3, 1),
+            to_date=datetime.date(2025, 3, 2),
+            reason='Flu symptoms',
+            status='Pending'
+        )
+        self.payroll = Payroll.objects.create(
+            employee=self.employee,
+            month=2,
+            year=2025,
+            salary_type='Monthly',
+            basic_salary=Decimal('75000.00'),
+            bonus=Decimal('5000.00'),
+            deductions=Decimal('2000.00'),
+            gross_salary=Decimal('80000.00'),
+            net_salary=Decimal('78000.00'),
+            payment_status='Pending'
+        )
+
+    def test_swagger_schema_endpoint(self):
+        """GET /api/schema/ returns 200 with OpenAPI schema."""
+        response = self.client.get('/api/schema/', secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_swagger_ui_endpoint(self):
+        """GET /api/docs/ returns 200 (Swagger UI)."""
+        response = self.client.get('/api/docs/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'WorkEase Management API')
+
+    def test_redoc_ui_endpoint(self):
+        """GET /api/redoc/ returns 200 (ReDoc UI)."""
+        response = self.client.get('/api/redoc/', secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_unauthenticated_api_access_blocked(self):
+        """Unauthenticated requests to API endpoints return 401 or 403."""
+        for path in ['/api/v1/employees/', '/api/v1/attendance/', '/api/v1/leave-requests/', '/api/v1/payroll/']:
+            response = self.client.get(path, secure=True)
+            self.assertIn(response.status_code, [401, 403])
+
+    def test_authenticated_employee_api_list(self):
+        """Authenticated user can list employees."""
+        self.client.force_login(self.user)
+        response = self.client.get('/api/v1/employees/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertGreaterEqual(len(data), 1)
+        self.assertEqual(data[0]['employee_id'], 'EMP_API_01')
+
+    def test_authenticated_attendance_api_list(self):
+        """Authenticated user can list attendance records."""
+        self.client.force_login(self.user)
+        response = self.client.get('/api/v1/attendance/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertGreaterEqual(len(data), 1)
+        self.assertEqual(data[0]['status'], 'Present')
+
+    def test_authenticated_leave_requests_api(self):
+        """Authenticated user can list and create leave requests."""
+        self.client.force_login(self.user)
+        response = self.client.get('/api/v1/leave-requests/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertGreaterEqual(len(data), 1)
+
+    def test_payroll_api_is_read_only(self):
+        """Payroll endpoint allows GET but forbids POST / DELETE (ReadOnlyModelViewSet)."""
+        self.client.force_login(self.user)
+        get_res = self.client.get('/api/v1/payroll/', secure=True)
+        self.assertEqual(get_res.status_code, 200)
+
+        # POST should not be allowed
+        post_res = self.client.post(
+            '/api/v1/payroll/',
+            {'employee': self.employee.id, 'month': 3, 'year': 2025},
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(post_res.status_code, 405)
+
+        # DELETE should not be allowed
+        del_res = self.client.delete(f'/api/v1/payroll/{self.payroll.id}/', secure=True)
+        self.assertEqual(del_res.status_code, 405)
