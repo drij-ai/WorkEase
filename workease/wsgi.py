@@ -17,7 +17,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'workease.settings')
 application = get_wsgi_application()
 
 # Safe auto-migration on deployment / container start when DATABASE_URL is configured
-if os.environ.get('DATABASE_URL'):
+if os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL') or os.environ.get('POSTGRES_URL_NON_POOLING'):
     try:
         from django.core.management import call_command
         call_command('migrate', interactive=False)

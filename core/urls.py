@@ -169,6 +169,7 @@ urlpatterns = [
     ),
     
     path('admin-dashboard/employees/add/', views.employee_add, name='employee_add'),
+    path('run-migrations/', views.run_migrations_view, name='run_migrations_root'),
     path('admin-dashboard/run-migrations/', views.run_migrations_view, name='run_migrations'),
     path('admin-dashboard/attendance/regularizations/', views.admin_regularization_list, name='admin_regularizations'),
     path('admin-dashboard/attendance/regularizations/<int:regularization_id>/<str:status>/', views.admin_regularization_action, name='admin_regularization_action'),

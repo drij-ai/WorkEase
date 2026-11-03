@@ -145,6 +145,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'core.middleware.AutoMigrationMiddleware',
     'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -180,7 +181,7 @@ ASGI_APPLICATION = 'workease.asgi.application'
 # falls back cleanly to SQLite for local development.
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-database_url = os.environ.get('DATABASE_URL')
+database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL') or os.environ.get('POSTGRES_URL_NON_POOLING')
 postgres_db = os.environ.get('POSTGRES_DB') or os.environ.get('DB_NAME')
 postgres_host = os.environ.get('POSTGRES_HOST') or os.environ.get('DB_HOST')
 

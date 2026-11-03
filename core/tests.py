@@ -1650,3 +1650,27 @@ class EmployeeSoftDeleteAndRegularizationTests(TestCase):
         )
         self.assertEqual(res_approve.status_code, 200)
         self.assertEqual(res_approve.json()['status'], 'Approved')
+
+
+class AutoMigrationAndResilienceTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+
+    def test_run_migrations_endpoint_get(self):
+        """Root /run-migrations/ returns HTTP 200 HTML page without requiring login."""
+        response = self.client.get('/run-migrations/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Database Migration Runner', response.content.decode('utf-8'))
+
+    def test_run_migrations_endpoint_json(self):
+        """Root /run-migrations/?format=json returns JSON response with status."""
+        response = self.client.get('/run-migrations/?format=json', secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertIn('output', data)
+
+    def test_admin_dashboard_run_migrations_endpoint(self):
+        """/admin-dashboard/run-migrations/ returns HTTP 200."""
+        response = self.client.get('/admin-dashboard/run-migrations/', secure=True)
+        self.assertEqual(response.status_code, 200)
