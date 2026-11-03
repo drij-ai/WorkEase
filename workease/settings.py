@@ -32,8 +32,14 @@ is_production = bool(
     or os.environ.get('VERCEL')
     or os.environ.get('VERCEL_URL')
 )
-default_debug = 'False' if is_production else 'True'
-DEBUG = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', default_debug)).lower() in ('true', '1', 't', 'yes')
+
+if is_production:
+    # In production environments (Render, Railway, Back4App, Vercel), DEBUG defaults to False
+    # unless explicitly enabled via DJANGO_DEBUG
+    DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 't', 'yes')
+else:
+    # In local development and CI testing, check DJANGO_DEBUG or DEBUG, defaulting to True
+    DEBUG = (os.environ.get('DJANGO_DEBUG') or os.environ.get('DEBUG', 'True')).lower() in ('true', '1', 't', 'yes')
 
 # Secret key: read from DJANGO_SECRET_KEY or SECRET_KEY
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY')
