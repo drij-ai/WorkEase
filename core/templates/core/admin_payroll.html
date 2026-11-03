@@ -652,12 +652,22 @@
     </div>
     {% endif %}
 
-    <div class="page-heading">
+    <div class="page-heading d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h1 class="page-title">Payroll Management</h1>
             <p class="page-description">
                 Manage employee salaries, bonuses, deductions and payroll records.
             </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'payroll_export_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-success d-inline-flex align-items-center gap-2 shadow-sm" style="font-size:13px; font-weight:600; padding:8px 14px; border-radius:8px;">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                Export Payroll CSV
+            </a>
+            <a href="/admin-dashboard/payroll/add/" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" style="font-size:13px; font-weight:600; padding:8px 14px; border-radius:8px;">
+                <i class="bi bi-plus-circle"></i>
+                Add Payroll Entry
+            </a>
         </div>
     </div>
 

@@ -629,46 +629,54 @@ def admin_dashboard(request):
 def employee_list(request):
     status_filter = request.GET.get('status', 'all')
     try:
-        employees = Employee.objects.all().order_by('name')
-        if status_filter == 'active':
-            employees = employees.filter(is_active=True)
-        elif status_filter == 'inactive':
-            employees = employees.filter(is_active=False)
-        list(employees)
-        total_count = Employee.objects.count()
+        all_qs = Employee.objects.all().order_by('name')
+        all_count = all_qs.count()
         active_count = Employee.objects.filter(is_active=True).count()
         inactive_count = Employee.objects.filter(is_active=False).count()
+
+        if status_filter == 'active':
+            employees = all_qs.filter(is_active=True)
+        elif status_filter == 'inactive':
+            employees = all_qs.filter(is_active=False)
+        else:
+            employees = all_qs
+        list(employees)
     except (ProgrammingError, OperationalError, DatabaseError):
         safe_run_migrations()
         try:
-            employees = Employee.objects.all().order_by('name')
-            if status_filter == 'active':
-                employees = employees.filter(is_active=True)
-            elif status_filter == 'inactive':
-                employees = employees.filter(is_active=False)
-            list(employees)
-            total_count = Employee.objects.count()
+            all_qs = Employee.objects.all().order_by('name')
+            all_count = all_qs.count()
             active_count = Employee.objects.filter(is_active=True).count()
             inactive_count = Employee.objects.filter(is_active=False).count()
+
+            if status_filter == 'active':
+                employees = all_qs.filter(is_active=True)
+            elif status_filter == 'inactive':
+                employees = all_qs.filter(is_active=False)
+            else:
+                employees = all_qs
+            list(employees)
         except Exception:
             try:
                 employees = Employee.objects.only(
                     'id', 'user', 'employee_id', 'name', 'phone', 'email',
                     'department', 'joining_date', 'basic_salary', 'hourly_rate', 'salary_type'
                 ).order_by('name')
-                total_count = len(employees)
-                active_count = total_count
+                all_count = len(employees)
+                active_count = all_count
                 inactive_count = 0
             except Exception:
                 employees = []
-                total_count = 0
+                all_count = 0
                 active_count = 0
                 inactive_count = 0
 
     return render(request, 'core/employees.html', {
         'employees': employees,
         'status_filter': status_filter,
-        'total_count': total_count,
+        'total_count': all_count,
+        'all_count': all_count,
+        'total_employees_count': all_count,
         'active_count': active_count,
         'inactive_count': inactive_count,
     })
@@ -2109,3 +2117,380 @@ def admin_regularization_action(request, regularization_id, status):
         )
 
     return redirect('admin_regularizations')
+
+
+@staff_member_required
+def employee_export_csv(request):
+    """Export all employee records as a formatted CSV file."""
+    import csv
+    from django.http import HttpResponse
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    today_str = timezone.localdate().strftime('%Y%m%d')
+    response['Content-Disposition'] = f'attachment; filename="workease_employees_{today_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'employee_id',
+        'name',
+        'email',
+        'phone',
+        'department',
+        'salary_type',
+        'basic_salary',
+        'hourly_rate',
+        'is_active',
+        'joining_date',
+        'relieving_date',
+    ])
+
+    employees = Employee.objects.select_related('user').all().order_by('employee_id')
+    for emp in employees:
+        writer.writerow([
+            emp.employee_id,
+            emp.name,
+            emp.contact_email or '',
+            emp.phone or '',
+            emp.department or '',
+            emp.salary_type or 'Monthly',
+            emp.basic_salary if emp.basic_salary is not None else '0.00',
+            emp.hourly_rate if emp.hourly_rate is not None else '0.00',
+            'True' if emp.is_active else 'False',
+            emp.joining_date.strftime('%Y-%m-%d') if emp.joining_date else '',
+            emp.relieving_date.strftime('%Y-%m-%d') if emp.relieving_date else '',
+        ])
+
+    return response
+
+
+@staff_member_required
+def employee_sample_csv(request):
+    """Download a template CSV header and sample rows for bulk employee onboarding."""
+    import csv
+    from django.http import HttpResponse
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="workease_employee_import_sample.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'employee_id',
+        'name',
+        'email',
+        'phone',
+        'department',
+        'salary_type',
+        'basic_salary',
+        'hourly_rate',
+        'is_active',
+        'joining_date',
+        'relieving_date',
+    ])
+    writer.writerow([
+        'EMP-1001',
+        'Alex Mercer',
+        'alex.mercer@example.com',
+        '9876543210',
+        'Engineering',
+        'Monthly',
+        '75000.00',
+        '0.00',
+        'True',
+        '2026-01-15',
+        '',
+    ])
+    writer.writerow([
+        'EMP-1002',
+        'Sara Connor',
+        'sara.connor@example.com',
+        '9876543211',
+        'Operations',
+        'Hourly',
+        '0.00',
+        '450.00',
+        'True',
+        '2026-02-01',
+        '',
+    ])
+    return response
+
+
+@staff_member_required
+def employee_import_csv(request):
+    """Parse uploaded CSV, create or update Employee and linked User accounts."""
+    import csv
+    import io
+    from datetime import datetime
+    from decimal import Decimal
+    from django.contrib.auth.models import User
+
+    if request.method != 'POST':
+        return redirect('employee_list')
+
+    csv_file = request.FILES.get('csv_file')
+    if not csv_file:
+        messages.error(request, "No CSV file selected. Please select a .csv file to import.")
+        return redirect('employee_list')
+
+    if not csv_file.name.lower().endswith('.csv'):
+        messages.error(request, "Invalid file format. Please upload a file with a .csv extension.")
+        return redirect('employee_list')
+
+    try:
+        file_data = csv_file.read().decode('utf-8-sig', errors='replace')
+        reader = csv.DictReader(io.StringIO(file_data))
+    except Exception as e:
+        messages.error(request, f"Could not read CSV file: {str(e)}")
+        return redirect('employee_list')
+
+    created_count = 0
+    updated_count = 0
+    errors = []
+
+    for row_idx, raw_row in enumerate(reader, start=2):
+        row = {k.strip(): (v.strip() if v else '') for k, v in raw_row.items() if k}
+        emp_id = row.get('employee_id')
+        name = row.get('name')
+
+        if not emp_id or not name:
+            errors.append(f"Row {row_idx}: Missing required employee_id or name.")
+            continue
+
+        email = row.get('email', '')
+        phone = row.get('phone', '')
+        department = row.get('department') or 'General'
+        salary_type = row.get('salary_type', 'Monthly')
+        if salary_type not in ['Monthly', 'Hourly']:
+            salary_type = 'Monthly'
+
+        try:
+            basic_salary = Decimal(str(row.get('basic_salary') or 0))
+        except Exception:
+            basic_salary = Decimal('0.00')
+
+        try:
+            hourly_rate = Decimal(str(row.get('hourly_rate') or 0))
+        except Exception:
+            hourly_rate = Decimal('0.00')
+
+        is_active_raw = row.get('is_active', 'True').lower()
+        is_active = is_active_raw in ['true', '1', 'yes', 't', 'active']
+
+        joining_date_raw = row.get('joining_date')
+        joining_date = timezone.localdate()
+        if joining_date_raw:
+            for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%d/%m/%Y', '%Y/%m/%d'):
+                try:
+                    joining_date = datetime.strptime(joining_date_raw, fmt).date()
+                    break
+                except ValueError:
+                    pass
+
+        relieving_date_raw = row.get('relieving_date')
+        relieving_date = None
+        if relieving_date_raw:
+            for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%d/%m/%Y', '%Y/%m/%d'):
+                try:
+                    relieving_date = datetime.strptime(relieving_date_raw, fmt).date()
+                    break
+                except ValueError:
+                    pass
+
+        try:
+            employee, created = Employee.objects.get_or_create(
+                employee_id=emp_id,
+                defaults={
+                    'name': name,
+                    'email': email or None,
+                    'phone': phone,
+                    'department': department,
+                    'salary_type': salary_type,
+                    'basic_salary': basic_salary,
+                    'hourly_rate': hourly_rate,
+                    'is_active': is_active,
+                    'joining_date': joining_date,
+                    'relieving_date': relieving_date,
+                }
+            )
+
+            if not created:
+                employee.name = name
+                if email:
+                    employee.email = email
+                if phone:
+                    employee.phone = phone
+                employee.department = department
+                employee.salary_type = salary_type
+                employee.basic_salary = basic_salary
+                employee.hourly_rate = hourly_rate
+                employee.is_active = is_active
+                employee.joining_date = joining_date
+                employee.relieving_date = relieving_date
+                employee.save()
+                updated_count += 1
+            else:
+                created_count += 1
+
+            # Sync or create linked User account
+            if not employee.user:
+                username = emp_id.lower().replace('-', '_')
+                user_obj = User.objects.filter(username=username).first()
+                if not user_obj and email:
+                    user_obj = User.objects.filter(email=email).first()
+                if not user_obj:
+                    user_obj = User.objects.create_user(
+                        username=username,
+                        email=email or f"{username}@workease.local",
+                        password=secrets.token_urlsafe(10),
+                        is_active=is_active
+                    )
+                employee.user = user_obj
+                employee.save(update_fields=['user'])
+            else:
+                if employee.user.is_active != is_active:
+                    employee.user.is_active = is_active
+                    employee.user.save(update_fields=['is_active'])
+
+        except Exception as e:
+            errors.append(f"Row {row_idx} ({emp_id}): {str(e)}")
+
+    if created_count > 0 or updated_count > 0:
+        messages.success(
+            request,
+            f"Employee Import Completed: {created_count} created, {updated_count} updated."
+        )
+    if errors:
+        messages.warning(
+            request,
+            f"Import Warnings ({len(errors)} issues): {'; '.join(errors[:3])}"
+        )
+
+    return redirect('employee_list')
+
+
+@staff_member_required
+def admin_attendance_export_csv(request):
+    """Export filtered Attendance records to CSV for accounting and audit."""
+    import csv
+    from django.http import HttpResponse
+
+    employee_id = request.GET.get('employee')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    status = request.GET.get('status')
+
+    attendance_records = Attendance.objects.select_related('employee').all().order_by('-date', '-check_in')
+
+    if employee_id:
+        attendance_records = attendance_records.filter(employee_id=employee_id)
+    if from_date:
+        attendance_records = attendance_records.filter(date__gte=from_date)
+    if to_date:
+        attendance_records = attendance_records.filter(date__lte=to_date)
+    if status:
+        attendance_records = attendance_records.filter(status=status)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    today_str = timezone.localdate().strftime('%Y%m%d')
+    response['Content-Disposition'] = f'attachment; filename="workease_attendance_{today_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Date',
+        'Employee ID',
+        'Employee Name',
+        'Department',
+        'Check-In',
+        'Check-Out',
+        'Break Hours',
+        'Working Hours',
+        'Status',
+    ])
+
+    for rec in attendance_records:
+        writer.writerow([
+            rec.date.strftime('%Y-%m-%d') if rec.date else '',
+            rec.employee.employee_id if rec.employee else '',
+            rec.employee.name if rec.employee else '',
+            rec.employee.department if rec.employee else '',
+            rec.check_in.strftime('%H:%M:%S') if rec.check_in else '',
+            rec.check_out.strftime('%H:%M:%S') if rec.check_out else '',
+            rec.break_hours if rec.break_hours is not None else '0.00',
+            rec.working_hours if rec.working_hours is not None else '0.00',
+            rec.status,
+        ])
+
+    return response
+
+
+@staff_member_required
+def payroll_export_csv(request):
+    """Export filtered Payroll statements to CSV for CA & tax accounting."""
+    import csv
+    from django.http import HttpResponse
+
+    month = request.GET.get('month')
+    year = request.GET.get('year')
+    employee_id = request.GET.get('employee')
+    payment_status = request.GET.get('payment_status')
+
+    payroll_records = Payroll.objects.select_related('employee').all().order_by('-year', '-month')
+
+    if month:
+        payroll_records = payroll_records.filter(month=month)
+    if year:
+        payroll_records = payroll_records.filter(year=year)
+    if employee_id:
+        payroll_records = payroll_records.filter(employee_id=employee_id)
+    if payment_status:
+        payroll_records = payroll_records.filter(payment_status=payment_status)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    today_str = timezone.localdate().strftime('%Y%m%d')
+    response['Content-Disposition'] = f'attachment; filename="workease_payroll_{today_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Month',
+        'Year',
+        'Employee ID',
+        'Employee Name',
+        'Department',
+        'Salary Type',
+        'Basic Salary',
+        'Hourly Rate',
+        'Total Hours',
+        'Bonus',
+        'Deductions',
+        'Gross Salary',
+        'Net Payable',
+        'Payment Status',
+        'Payment Gateway',
+        'Payment Order ID',
+        'Payment ID',
+        'Paid At',
+    ])
+
+    for p in payroll_records:
+        writer.writerow([
+            p.month,
+            p.year,
+            p.employee.employee_id if p.employee else '',
+            p.employee.name if p.employee else '',
+            p.employee.department if p.employee else '',
+            p.salary_type,
+            p.basic_salary,
+            p.hourly_rate,
+            p.total_hours,
+            p.bonus,
+            p.deductions,
+            p.gross_salary,
+            p.net_salary,
+            p.payment_status,
+            p.payment_gateway,
+            p.payment_order_id or '',
+            p.payment_id or '',
+            p.paid_at.strftime('%Y-%m-%d %H:%M:%S') if p.paid_at else '',
+        ])
+
+    return response

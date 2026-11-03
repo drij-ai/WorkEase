@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 from django.test import TestCase, Client, SimpleTestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.contrib.auth.models import User
 from core.models import Employee, Attendance, WorkLocation, Payroll, Leave, Notification, Holiday, BiometricCredential, AttendanceRegularization
@@ -1674,3 +1675,157 @@ class AutoMigrationAndResilienceTests(TestCase):
         """/admin-dashboard/run-migrations/ returns HTTP 200."""
         response = self.client.get('/admin-dashboard/run-migrations/', secure=True)
         self.assertEqual(response.status_code, 200)
+
+
+class BulkCsvImportExportTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.admin_user = User.objects.create_superuser(
+            username="admin_csv",
+            email="admin_csv@workease.com",
+            password="CsvAdminPassword123!",
+            is_staff=True,
+            is_superuser=True
+        )
+        self.employee = Employee.objects.create(
+            employee_id="EMP-7701",
+            name="Alice Smith",
+            email="alice@workease.com",
+            phone="9123456789",
+            department="Finance",
+            joining_date=datetime.date(2025, 6, 1),
+            basic_salary=Decimal("55000.00"),
+            hourly_rate=Decimal("0.00"),
+            salary_type="Monthly",
+            is_active=True
+        )
+
+    def test_employee_directory_all_counter_badge(self):
+        """Verify the 'All' pill badge context variable displays total count accurately."""
+        self.client.force_login(self.admin_user)
+        Employee.objects.create(
+            employee_id="EMP-7702",
+            name="Bob Inactive",
+            phone="9123456780",
+            department="HR",
+            joining_date=datetime.date(2025, 7, 1),
+            basic_salary=Decimal("45000.00"),
+            salary_type="Monthly",
+            is_active=False
+        )
+        response = self.client.get('/admin-dashboard/employees/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_count'], 2)
+        self.assertEqual(response.context['all_count'], 2)
+        self.assertEqual(response.context['active_count'], 1)
+        self.assertEqual(response.context['inactive_count'], 1)
+
+    def test_employee_export_csv(self):
+        """Export employees CSV returns 200, valid headers and employee data."""
+        self.client.force_login(self.admin_user)
+        response = self.client.get('/admin-dashboard/employees/export/csv/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/csv', response['Content-Type'])
+        self.assertIn('attachment; filename="workease_employees_', response['Content-Disposition'])
+
+        content = response.content.decode('utf-8')
+        lines = content.strip().splitlines()
+        self.assertGreaterEqual(len(lines), 2)
+        self.assertIn('employee_id,name,email,phone,department', lines[0])
+        self.assertIn('EMP-7701,Alice Smith', lines[1])
+
+    def test_employee_sample_csv(self):
+        """Sample employee CSV returns valid headers and demonstration rows."""
+        self.client.force_login(self.admin_user)
+        response = self.client.get('/admin-dashboard/employees/import/sample-csv/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/csv', response['Content-Type'])
+        content = response.content.decode('utf-8')
+        self.assertIn('employee_id,name,email,phone,department', content)
+        self.assertIn('EMP-1001,Alex Mercer', content)
+
+    def test_employee_import_csv_creation_and_update(self):
+        """Bulk import CSV creates new employees and updates existing records by employee_id."""
+        self.client.force_login(self.admin_user)
+        csv_data = (
+            "employee_id,name,email,phone,department,salary_type,basic_salary,hourly_rate,is_active,joining_date,relieving_date\n"
+            "EMP-7701,Alice Smith Updated,alice_new@workease.com,9998887776,Accounting,Monthly,62000.00,0.00,True,2025-06-01,\n"
+            "EMP-7703,Charlie New,charlie@workease.com,9871112223,Engineering,Hourly,0.00,420.00,True,2026-03-01,\n"
+        )
+        uploaded_file = SimpleUploadedFile("employees_test.csv", csv_data.encode('utf-8'), content_type="text/csv")
+        response = self.client.post(
+            '/admin-dashboard/employees/import/csv/',
+            {'csv_file': uploaded_file},
+            secure=True
+        )
+        self.assertEqual(response.status_code, 302)
+
+        self.employee.refresh_from_db()
+        self.assertEqual(self.employee.name, "Alice Smith Updated")
+        self.assertEqual(self.employee.department, "Accounting")
+        self.assertEqual(self.employee.basic_salary, Decimal("62000.00"))
+
+        charlie = Employee.objects.filter(employee_id="EMP-7703").first()
+        self.assertIsNotNone(charlie)
+        self.assertEqual(charlie.name, "Charlie New")
+        self.assertEqual(charlie.salary_type, "Hourly")
+        self.assertEqual(charlie.hourly_rate, Decimal("420.00"))
+        self.assertTrue(charlie.is_active)
+        self.assertIsNotNone(charlie.user)
+
+    def test_employee_import_csv_invalid_file_handling(self):
+        """Uploading non-CSV or empty request handled safely without crashing."""
+        self.client.force_login(self.admin_user)
+        res1 = self.client.post('/admin-dashboard/employees/import/csv/', {}, secure=True)
+        self.assertEqual(res1.status_code, 302)
+
+        txt_file = SimpleUploadedFile("test.txt", b"some text", content_type="text/plain")
+        res2 = self.client.post('/admin-dashboard/employees/import/csv/', {'csv_file': txt_file}, secure=True)
+        self.assertEqual(res2.status_code, 302)
+
+    def test_attendance_export_csv(self):
+        """Admin attendance export CSV downloads filtered attendance data."""
+        self.client.force_login(self.admin_user)
+        att = Attendance.objects.create(
+            employee=self.employee,
+            date=datetime.date(2026, 11, 2),
+            check_in=datetime.time(9, 30),
+            check_out=datetime.time(18, 0),
+            break_hours=Decimal("0.5"),
+            status="Present"
+        )
+        response = self.client.get(f'/admin-dashboard/attendance/export/csv/?employee={self.employee.id}', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/csv', response['Content-Type'])
+        self.assertIn('attachment; filename="workease_attendance_', response['Content-Disposition'])
+
+        content = response.content.decode('utf-8')
+        self.assertIn('Date,Employee ID,Employee Name,Department', content)
+        self.assertIn('EMP-7701,Alice Smith,Finance', content)
+        self.assertIn('Present', content)
+
+    def test_payroll_export_csv(self):
+        """Admin payroll export CSV downloads filtered CA payroll statement."""
+        self.client.force_login(self.admin_user)
+        pay = Payroll.objects.create(
+            employee=self.employee,
+            month=11,
+            year=2026,
+            salary_type="Monthly",
+            basic_salary=Decimal("55000.00"),
+            bonus=Decimal("5000.00"),
+            deductions=Decimal("2000.00"),
+            gross_salary=Decimal("60000.00"),
+            net_salary=Decimal("58000.00"),
+            payment_status="Paid",
+            payment_gateway="Razorpay"
+        )
+        response = self.client.get('/admin-dashboard/payroll/export/csv/?month=11&year=2026', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/csv', response['Content-Type'])
+        self.assertIn('attachment; filename="workease_payroll_', response['Content-Disposition'])
+
+        content = response.content.decode('utf-8')
+        self.assertIn('Month,Year,Employee ID,Employee Name', content)
+        self.assertIn('11,2026,EMP-7701,Alice Smith', content)
+        self.assertIn('58000.00,Paid', content)

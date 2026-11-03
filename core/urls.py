@@ -168,6 +168,17 @@ urlpatterns = [
         name='work_location_delete'
     ),
     
+    # CSV Export and Import Endpoints
+    path('admin-dashboard/employees/export/csv/', views.employee_export_csv, name='employee_export_csv'),
+    path('employees/export/csv/', views.employee_export_csv, name='employee_export_csv_alt'),
+    path('admin-dashboard/employees/import/sample-csv/', views.employee_sample_csv, name='employee_sample_csv'),
+    path('employees/import/sample-csv/', views.employee_sample_csv, name='employee_sample_csv_alt'),
+    path('admin-dashboard/employees/import/csv/', views.employee_import_csv, name='employee_import_csv'),
+    path('employees/import/csv/', views.employee_import_csv, name='employee_import_csv_alt'),
+    path('admin-dashboard/attendance/export/csv/', views.admin_attendance_export_csv, name='admin_attendance_export_csv'),
+    path('admin-attendance/export/csv/', views.admin_attendance_export_csv, name='admin_attendance_export_csv_alt'),
+    path('admin-dashboard/payroll/export/csv/', views.payroll_export_csv, name='payroll_export_csv'),
+    path('payroll/export/csv/', views.payroll_export_csv, name='payroll_export_csv_alt'),
     path('admin-dashboard/employees/add/', views.employee_add, name='employee_add'),
     path('run-migrations/', views.run_migrations_view, name='run_migrations_root'),
     path('admin-dashboard/run-migrations/', views.run_migrations_view, name='run_migrations'),
