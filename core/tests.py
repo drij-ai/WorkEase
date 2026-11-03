@@ -1,3 +1,5 @@
+from django.utils import timezone
+import json
 from decimal import Decimal
 import datetime
 import os
@@ -6,7 +8,7 @@ import sys
 from django.test import TestCase, Client, SimpleTestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from core.models import Employee, Attendance, WorkLocation, Payroll, Leave, Notification, Holiday
+from core.models import Employee, Attendance, WorkLocation, Payroll, Leave, Notification, Holiday, BiometricCredential
 
 
 class HealthCheckAndCoreViewsTest(TestCase):
@@ -1120,3 +1122,236 @@ class RestFrameworkAndSwaggerTests(TestCase):
         # DELETE should not be allowed
         del_res = self.client.delete(f'/api/v1/payroll/{self.payroll.id}/', secure=True)
         self.assertEqual(del_res.status_code, 405)
+
+
+
+class BiometricRegistrationAndAuthTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.user = User.objects.create_user(
+            username='biometric_user',
+            password='TestPassword123!',
+            email='bio@example.com'
+        )
+        self.employee = Employee.objects.create(
+            user=self.user,
+            employee_id='EMP_BIO_01',
+            name='Biometric Employee',
+            phone='9876543210',
+            email='bio@example.com',
+            department='Engineering',
+            joining_date=datetime.date(2025, 1, 1),
+            basic_salary=Decimal('85000.00'),
+            salary_type='Monthly'
+        )
+        self.work_location = WorkLocation.objects.create(
+            name='Headquarters',
+            latitude=Decimal('23.022500'),
+            longitude=Decimal('72.571400'),
+            allowed_radius=500
+        )
+
+    def test_unauthenticated_biometric_endpoints_redirect_to_login(self):
+        """Unauthenticated access to biometric endpoints redirects to login."""
+        endpoints = [
+            '/biometric/register/options/',
+            '/biometric/auth/options/',
+        ]
+        for ep in endpoints:
+            response = self.client.get(ep, secure=True)
+            self.assertEqual(response.status_code, 302)
+            self.assertIn('/login/', response.url)
+
+    def test_biometric_register_options(self):
+        """Authenticated employee receives WebAuthn creation options and sets session challenge."""
+        self.client.force_login(self.user)
+        response = self.client.get('/biometric/register/options/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('challenge', data)
+        self.assertIn('rp', data)
+        self.assertIn('user', data)
+        self.assertEqual(data['user']['name'], 'bio@example.com')
+        self.assertEqual(self.client.session.get('webauthn_reg_challenge'), data['challenge'])
+
+    def test_biometric_register_verify(self):
+        """Employee can verify and register a new biometric credential."""
+        self.client.force_login(self.user)
+        # Set session challenge
+        session = self.client.session
+        session['webauthn_reg_challenge'] = 'test_challenge_12345'
+        session.save()
+
+        payload = {
+            'credential_id': 'cred_webauthn_id_9999',
+            'public_key': 'pubkey_sample_base64_data',
+            'device_name': 'iPhone Touch ID',
+        }
+        response = self.client.post(
+            '/biometric/register/verify/',
+            json.dumps(payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['credential_id'], 'cred_webauthn_id_9999')
+
+        # Check DB persistence
+        self.assertTrue(
+            BiometricCredential.objects.filter(
+                employee=self.employee,
+                credential_id='cred_webauthn_id_9999'
+            ).exists()
+        )
+        self.assertTrue(self.employee.has_biometric)
+
+    def test_biometric_auth_options_without_credentials_fails(self):
+        """Employee without registered biometrics receives error from auth options."""
+        self.client.force_login(self.user)
+        response = self.client.get('/biometric/auth/options/', secure=True)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn('error', data)
+
+    def test_biometric_auth_options_with_credentials_succeeds(self):
+        """Employee with registered biometric receives WebAuthn assertion options."""
+        BiometricCredential.objects.create(
+            employee=self.employee,
+            credential_id='cred_existing_token',
+            public_key='sample_key',
+            device_name='Windows Hello'
+        )
+        self.client.force_login(self.user)
+        response = self.client.get('/biometric/auth/options/', secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('challenge', data)
+        self.assertIn('allowCredentials', data)
+        self.assertEqual(data['allowCredentials'][0]['id'], 'cred_existing_token')
+        self.assertEqual(self.client.session.get('webauthn_auth_challenge'), data['challenge'])
+
+    def test_biometric_attendance_check_in_and_check_out_flow(self):
+        """Full biometric punch flow: Check-In then Check-Out with GPS coordinates."""
+        cred = BiometricCredential.objects.create(
+            employee=self.employee,
+            credential_id='cred_punch_token',
+            public_key='sample_key',
+            device_name='Office Tablet Biometric',
+            sign_count=0
+        )
+        self.client.force_login(self.user)
+
+        # 1. Biometric Check-In inside allowed radius (exact HQ coords)
+        check_in_payload = {
+            'credential_id': 'cred_punch_token',
+            'action': 'check_in',
+            'latitude': '23.022500',
+            'longitude': '72.571400',
+        }
+        res_in = self.client.post(
+            '/biometric/auth/verify/',
+            json.dumps(check_in_payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(res_in.status_code, 200)
+        in_data = res_in.json()
+        self.assertTrue(in_data['success'])
+        self.assertEqual(in_data['action'], 'check_in')
+
+        today = timezone.localdate()
+        att = Attendance.objects.filter(employee=self.employee, date=today).first()
+        self.assertIsNotNone(att)
+        self.assertIsNotNone(att.check_in)
+        self.assertIsNone(att.check_out)
+
+        cred.refresh_from_db()
+        self.assertEqual(cred.sign_count, 1)
+
+        # 2. Duplicate Check-In rejected
+        res_dup = self.client.post(
+            '/biometric/auth/verify/',
+            json.dumps(check_in_payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(res_dup.status_code, 400)
+        self.assertFalse(res_dup.json()['success'])
+
+        # Adjust check_in time to simulate an elapsed shift before checkout
+        att.check_in = (timezone.now() - datetime.timedelta(hours=4)).time()
+        att.save(update_fields=['check_in'])
+
+        # 3. Biometric Check-Out with break hours
+        check_out_payload = {
+            'credential_id': 'cred_punch_token',
+            'action': 'check_out',
+            'latitude': '23.022500',
+            'longitude': '72.571400',
+            'break_hours': '0.5'
+        }
+        res_out = self.client.post(
+            '/biometric/auth/verify/',
+            json.dumps(check_out_payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(res_out.status_code, 200)
+        out_data = res_out.json()
+        self.assertTrue(out_data['success'])
+        self.assertEqual(out_data['action'], 'check_out')
+
+        att.refresh_from_db()
+        self.assertIsNotNone(att.check_out)
+        self.assertEqual(att.break_hours, Decimal('0.5'))
+
+        cred.refresh_from_db()
+        self.assertEqual(cred.sign_count, 3)
+
+    def test_biometric_attendance_outside_geofence_rejected(self):
+        """Biometric punch outside office radius is rejected with error."""
+        BiometricCredential.objects.create(
+            employee=self.employee,
+            credential_id='cred_geofence_token',
+            public_key='sample_key',
+            device_name='Android Biometric'
+        )
+        self.client.force_login(self.user)
+
+        # New York coordinates (far away from Ahmedabad HQ)
+        payload = {
+            'credential_id': 'cred_geofence_token',
+            'action': 'check_in',
+            'latitude': '40.7128',
+            'longitude': '-74.0060',
+        }
+        response = self.client.post(
+            '/biometric/auth/verify/',
+            json.dumps(payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn('error', data)
+        self.assertIn('Allowed radius', data['error'])
+
+    def test_biometric_attendance_invalid_credential_rejected(self):
+        """Punch with unassociated credential_id is rejected."""
+        self.client.force_login(self.user)
+        payload = {
+            'credential_id': 'cred_unregistered_unknown',
+            'action': 'check_in',
+            'latitude': '23.022500',
+            'longitude': '72.571400',
+        }
+        response = self.client.post(
+            '/biometric/auth/verify/',
+            json.dumps(payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Unrecognized or unauthorized', response.json()['error'])

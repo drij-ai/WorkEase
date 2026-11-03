@@ -63,6 +63,14 @@ class Employee(models.Model):
             return self.user.email
         return None
 
+    @property
+    def has_biometric(self):
+        return self.biometric_credentials.exists()
+
+    @property
+    def primary_biometric(self):
+        return self.biometric_credentials.first()
+
     def __str__(self):
         return f"{self.employee_id} - {self.name}"
 
@@ -407,3 +415,37 @@ class Holiday(models.Model):
 
     def __str__(self):
         return f"{self.date} - {self.title}"
+
+
+class BiometricCredential(models.Model):
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name='biometric_credentials'
+    )
+    credential_id = models.CharField(
+        max_length=512,
+        unique=True,
+        help_text="Base64 or string WebAuthn Credential ID"
+    )
+    public_key = models.TextField(
+        help_text="Public key representation or COSE key in base64"
+    )
+    sign_count = models.IntegerField(
+        default=0
+    )
+    device_name = models.CharField(
+        max_length=150,
+        blank=True,
+        default='Biometric Device'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.device_name} ({self.credential_id[:16]}...)"
+

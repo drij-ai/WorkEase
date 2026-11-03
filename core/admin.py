@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee, Attendance, Payroll, Leave, WorkLocation
+from .models import Employee, Attendance, Payroll, Leave, WorkLocation, BiometricCredential
 
 
 @admin.register(Employee)
@@ -138,4 +138,27 @@ class WorkLocationAdmin(admin.ModelAdmin):
 
     ordering = (
         'name',
+    )
+
+@admin.register(BiometricCredential)
+class BiometricCredentialAdmin(admin.ModelAdmin):
+    list_display = (
+        'employee',
+        'device_name',
+        'credential_id',
+        'sign_count',
+        'created_at',
+    )
+    search_fields = (
+        'employee__name',
+        'employee__employee_id',
+        'device_name',
+        'credential_id',
+    )
+    list_filter = (
+        'device_name',
+        'created_at',
+    )
+    ordering = (
+        '-created_at',
     )

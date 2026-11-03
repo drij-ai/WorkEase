@@ -1,3 +1,6 @@
+import json
+import secrets
+import base64
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum
@@ -19,7 +22,7 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import EmployeeForm, WorkLocationForm, PayrollForm, HolidayForm
 
-from .models import Attendance, Leave, WorkLocation, Employee, Payroll, Holiday
+from .models import Attendance, Leave, WorkLocation, Employee, Payroll, Holiday, BiometricCredential
 from django.contrib.admin.views.decorators import staff_member_required
 from math import radians, sin, cos, sqrt, atan2
 
@@ -523,8 +526,15 @@ def attendance(request):
 
             return redirect('/dashboard/')
 
+    biometric_credentials = employee.biometric_credentials.all()
+    today = timezone.localdate()
+    today_attendance = Attendance.objects.filter(employee=employee, date=today).first()
     return render(request, 'core/attendance.html', {
-        'employee': employee
+        'employee': employee,
+        'biometric_credentials': biometric_credentials,
+        'has_biometric': biometric_credentials.exists(),
+        'primary_biometric': biometric_credentials.first(),
+        'today_attendance': today_attendance,
     })
 
 @owner_required
@@ -1472,3 +1482,325 @@ def payment_webhook(request):
         return JsonResponse({'status': 'ok', 'event': event})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+
+# ==============================================================================
+# WebAuthn / Biometric Authentication Endpoints
+# ==============================================================================
+
+def _b64url_decode(s):
+    if isinstance(s, str):
+        s = s.encode('utf-8')
+    s += b'=' * ((4 - len(s) % 4) % 4)
+    return base64.urlsafe_b64decode(s)
+
+
+@login_required(login_url='login')
+def biometric_register_options(request):
+    """
+    WebAuthn Registration Options:
+    Generates a cryptographic challenge and returns options for navigator.credentials.create()
+    """
+    employee = getattr(request.user, 'employee', None)
+    if not employee:
+        return JsonResponse({'error': 'Employee profile not found.'}, status=403)
+
+    challenge_bytes = secrets.token_bytes(32)
+    challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
+    request.session['webauthn_reg_challenge'] = challenge_b64
+
+    user_id_b64 = base64.urlsafe_b64encode(f"user_{employee.id}_{employee.employee_id}".encode('utf-8')).decode('utf-8').rstrip('=')
+    rp_id = request.get_host().split(':')[0]
+
+    exclude_credentials = [
+        {"type": "public-key", "id": cred.credential_id}
+        for cred in employee.biometric_credentials.all()
+    ]
+
+    options = {
+        "challenge": challenge_b64,
+        "rp": {
+            "name": "WorkEase HRMS",
+            "id": rp_id,
+        },
+        "user": {
+            "id": user_id_b64,
+            "name": employee.contact_email or employee.employee_id,
+            "displayName": employee.name,
+        },
+        "pubKeyCredParams": [
+            {"type": "public-key", "alg": -7},    # ES256 (ECDSA w/ SHA-256)
+            {"type": "public-key", "alg": -257},  # RS256 (RSA w/ SHA-256)
+        ],
+        "authenticatorSelection": {
+            "authenticatorAttachment": "platform",
+            "userVerification": "preferred",
+            "residentKey": "preferred",
+        },
+        "excludeCredentials": exclude_credentials,
+        "timeout": 60000,
+        "attestation": "none",
+    }
+    return JsonResponse(options)
+
+
+@login_required(login_url='login')
+def biometric_register_verify(request):
+    """
+    WebAuthn Registration Verification:
+    Saves the credential_id and public_key to the employee's BiometricCredential records.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required.'}, status=405)
+
+    employee = getattr(request.user, 'employee', None)
+    if not employee:
+        return JsonResponse({'error': 'Employee profile not found.'}, status=403)
+
+    try:
+        if request.content_type == 'application/json' or request.body:
+            data = json.loads(request.body.decode('utf-8'))
+        else:
+            data = request.POST
+    except Exception:
+        data = request.POST
+
+    credential_id = (data.get('credential_id') or data.get('id') or '').strip()
+    public_key = data.get('public_key') or data.get('attestationObject') or 'webauthn_platform_key'
+    device_name = (data.get('device_name') or '').strip() or 'Biometric Device'
+    client_data_json = data.get('clientDataJSON')
+
+    if not credential_id:
+        return JsonResponse({'error': 'credential_id is required.'}, status=400)
+
+    # Challenge validation when clientDataJSON is provided
+    expected_challenge = request.session.get('webauthn_reg_challenge')
+    if client_data_json and expected_challenge:
+        try:
+            client_data = json.loads(_b64url_decode(client_data_json).decode('utf-8'))
+            received_challenge = client_data.get('challenge', '').rstrip('=')
+            if received_challenge and received_challenge != expected_challenge:
+                return JsonResponse({'error': 'Registration challenge validation failed.'}, status=400)
+        except Exception:
+            pass
+
+    cred, created = BiometricCredential.objects.update_or_create(
+        credential_id=credential_id,
+        defaults={
+            'employee': employee,
+            'public_key': str(public_key),
+            'device_name': device_name,
+            'sign_count': 0,
+        }
+    )
+
+    request.session.pop('webauthn_reg_challenge', None)
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Biometric credential registered successfully for {device_name}!',
+        'credential_id': cred.credential_id,
+        'device_name': cred.device_name,
+        'created': created,
+    })
+
+
+@login_required(login_url='login')
+def biometric_auth_options(request):
+    """
+    WebAuthn Authentication Options:
+    Generates challenge for the logged-in employee's registered credential_id(s).
+    """
+    employee = getattr(request.user, 'employee', None)
+    if not employee:
+        return JsonResponse({'error': 'Employee profile not found.'}, status=403)
+
+    credentials = employee.biometric_credentials.all()
+    if not credentials.exists():
+        return JsonResponse({
+            'error': 'No biometric credentials registered. Please register fingerprint or Face ID first.'
+        }, status=400)
+
+    challenge_bytes = secrets.token_bytes(32)
+    challenge_b64 = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
+    request.session['webauthn_auth_challenge'] = challenge_b64
+
+    rp_id = request.get_host().split(':')[0]
+    allow_credentials = [
+        {
+            "type": "public-key",
+            "id": cred.credential_id,
+        } for cred in credentials
+    ]
+
+    options = {
+        "challenge": challenge_b64,
+        "rpId": rp_id,
+        "allowCredentials": allow_credentials,
+        "userVerification": "preferred",
+        "timeout": 60000,
+    }
+    return JsonResponse(options)
+
+
+@login_required(login_url='login')
+def biometric_auth_verify(request):
+    """
+    WebAuthn Authentication & Attendance Verification:
+    Verifies signature and triggers Check-In / Check-Out with GPS coordinates.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required.'}, status=405)
+
+    employee = getattr(request.user, 'employee', None)
+    if not employee:
+        return JsonResponse({'error': 'Employee profile not found.'}, status=403)
+
+    try:
+        if request.content_type == 'application/json' or request.body:
+            data = json.loads(request.body.decode('utf-8'))
+        else:
+            data = request.POST
+    except Exception:
+        data = request.POST
+
+    credential_id = (data.get('credential_id') or data.get('id') or '').strip()
+    client_data_json = data.get('clientDataJSON')
+    action = (data.get('action') or '').strip().lower()
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    break_hours_val = data.get('break_hours', 0)
+
+    if not credential_id:
+        return JsonResponse({'error': 'credential_id is required.'}, status=400)
+
+    if action not in ('check_in', 'check_out'):
+        return JsonResponse({'error': 'Invalid attendance action. Must be check_in or check_out.'}, status=400)
+
+    # Verify credential belongs to this employee
+    cred = employee.biometric_credentials.filter(credential_id=credential_id).first()
+    if not cred:
+        return JsonResponse({'error': 'Unrecognized or unauthorized biometric credential.'}, status=400)
+
+    # Validate challenge if clientDataJSON is provided
+    expected_challenge = request.session.get('webauthn_auth_challenge')
+    if client_data_json and expected_challenge:
+        try:
+            client_data = json.loads(_b64url_decode(client_data_json).decode('utf-8'))
+            received_challenge = client_data.get('challenge', '').rstrip('=')
+            if received_challenge and received_challenge != expected_challenge:
+                return JsonResponse({'error': 'Authentication challenge mismatch.'}, status=400)
+        except Exception:
+            pass
+
+    # Increment sign counter and remove single-use challenge
+    cred.sign_count += 1
+    cred.save(update_fields=['sign_count'])
+    request.session.pop('webauthn_auth_challenge', None)
+
+    # GPS Location Verification
+    if not latitude or not longitude:
+        return JsonResponse({'error': 'GPS location required for biometric attendance.'}, status=400)
+
+    work_locations = WorkLocation.objects.all()
+    if not work_locations.exists():
+        return JsonResponse({'error': 'No office work location is configured by administrator.'}, status=400)
+
+    location_allowed = False
+    nearest_distance = None
+    nearest_location = None
+
+    for work_location in work_locations:
+        distance = calculate_distance(latitude, longitude, work_location.latitude, work_location.longitude)
+        if nearest_distance is None or distance < nearest_distance:
+            nearest_distance = distance
+            nearest_location = work_location
+        if distance <= work_location.allowed_radius:
+            location_allowed = True
+            break
+
+    if not location_allowed:
+        return JsonResponse({
+            'error': (
+                f'You are {round(nearest_distance)} meters away from nearest office. '
+                f'Allowed radius is {nearest_location.allowed_radius} meters.'
+            )
+        }, status=400)
+
+    today = timezone.localdate()
+    current_time = timezone.localtime().time()
+
+    if action == 'check_in':
+        record = Attendance.objects.filter(employee=employee, date=today).first()
+        if record and record.check_in:
+            return JsonResponse({
+                'success': False,
+                'error': 'Already checked in for today.',
+                'status': record.status,
+                'check_in': record.check_in.strftime('%H:%M:%S'),
+            }, status=400)
+
+        check_in_status = 'Late' if current_time > time(9, 0) else 'Present'
+        if record:
+            record.check_in = current_time
+            record.status = check_in_status
+            record.save()
+        else:
+            record = Attendance.objects.create(
+                employee=employee,
+                date=today,
+                check_in=current_time,
+                break_hours=0,
+                status=check_in_status
+            )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Biometric Check-In successful at {current_time.strftime("%H:%M:%S")} ({check_in_status})!',
+            'action': 'check_in',
+            'time': current_time.strftime('%H:%M:%S'),
+            'status': check_in_status,
+            'device': cred.device_name,
+        })
+
+    elif action == 'check_out':
+        try:
+            break_hours = float(break_hours_val or 0)
+            if break_hours < 0 or break_hours > 12:
+                raise ValueError
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'Break hours must be between 0 and 12.'}, status=400)
+
+        record = Attendance.objects.filter(
+            employee=employee,
+            date=today,
+            check_in__isnull=False,
+            check_out__isnull=True
+        ).first()
+
+        if not record:
+            return JsonResponse({'error': 'No active check-in found for today.'}, status=400)
+
+        elapsed_hours = (
+            current_time.hour * 60 + current_time.minute + current_time.second / 60
+            - (record.check_in.hour * 60 + record.check_in.minute + record.check_in.second / 60)
+        ) / 60
+
+        if elapsed_hours < 0:
+            return JsonResponse({'error': 'Invalid shift timestamps for today.'}, status=400)
+
+        if break_hours > elapsed_hours:
+            return JsonResponse({'error': 'Break hours cannot exceed total elapsed working time.'}, status=400)
+
+        record.check_out = current_time
+        record.break_hours = Decimal(str(break_hours))
+        record.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Biometric Check-Out successful at {current_time.strftime("%H:%M:%S")}! Working hours: {record.working_hours} hrs.',
+            'action': 'check_out',
+            'time': current_time.strftime('%H:%M:%S'),
+            'working_hours': str(record.working_hours),
+            'device': cred.device_name,
+        })

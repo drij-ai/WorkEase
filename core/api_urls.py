@@ -11,6 +11,7 @@ from .api_views import (
     LeaveViewSet,
     LeaveRequestViewSet,
     PayrollViewSet,
+    BiometricCredentialViewSet,
 )
 
 router = DefaultRouter()
@@ -19,6 +20,7 @@ router.register(r'attendance', AttendanceViewSet, basename='attendance')
 router.register(r'leave-requests', LeaveRequestViewSet, basename='leaverequest')
 router.register(r'leaves', LeaveViewSet, basename='leave')
 router.register(r'payroll', PayrollViewSet, basename='payroll')
+router.register(r'biometrics', BiometricCredentialViewSet, basename='biometric')
 
 urlpatterns = [
     path('v1/', include(router.urls)),
@@ -26,4 +28,3 @@ urlpatterns = [
     path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
-

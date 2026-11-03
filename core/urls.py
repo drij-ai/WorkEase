@@ -172,4 +172,8 @@ urlpatterns = [
     path('admin-dashboard/run-migrations/', views.run_migrations_view, name='run_migrations'),
     path('leave/', views.leave_apply, name='leave_apply'),
     path('attendance/', views.attendance, name='attendance'),
+    path('biometric/register/options/', views.biometric_register_options, name='biometric_register_options'),
+    path('biometric/register/verify/', views.biometric_register_verify, name='biometric_register_verify'),
+    path('biometric/auth/options/', views.biometric_auth_options, name='biometric_auth_options'),
+    path('biometric/auth/verify/', views.biometric_auth_verify, name='biometric_auth_verify'),
 ]

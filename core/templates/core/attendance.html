@@ -524,6 +524,29 @@
                     📍 Location permission check thashe...
                 </div>
 
+                <!-- WebAuthn Biometric Authentication Box -->
+                <div class="biometric-box p-3 mb-3 border rounded-3" style="background: #f8fbff; border-color: #dbe7fb !important;">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="font-size: 26px;">🖐️</span>
+                            <div>
+                                <strong style="color: #17233d; font-size: 14px;">WebAuthn Biometric Security</strong>
+                                <div class="text-muted" style="font-size: 12px;" id="biometricStatusLabel">
+                                    {% if has_biometric %}
+                                        <span class="text-success fw-bold">● Active:</span> {{ primary_biometric.device_name }} (Ready for Fingerprint / Face ID punch)
+                                    {% else %}
+                                        Register your phone Fingerprint, Face ID, or Windows Hello for instant one-touch verification.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm {% if has_biometric %}btn-outline-primary{% else %}btn-primary{% endif %}" id="btnRegisterBiometric" style="font-weight: 550;">
+                            {% if has_biometric %}🔄 Re-register Biometric{% else %}🖐️ Register Fingerprint / Biometric{% endif %}
+                        </button>
+                    </div>
+                    <div id="biometricFeedback" class="alert d-none mt-2 mb-0" role="alert" style="font-size: 13px;"></div>
+                </div>
+
                 {% if error %}
                     <div class="alert alert-danger mt-3" role="alert">
                         {{ error }}
@@ -564,24 +587,20 @@
 
                         <button
                             class="attendance-btn check-in"
-                            type="submit"
-                            name="action"
-                            value="check_in"
+                            type="button"
                             id="checkInButton"
                             disabled
                         >
-                            🟢 Check In
+                            🟢 Check In {% if has_biometric %}<small style="font-size: 11px; opacity: 0.85;">(Fingerprint)</small>{% endif %}
                         </button>
 
                         <button
                             class="attendance-btn check-out"
-                            type="submit"
-                            name="action"
-                            value="check_out"
+                            type="button"
                             id="checkOutButton"
                             disabled
                         >
-                            🔴 Check Out
+                            🔴 Check Out {% if has_biometric %}<small style="font-size: 11px; opacity: 0.85;">(Fingerprint)</small>{% endif %}
                         </button>
 
                     </div>
@@ -662,6 +681,221 @@
         }
 
         window.addEventListener("load", getLocation);
+
+        // ==============================================================================
+        // WebAuthn Biometric Authentication Logic
+        // ==============================================================================
+        const hasBiometricRegistered = {{ has_biometric|yesno:"true,false" }};
+        const attendanceForm = document.getElementById("attendanceForm");
+        const btnRegisterBiometric = document.getElementById("btnRegisterBiometric");
+        const biometricFeedback = document.getElementById("biometricFeedback");
+
+        function showBiometricFeedback(msg, type = "info") {
+            biometricFeedback.className = `alert alert-${type} mt-2 mb-0`;
+            biometricFeedback.innerHTML = msg;
+            biometricFeedback.classList.remove("d-none");
+        }
+
+        function getCsrfToken() {
+            const input = document.querySelector('[name=csrfmiddlewaretoken]');
+            return input ? input.value : '';
+        }
+
+        function bufferToBase64Url(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        function base64UrlToBuffer(base64Url) {
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            while (base64.length % 4) {
+                base64 += '=';
+            }
+            const binary = window.atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        // 1. Biometric Registration
+        if (btnRegisterBiometric) {
+            btnRegisterBiometric.addEventListener("click", async function() {
+                if (!window.PublicKeyCredential) {
+                    showBiometricFeedback("❌ WebAuthn / Biometric authentication is not supported on this device/browser.", "danger");
+                    return;
+                }
+
+                showBiometricFeedback("⏳ Requesting registration options from server...", "info");
+                btnRegisterBiometric.disabled = true;
+
+                try {
+                    const optRes = await fetch('/biometric/register/options/');
+                    if (!optRes.ok) {
+                        const err = await optRes.json();
+                        throw new Error(err.error || "Failed to fetch registration options.");
+                    }
+                    const options = await optRes.json();
+
+                    options.challenge = base64UrlToBuffer(options.challenge);
+                    options.user.id = base64UrlToBuffer(options.user.id);
+                    if (options.excludeCredentials) {
+                        options.excludeCredentials = options.excludeCredentials.map(c => ({
+                            ...c,
+                            id: base64UrlToBuffer(c.id)
+                        }));
+                    }
+
+                    showBiometricFeedback("👆 Touch your device Fingerprint sensor, scan Face ID, or use Windows Hello now...", "warning");
+                    const credential = await navigator.credentials.create({ publicKey: options });
+
+                    const rawIdB64 = bufferToBase64Url(credential.rawId);
+                    const clientDataB64 = bufferToBase64Url(credential.response.clientDataJSON);
+                    const attestationB64 = bufferToBase64Url(credential.response.attestationObject);
+
+                    const deviceName = /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'Apple FaceID/TouchID' :
+                                       /Android/.test(navigator.userAgent) ? 'Android Biometric' :
+                                       /Macintosh/.test(navigator.userAgent) ? 'Mac Touch ID' :
+                                       /Windows/.test(navigator.userAgent) ? 'Windows Hello' : 'Biometric Authenticator';
+
+                    const verifyRes = await fetch('/biometric/register/verify/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify({
+                            credential_id: rawIdB64,
+                            public_key: attestationB64,
+                            clientDataJSON: clientDataB64,
+                            device_name: deviceName
+                        })
+                    });
+
+                    const verifyData = await verifyRes.json();
+                    if (verifyRes.ok && verifyData.success) {
+                        showBiometricFeedback(`✅ ${verifyData.message}`, "success");
+                        setTimeout(() => window.location.reload(), 1200);
+                    } else {
+                        throw new Error(verifyData.error || "Biometric registration failed.");
+                    }
+                } catch (err) {
+                    console.error("Biometric registration error:", err);
+                    showBiometricFeedback(`❌ ${err.message || 'Biometric registration cancelled or failed.'}`, "danger");
+                } finally {
+                    btnRegisterBiometric.disabled = false;
+                }
+            });
+        }
+
+        // 2. Regular form submit fallback
+        function submitRegularAttendance(action) {
+            let actionInput = attendanceForm.querySelector('input[name="action"]');
+            if (!actionInput) {
+                actionInput = document.createElement("input");
+                actionInput.type = "hidden";
+                actionInput.name = "action";
+                attendanceForm.appendChild(actionInput);
+            }
+            actionInput.value = action;
+            attendanceForm.submit();
+        }
+
+        // 3. Biometric Check-In and Check-Out
+        async function handleAttendanceClick(action) {
+            const lat = latitudeInput.value;
+            const lon = longitudeInput.value;
+            const breakHours = document.getElementById("break_hours") ? document.getElementById("break_hours").value : 0;
+
+            if (!lat || !lon) {
+                showBiometricFeedback("📍 Please wait until GPS location is detected.", "danger");
+                return;
+            }
+
+            // Fallback immediately if device doesn't support WebAuthn or employee hasn't registered
+            if (!window.PublicKeyCredential || !hasBiometricRegistered) {
+                submitRegularAttendance(action);
+                return;
+            }
+
+            showBiometricFeedback(`⏳ Preparing biometric verification for ${action === 'check_in' ? 'Check-In' : 'Check-Out'}...`, "info");
+            checkInButton.disabled = true;
+            checkOutButton.disabled = true;
+
+            try {
+                const optRes = await fetch('/biometric/auth/options/');
+                if (!optRes.ok) {
+                    const err = await optRes.json();
+                    throw new Error(err.error || "Failed to get biometric authentication options.");
+                }
+
+                const options = await optRes.json();
+                options.challenge = base64UrlToBuffer(options.challenge);
+                if (options.allowCredentials) {
+                    options.allowCredentials = options.allowCredentials.map(c => ({
+                        ...c,
+                        id: base64UrlToBuffer(c.id)
+                    }));
+                }
+
+                showBiometricFeedback("👆 Touch Fingerprint sensor or scan Face ID to verify attendance...", "warning");
+                const assertion = await navigator.credentials.get({ publicKey: options });
+
+                const rawIdB64 = bufferToBase64Url(assertion.rawId);
+                const clientDataB64 = bufferToBase64Url(assertion.response.clientDataJSON);
+                const authDataB64 = bufferToBase64Url(assertion.response.authenticatorData);
+                const signatureB64 = bufferToBase64Url(assertion.response.signature);
+
+                showBiometricFeedback("⏳ Verifying biometric signature and office GPS coordinates...", "info");
+
+                const verifyRes = await fetch('/biometric/auth/verify/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        credential_id: rawIdB64,
+                        clientDataJSON: clientDataB64,
+                        authenticatorData: authDataB64,
+                        signature: signatureB64,
+                        action: action,
+                        latitude: lat,
+                        longitude: lon,
+                        break_hours: breakHours
+                    })
+                });
+
+                const result = await verifyRes.json();
+                if (verifyRes.ok && result.success) {
+                    showBiometricFeedback(`✅ ${result.message}`, "success");
+                    setTimeout(() => {
+                        window.location.href = '/dashboard/';
+                    }, 1200);
+                } else {
+                    showBiometricFeedback(`❌ ${result.error || 'Verification failed.'}`, "danger");
+                    checkInButton.disabled = false;
+                    checkOutButton.disabled = false;
+                }
+            } catch (err) {
+                console.warn("Biometric verification prompt cancelled or error:", err);
+                if (confirm("Biometric verification was not completed. Do you want to submit regular location attendance instead?")) {
+                    submitRegularAttendance(action);
+                } else {
+                    showBiometricFeedback("ℹ️ Biometric punch cancelled.", "secondary");
+                    checkInButton.disabled = false;
+                    checkOutButton.disabled = false;
+                }
+            }
+        }
+
+        checkInButton.addEventListener("click", () => handleAttendanceClick('check_in'));
+        checkOutButton.addEventListener("click", () => handleAttendanceClick('check_out'));
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

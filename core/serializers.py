@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Employee, Attendance, Leave, Payroll
+from .models import Employee, Attendance, Leave, Payroll, BiometricCredential
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -96,3 +96,20 @@ class PayrollSerializer(serializers.ModelSerializer):
             'id',
             'generated_at',
         ]
+
+
+class BiometricCredentialSerializer(serializers.ModelSerializer):
+    employee_name = serializers.ReadOnlyField(source='employee.name')
+
+    class Meta:
+        model = BiometricCredential
+        fields = [
+            'id',
+            'employee',
+            'employee_name',
+            'credential_id',
+            'device_name',
+            'sign_count',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']

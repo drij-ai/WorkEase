@@ -1,12 +1,13 @@
 from rest_framework import viewsets, permissions
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from .models import Employee, Attendance, Leave, Payroll
+from .models import Employee, Attendance, Leave, Payroll, BiometricCredential
 from .serializers import (
     EmployeeSerializer,
     AttendanceSerializer,
     LeaveSerializer,
     LeaveRequestSerializer,
     PayrollSerializer,
+    BiometricCredentialSerializer,
 )
 
 
@@ -81,3 +82,17 @@ class PayrollViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PayrollSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+
+
+@extend_schema_view(
+    list=extend_schema(summary="List registered biometric credentials", tags=["Biometrics"]),
+    retrieve=extend_schema(summary="Retrieve biometric credential details", tags=["Biometrics"]),
+)
+class BiometricCredentialViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Read-only API for employee WebAuthn biometric credentials.
+    Requires authentication.
+    """
+    queryset = BiometricCredential.objects.select_related('employee').all().order_by('-created_at')
+    serializer_class = BiometricCredentialSerializer
+    permission_classes = [permissions.IsAuthenticated]
