@@ -33,10 +33,10 @@ is_production = bool(
     or os.environ.get('VERCEL_URL')
 )
 default_debug = 'False' if is_production else 'True'
-DEBUG = os.environ.get('DJANGO_DEBUG', default_debug).lower() in ('true', '1', 't', 'yes')
+DEBUG = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', default_debug)).lower() in ('true', '1', 't', 'yes')
 
-# Secret key: read from DJANGO_SECRET_KEY
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+# Secret key: read from DJANGO_SECRET_KEY or SECRET_KEY
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
         # Fallback key solely for local development

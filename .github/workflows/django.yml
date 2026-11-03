@@ -16,8 +16,8 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_DB: workease_test
-          POSTGRES_USER: workease
-          POSTGRES_PASSWORD: workease_password
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
@@ -27,13 +27,16 @@ jobs:
           --health-retries 5
 
     env:
-      DJANGO_SECRET_KEY: test-secret-key-for-github-actions-ci-pipeline
-      DJANGO_DEBUG: "True"
-      DATABASE_URL: postgresql://workease:workease_password@127.0.0.1:5432/workease_test
-      DEFAULT_GATEWAY_API: razorpay
-      RAZORPAY_KEY_ID: rzp_test_mock_ci
-      RAZORPAY_KEY_SECRET: rzp_secret_mock_ci
-      PAYMENT_GATEWAY_CURRENCY: INR
+      SECRET_KEY: 'test-secret-key-for-ci-cd'
+      DJANGO_SECRET_KEY: 'test-secret-key-for-ci-cd'
+      DEBUG: 'True'
+      DJANGO_DEBUG: 'True'
+      DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/workease_test'
+      DJANGO_SETTINGS_MODULE: 'workease.settings'
+      DEFAULT_GATEWAY_API: 'razorpay'
+      RAZORPAY_KEY_ID: 'rzp_test_mock_ci'
+      RAZORPAY_KEY_SECRET: 'rzp_secret_mock_ci'
+      PAYMENT_GATEWAY_CURRENCY: 'INR'
 
     steps:
       - name: Check out repository
@@ -51,14 +54,37 @@ jobs:
           pip install -r requirements.txt
 
       - name: Django System Check
+        env:
+          SECRET_KEY: 'test-secret-key-for-ci-cd'
+          DEBUG: 'True'
+          DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/workease_test'
+          DJANGO_SETTINGS_MODULE: 'workease.settings'
         run: |
           python manage.py check
 
       - name: Validate OpenAPI Schema
+        env:
+          SECRET_KEY: 'test-secret-key-for-ci-cd'
+          DEBUG: 'True'
+          DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/workease_test'
+          DJANGO_SETTINGS_MODULE: 'workease.settings'
         run: |
           python manage.py spectacular --validate
 
-      - name: Run Django Test Suite
+      - name: Run Database Migrations
+        env:
+          SECRET_KEY: 'test-secret-key-for-ci-cd'
+          DEBUG: 'True'
+          DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/workease_test'
+          DJANGO_SETTINGS_MODULE: 'workease.settings'
         run: |
-          python manage.py test
+          python manage.py migrate --noinput
 
+      - name: Run Django Test Suite
+        env:
+          SECRET_KEY: 'test-secret-key-for-ci-cd'
+          DEBUG: 'True'
+          DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/workease_test'
+          DJANGO_SETTINGS_MODULE: 'workease.settings'
+        run: |
+          python manage.py test --noinput
