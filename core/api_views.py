@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from .models import Employee, Attendance, Leave, Payroll, BiometricCredential
+from .models import Employee, Attendance, Leave, Payroll, BiometricCredential, AttendanceRegularization
 from .serializers import (
     EmployeeSerializer,
     AttendanceSerializer,
@@ -8,6 +10,7 @@ from .serializers import (
     LeaveRequestSerializer,
     PayrollSerializer,
     BiometricCredentialSerializer,
+    AttendanceRegularizationSerializer,
 )
 
 
@@ -27,6 +30,9 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.select_related('user').all().order_by('employee_id')
     serializer_class = EmployeeSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def perform_destroy(self, instance):
+        instance.soft_delete()
 
 
 @extend_schema_view(
@@ -96,3 +102,54 @@ class BiometricCredentialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = BiometricCredential.objects.select_related('employee').all().order_by('-created_at')
     serializer_class = BiometricCredentialSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@extend_schema_view(
+    list=extend_schema(summary="List attendance regularization requests", tags=["Attendance Regularization"]),
+    retrieve=extend_schema(summary="Retrieve attendance regularization request", tags=["Attendance Regularization"]),
+    create=extend_schema(summary="Submit attendance regularization request", tags=["Attendance Regularization"]),
+    update=extend_schema(summary="Update regularization request", tags=["Attendance Regularization"]),
+    partial_update=extend_schema(summary="Partially update regularization request", tags=["Attendance Regularization"]),
+    destroy=extend_schema(summary="Delete regularization request", tags=["Attendance Regularization"]),
+)
+class AttendanceRegularizationViewSet(viewsets.ModelViewSet):
+    """
+    CRUD API for Employee Attendance Regularization (Missed Punch Correction) requests.
+    Requires authentication.
+    """
+    queryset = AttendanceRegularization.objects.select_related('employee', 'attendance').all().order_by('-date', '-created_at')
+    serializer_class = AttendanceRegularizationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        employee = serializer.validated_data.get('employee')
+        if not employee and hasattr(self.request.user, 'employee'):
+            employee = self.request.user.employee
+            serializer.validated_data['employee'] = employee
+        reg_date = serializer.validated_data.get('date')
+        att = Attendance.objects.filter(employee=employee, date=reg_date).first()
+        serializer.save(employee=employee, attendance=att)
+
+    @extend_schema(
+        summary="Approve regularization request",
+        description="Approves a pending attendance regularization request, automatically creating or updating the attendance record and recalculating working hours.",
+        tags=["Attendance Regularization"]
+    )
+    @action(detail=True, methods=['post'], url_path='approve')
+    def approve(self, request, pk=None):
+        regularization = self.get_object()
+        admin_remarks = request.data.get('admin_remarks', '')
+        regularization.approve(admin_remarks=admin_remarks)
+        return Response(self.get_serializer(regularization).data)
+
+    @extend_schema(
+        summary="Reject regularization request",
+        description="Rejects a pending attendance regularization request.",
+        tags=["Attendance Regularization"]
+    )
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        regularization = self.get_object()
+        admin_remarks = request.data.get('admin_remarks', '')
+        regularization.reject(admin_remarks=admin_remarks)
+        return Response(self.get_serializer(regularization).data)

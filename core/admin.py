@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import Employee, Attendance, Payroll, Leave, WorkLocation, BiometricCredential
+from .models import (
+    Employee,
+    Attendance,
+    Payroll,
+    Leave,
+    WorkLocation,
+    BiometricCredential,
+    AttendanceRegularization,
+)
 
 
 @admin.register(Employee)
@@ -13,6 +21,8 @@ class EmployeeAdmin(admin.ModelAdmin):
         'salary_type',
         'basic_salary',
         'joining_date',
+        'is_active',
+        'relieving_date',
     )
 
     search_fields = (
@@ -23,6 +33,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
+        'is_active',
         'department',
         'salary_type',
     )
@@ -158,6 +169,32 @@ class BiometricCredentialAdmin(admin.ModelAdmin):
     list_filter = (
         'device_name',
         'created_at',
+    )
+    ordering = (
+        '-created_at',
+    )
+
+
+@admin.register(AttendanceRegularization)
+class AttendanceRegularizationAdmin(admin.ModelAdmin):
+    list_display = (
+        'employee',
+        'date',
+        'requested_check_in',
+        'requested_check_out',
+        'status',
+        'created_at',
+        'reviewed_at',
+    )
+    search_fields = (
+        'employee__name',
+        'employee__employee_id',
+        'reason',
+        'admin_remarks',
+    )
+    list_filter = (
+        'status',
+        'date',
     )
     ordering = (
         '-created_at',

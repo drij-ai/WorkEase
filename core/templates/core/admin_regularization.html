@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Attendance Regularization Requests - Review and approve missed punches in WorkEase.">
+    <title>Attendance Regularization Requests | WorkEase</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy: #102a4c;
+            --blue: #2563eb;
+            --page: #f4f7fc;
+            --text: #172b4d;
+            --muted: #4b5563;
+            --line: #e7edf5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--page);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .topbar {
+            background: linear-gradient(110deg, #102a4c, #173b66);
+            padding: 12px 0;
+            color: #fff;
+            box-shadow: 0 3px 14px rgba(16,42,76,.12);
+        }
+
+        .topbar-inner {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            color: #fff;
+            text-decoration: none;
+            font-size: 21px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+
+        .brand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 37px;
+            height: 37px;
+            margin-right: 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.14);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-topbar {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: .2s;
+        }
+
+        .btn-topbar:hover {
+            background: rgba(255,255,255,0.22);
+            color: #fff;
+        }
+
+        .page-wrap {
+            max-width: 1600px;
+            margin: auto;
+            padding: 30px 26px;
+        }
+
+        .breadcrumb-line {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .breadcrumb-line a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .breadcrumb-line a:hover { color: var(--blue); }
+
+        .page-title {
+            font-size: clamp(22px, 2.5vw, 28px);
+            font-weight: 750;
+            margin: 0 0 4px;
+            color: var(--navy);
+        }
+
+        .page-subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-val {
+            font-size: 26px;
+            font-weight: 750;
+            line-height: 1.1;
+        }
+
+        .stat-lbl {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .filter-card, .table-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .table tbody td {
+            padding: 14px 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .action-form { display: inline-block; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="container-fluid px-4 topbar-inner">
+            <a href="/admin-dashboard/" class="brand">
+                <span class="brand-icon"><i class="bi bi-clock-history"></i></span>
+                WorkEase Regularization
+            </a>
+
+            <div class="topbar-right">
+                <a href="/admin-dashboard/attendance/" class="btn-topbar">
+                    <i class="bi bi-calendar-check"></i> Attendance Records
+                </a>
+                <a href="/admin-dashboard/" class="btn-topbar">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-wrap">
+
+        <div class="breadcrumb-line">
+            <i class="bi bi-house-door me-1"></i>
+            <a href="/admin-dashboard/">Dashboard</a>
+            <span class="mx-2">/</span>
+            <a href="/admin-dashboard/attendance/">Attendance</a>
+            <span class="mx-2">/</span>
+            <span class="text-dark fw-semibold">Regularization Requests</span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div>
+                <h1 class="page-title">Attendance Regularization (Missed Punch Correction)</h1>
+                <p class="page-subtitle">Review employee correction requests, adjust shift hours, and approve with one click.</p>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Stat Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-val text-primary">{{ total_requests }}</div>
+                        <div class="stat-lbl">Total Requests</div>
+                    </div>
+                    <i class="bi bi-folder2-open text-primary fs-2"></i>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-val text-warning">{{ pending_count }}</div>
+                        <div class="stat-lbl">Pending Approval</div>
+                    </div>
+                    <i class="bi bi-hourglass-split text-warning fs-2"></i>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-val text-success">{{ approved_count }}</div>
+                        <div class="stat-lbl">Approved</div>
+                    </div>
+                    <i class="bi bi-check-circle text-success fs-2"></i>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <div class="stat-val text-danger">{{ rejected_count }}</div>
+                        <div class="stat-lbl">Rejected</div>
+                    </div>
+                    <i class="bi bi-x-circle text-danger fs-2"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="filter-card p-3 mb-4">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-12 col-md-auto">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="?status=all{% if selected_employee %}&employee={{ selected_employee }}{% endif %}" class="btn btn-outline-secondary {% if status_filter == 'all' or not status_filter %}active{% endif %}">
+                            All
+                        </a>
+                        <a href="?status=Pending{% if selected_employee %}&employee={{ selected_employee }}{% endif %}" class="btn btn-outline-warning {% if status_filter == 'Pending' %}active{% endif %}">
+                            Pending ({{ pending_count }})
+                        </a>
+                        <a href="?status=Approved{% if selected_employee %}&employee={{ selected_employee }}{% endif %}" class="btn btn-outline-success {% if status_filter == 'Approved' %}active{% endif %}">
+                            Approved ({{ approved_count }})
+                        </a>
+                        <a href="?status=Rejected{% if selected_employee %}&employee={{ selected_employee }}{% endif %}" class="btn btn-outline-danger {% if status_filter == 'Rejected' %}active{% endif %}">
+                            Rejected ({{ rejected_count }})
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-3">
+                    <select name="employee" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Employees</option>
+                        {% for emp in employees %}
+                            <option value="{{ emp.id }}" {% if selected_employee|stringformat:"s" == emp.id|stringformat:"s" %}selected{% endif %}>
+                                {{ emp.name }} ({{ emp.employee_id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <input type="date" name="from_date" class="form-control form-control-sm" value="{{ from_date }}" placeholder="From Date">
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <input type="date" name="to_date" class="form-control form-control-sm" value="{{ to_date }}" placeholder="To Date">
+                </div>
+
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-primary btn-sm px-3">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
+                    <a href="{% url 'admin_regularizations' %}" class="btn btn-outline-secondary btn-sm px-2">
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Requests Table -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Current Punch</th>
+                            <th>Requested Punch</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Remarks / Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in regularization_requests %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ req.employee.name }}</div>
+                                <div class="text-muted small" style="font-size: 11px;">
+                                    ID: {{ req.employee.employee_id }} · {{ req.employee.department }}
+                                </div>
+                            </td>
+
+                            <td class="fw-semibold text-secondary">
+                                {{ req.date }}
+                            </td>
+
+                            <td>
+                                {% if req.attendance %}
+                                    <div class="small">
+                                        <span class="text-success"><i class="bi bi-box-arrow-in-right"></i> {{ req.attendance.check_in|default:"None" }}</span>
+                                        <br>
+                                        <span class="text-danger"><i class="bi bi-box-arrow-right"></i> {{ req.attendance.check_out|default:"None" }}</span>
+                                        <span class="text-muted ms-1">({{ req.attendance.working_hours }}h)</span>
+                                    </div>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border">No Record (Absent)</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="small fw-semibold">
+                                    <span class="text-success"><i class="bi bi-arrow-right-circle"></i> In: {{ req.requested_check_in|default:"—" }}</span>
+                                    <br>
+                                    <span class="text-danger"><i class="bi bi-arrow-left-circle"></i> Out: {{ req.requested_check_out|default:"—" }}</span>
+                                </div>
+                            </td>
+
+                            <td style="max-width: 250px;">
+                                <div class="text-dark small">{{ req.reason }}</div>
+                                <div class="text-muted" style="font-size: 10px;">Applied: {{ req.created_at|date:"M d, Y H:i" }}</div>
+                            </td>
+
+                            <td>
+                                {% if req.status == 'Approved' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="bi bi-check-circle me-1"></i>Approved
+                                    </span>
+                                {% elif req.status == 'Rejected' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        <i class="bi bi-x-circle me-1"></i>Rejected
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                                        <i class="bi bi-hourglass-split me-1"></i>Pending
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if req.status == 'Pending' %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <!-- One click approve form -->
+                                        <form method="POST" action="{% url 'admin_regularization_action' req.id 'Approved' %}" class="action-form">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="admin_remarks" value="Approved by Admin">
+                                            <button type="submit" class="btn btn-sm btn-success px-2 py-1" title="Approve Request">
+                                                <i class="bi bi-check-lg"></i> Approve
+                                            </button>
+                                        </form>
+
+                                        <!-- One click reject form -->
+                                        <form method="POST" action="{% url 'admin_regularization_action' req.id 'Rejected' %}" class="action-form" onsubmit="return confirm('Reject this attendance regularization request?');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="admin_remarks" value="Rejected by Admin">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1" title="Reject Request">
+                                                <i class="bi bi-x-lg"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <div class="small text-muted">
+                                        <div><strong>Remarks:</strong> {{ req.admin_remarks|default:"None" }}</div>
+                                        <div style="font-size: 10px;">Reviewed: {{ req.reviewed_at|date:"M d, Y H:i"|default:"—" }}</div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                                <strong>No Regularization Requests Found</strong>
+                                <p class="small text-muted mb-0">Employee requests for missed punches will appear here.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

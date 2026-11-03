@@ -12,6 +12,7 @@ from .api_views import (
     LeaveRequestViewSet,
     PayrollViewSet,
     BiometricCredentialViewSet,
+    AttendanceRegularizationViewSet,
 )
 
 router = DefaultRouter()
@@ -21,6 +22,7 @@ router.register(r'leave-requests', LeaveRequestViewSet, basename='leaverequest')
 router.register(r'leaves', LeaveViewSet, basename='leave')
 router.register(r'payroll', PayrollViewSet, basename='payroll')
 router.register(r'biometrics', BiometricCredentialViewSet, basename='biometric')
+router.register(r'attendance-regularizations', AttendanceRegularizationViewSet, basename='attendance-regularization')
 
 urlpatterns = [
     path('v1/', include(router.urls)),

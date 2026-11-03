@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Employee, Attendance, Leave, Payroll, BiometricCredential
+from .models import Employee, Attendance, Leave, Payroll, BiometricCredential, AttendanceRegularization
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -17,11 +17,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'contact_email',
             'department',
             'joining_date',
+            'is_active',
+            'relieving_date',
             'basic_salary',
             'hourly_rate',
             'salary_type',
         ]
-        read_only_fields = ['id', 'contact_email']
+        read_only_fields = ['id', 'contact_email', 'relieving_date']
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
@@ -113,3 +115,27 @@ class BiometricCredentialSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = ['id', 'created_at']
+
+
+class AttendanceRegularizationSerializer(serializers.ModelSerializer):
+    employee_name = serializers.ReadOnlyField(source='employee.name')
+    employee_id_code = serializers.ReadOnlyField(source='employee.employee_id')
+
+    class Meta:
+        model = AttendanceRegularization
+        fields = [
+            'id',
+            'employee',
+            'employee_name',
+            'employee_id_code',
+            'attendance',
+            'date',
+            'requested_check_in',
+            'requested_check_out',
+            'reason',
+            'status',
+            'admin_remarks',
+            'created_at',
+            'reviewed_at',
+        ]
+        read_only_fields = ['id', 'attendance', 'created_at', 'reviewed_at']

@@ -22,7 +22,7 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import EmployeeForm, WorkLocationForm, PayrollForm, HolidayForm
 
-from .models import Attendance, Leave, WorkLocation, Employee, Payroll, Holiday, BiometricCredential
+from .models import Attendance, Leave, WorkLocation, Employee, Payroll, Holiday, BiometricCredential, AttendanceRegularization
 from django.contrib.admin.views.decorators import staff_member_required
 from math import radians, sin, cos, sqrt, atan2
 
@@ -529,12 +529,15 @@ def attendance(request):
     biometric_credentials = employee.biometric_credentials.all()
     today = timezone.localdate()
     today_attendance = Attendance.objects.filter(employee=employee, date=today).first()
+    regularizations = AttendanceRegularization.objects.filter(employee=employee).order_by('-date', '-created_at')
     return render(request, 'core/attendance.html', {
         'employee': employee,
         'biometric_credentials': biometric_credentials,
         'has_biometric': biometric_credentials.exists(),
         'primary_biometric': biometric_credentials.first(),
         'today_attendance': today_attendance,
+        'regularizations': regularizations,
+        'today': today.isoformat(),
     })
 
 @owner_required
@@ -589,11 +592,44 @@ def admin_dashboard(request):
 
 @staff_member_required
 def employee_list(request):
+    status_filter = request.GET.get('status', 'all')
     employees = Employee.objects.all().order_by('name')
 
+    if status_filter == 'active':
+        employees = employees.filter(is_active=True)
+    elif status_filter == 'inactive':
+        employees = employees.filter(is_active=False)
+
+    total_count = Employee.objects.count()
+    active_count = Employee.objects.filter(is_active=True).count()
+    inactive_count = Employee.objects.filter(is_active=False).count()
+
     return render(request, 'core/employees.html', {
-        'employees': employees
+        'employees': employees,
+        'status_filter': status_filter,
+        'total_count': total_count,
+        'active_count': active_count,
+        'inactive_count': inactive_count,
     })
+
+
+@staff_member_required
+def employee_toggle_status(request, employee_id):
+    employee = get_object_or_404(Employee, id=employee_id)
+    if request.method == 'POST':
+        if employee.is_active:
+            employee.soft_delete()
+            messages.success(
+                request,
+                f"Employee '{employee.name}' has been deactivated. Historical records preserved."
+            )
+        else:
+            employee.reactivate()
+            messages.success(
+                request,
+                f"Employee '{employee.name}' has been reactivated successfully."
+            )
+    return redirect('/admin-dashboard/employees/')
 
 
 @staff_member_required
@@ -644,10 +680,13 @@ def employee_edit(request, employee_id):
 
 @staff_member_required
 def employee_delete(request, employee_id):
+    employee = get_object_or_404(Employee, id=employee_id)
     if request.method == 'POST':
-        employee = Employee.objects.get(id=employee_id)
-        employee.delete()
-
+        employee.soft_delete()
+        messages.success(
+            request,
+            f"Employee '{employee.name}' deactivated successfully. All attendance, leave, and payroll records preserved."
+        )
     return redirect('/admin-dashboard/employees/')
 
 
@@ -1804,3 +1843,147 @@ def biometric_auth_verify(request):
             'working_hours': str(record.working_hours),
             'device': cred.device_name,
         })
+
+
+@login_required
+def attendance_regularize(request):
+    if not hasattr(request.user, 'employee'):
+        messages.error(request, "Employee profile not found.")
+        return redirect('/dashboard/')
+
+    employee = request.user.employee
+    if request.method == 'POST':
+        date_str = request.POST.get('date')
+        check_in_str = request.POST.get('requested_check_in')
+        check_out_str = request.POST.get('requested_check_out')
+        reason = request.POST.get('reason', '').strip()
+
+        if not date_str:
+            messages.error(request, "Please select a date for attendance regularization.")
+            return redirect('attendance')
+
+        if not check_in_str and not check_out_str:
+            messages.error(request, "Please enter at least a requested check-in or check-out time.")
+            return redirect('attendance')
+
+        if not reason:
+            messages.error(request, "Please provide a reason explaining the missed punch.")
+            return redirect('attendance')
+
+        from datetime import datetime
+        try:
+            reg_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            req_in = datetime.strptime(check_in_str, '%H:%M').time() if check_in_str else None
+            req_out = datetime.strptime(check_out_str, '%H:%M').time() if check_out_str else None
+        except ValueError:
+            messages.error(request, "Invalid date or time format.")
+            return redirect('attendance')
+
+        if req_in and req_out and req_out <= req_in:
+            messages.error(request, "Requested check-out time must be after check-in time.")
+            return redirect('attendance')
+
+        att_record = Attendance.objects.filter(employee=employee, date=reg_date).first()
+
+        regularization = AttendanceRegularization.objects.create(
+            employee=employee,
+            attendance=att_record,
+            date=reg_date,
+            requested_check_in=req_in,
+            requested_check_out=req_out,
+            reason=reason,
+            status='Pending'
+        )
+
+        messages.success(
+            request,
+            f"Attendance regularization request for {reg_date} submitted successfully. Awaiting manager approval."
+        )
+
+    return redirect('attendance')
+
+
+@staff_member_required
+def admin_regularization_list(request):
+    status_filter = request.GET.get('status', 'all')
+    employee_id = request.GET.get('employee')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    requests_qs = AttendanceRegularization.objects.select_related('employee', 'attendance').all().order_by('-created_at')
+
+    if status_filter in ['Pending', 'Approved', 'Rejected']:
+        requests_qs = requests_qs.filter(status=status_filter)
+
+    if employee_id:
+        requests_qs = requests_qs.filter(employee_id=employee_id)
+
+    if from_date:
+        requests_qs = requests_qs.filter(date__gte=from_date)
+
+    if to_date:
+        requests_qs = requests_qs.filter(date__lte=to_date)
+
+    total_requests = AttendanceRegularization.objects.count()
+    pending_count = AttendanceRegularization.objects.filter(status='Pending').count()
+    approved_count = AttendanceRegularization.objects.filter(status='Approved').count()
+    rejected_count = AttendanceRegularization.objects.filter(status='Rejected').count()
+    employees = Employee.objects.all().order_by('name')
+
+    return render(request, 'core/admin_regularization.html', {
+        'regularization_requests': requests_qs,
+        'employees': employees,
+        'status_filter': status_filter,
+        'selected_employee': employee_id,
+        'from_date': from_date,
+        'to_date': to_date,
+        'total_requests': total_requests,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
+    })
+
+
+@staff_member_required
+def admin_regularization_action(request, regularization_id, status):
+    regularization = get_object_or_404(
+        AttendanceRegularization.objects.select_related('employee', 'attendance'),
+        id=regularization_id
+    )
+
+    if status not in ['Approved', 'Rejected']:
+        messages.error(request, "Invalid regularization status.")
+        return redirect('admin_regularizations')
+
+    admin_remarks = request.POST.get('admin_remarks', '').strip() if request.method == 'POST' else ''
+
+    if status == 'Approved':
+        regularization.approve(admin_remarks=admin_remarks)
+        Notification.objects.create(
+            employee=regularization.employee,
+            title='Attendance Regularization Approved',
+            message=(
+                f'Your attendance regularization request for {regularization.date} '
+                f'has been approved. Total working hours recalculated.'
+            )
+        )
+        messages.success(
+            request,
+            f"Attendance regularization for {regularization.employee.name} on {regularization.date} approved. Attendance updated."
+        )
+    elif status == 'Rejected':
+        regularization.reject(admin_remarks=admin_remarks)
+        Notification.objects.create(
+            employee=regularization.employee,
+            title='Attendance Regularization Rejected',
+            message=(
+                f'Your attendance regularization request for {regularization.date} '
+                f'has been rejected. Remarks: {admin_remarks or "No remarks provided."}'
+            )
+        )
+        messages.warning(
+            request,
+            f"Attendance regularization for {regularization.employee.name} on {regularization.date} rejected."
+        )
+
+    return redirect('admin_regularizations')

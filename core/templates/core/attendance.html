@@ -615,6 +615,137 @@
 
             </div>
         </section>
+        <!-- Attendance Regularization (Missed Punch Correction) -->
+        <section class="card" style="margin-top: 24px; border: 1px solid #dbeafe; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 18px rgba(37,99,235,0.06);">
+            <div style="background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 18px 22px; color: #fff;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history" style="font-size: 22px;"></i>
+                        <div>
+                            <h3 style="font-size: 17px; font-weight: 700; margin: 0;">Attendance Regularization (Missed Punch)</h3>
+                            <p style="font-size: 12px; margin: 0; opacity: 0.85;">Submit a request to correct missed punches or irregular shift hours.</p>
+                        </div>
+                    </div>
+                    <span class="badge bg-light text-primary fw-semibold px-2 py-1" style="font-size: 11px;">Workflow</span>
+                </div>
+            </div>
+
+            <div class="card-body" style="padding: 22px;">
+                <!-- Request Form -->
+                <form method="POST" action="{% url 'attendance_regularize' %}" style="margin-bottom: 24px;">
+                    {% csrf_token %}
+                    <h4 style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 14px;">
+                        <i class="bi bi-pencil-square me-1 text-primary"></i> Request Missed Punch Correction
+                    </h4>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" style="font-size: 12px; font-weight: 600; color: #475569;">
+                                Attendance Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" name="date" class="form-control form-control-sm" required max="{{ today }}" value="{{ today }}" style="min-height: 40px; border-radius: 8px;">
+                        </div>
+
+                        <div class="col-6 col-md-4">
+                            <label class="form-label" style="font-size: 12px; font-weight: 600; color: #475569;">
+                                Requested Check-In
+                            </label>
+                            <input type="time" name="requested_check_in" class="form-control form-control-sm" style="min-height: 40px; border-radius: 8px;" placeholder="HH:MM">
+                        </div>
+
+                        <div class="col-6 col-md-4">
+                            <label class="form-label" style="font-size: 12px; font-weight: 600; color: #475569;">
+                                Requested Check-Out
+                            </label>
+                            <input type="time" name="requested_check_out" class="form-control form-control-sm" style="min-height: 40px; border-radius: 8px;" placeholder="HH:MM">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label" style="font-size: 12px; font-weight: 600; color: #475569;">
+                                Reason for Regularization <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="reason" rows="2" class="form-control form-control-sm" required placeholder="Describe why punch was missed (e.g. client meeting, biometric scanner glitch, power outage)..." style="border-radius: 8px; resize: vertical;"></textarea>
+                        </div>
+
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary btn-sm px-4 py-2" style="border-radius: 8px; font-weight: 600;">
+                                <i class="bi bi-send me-1"></i> Submit Correction Request
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <hr style="border-color: #e2e8f0; margin: 20px 0;">
+
+                <!-- Request History -->
+                <h4 style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">
+                    <i class="bi bi-journal-text me-1 text-primary"></i> Regularization Request History
+                </h4>
+
+                <div class="table-responsive" style="border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead style="background: #f8fafc; font-size: 11px; text-transform: uppercase; color: #64748b;">
+                            <tr>
+                                <th style="padding: 10px 14px;">Date</th>
+                                <th style="padding: 10px 14px;">Requested In</th>
+                                <th style="padding: 10px 14px;">Requested Out</th>
+                                <th style="padding: 10px 14px;">Reason</th>
+                                <th style="padding: 10px 14px;">Status</th>
+                                <th style="padding: 10px 14px;">Admin Remarks</th>
+                                <th style="padding: 10px 14px;">Submitted On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reg in regularizations %}
+                            <tr>
+                                <td style="padding: 10px 14px; font-weight: 600; color: #1e293b;">
+                                    {{ reg.date }}
+                                </td>
+                                <td style="padding: 10px 14px; color: #059669; font-weight: 600;">
+                                    {{ reg.requested_check_in|default:"—" }}
+                                </td>
+                                <td style="padding: 10px 14px; color: #dc2626; font-weight: 600;">
+                                    {{ reg.requested_check_out|default:"—" }}
+                                </td>
+                                <td style="padding: 10px 14px; color: #475569; max-width: 220px;">
+                                    {{ reg.reason }}
+                                </td>
+                                <td style="padding: 10px 14px;">
+                                    {% if reg.status == 'Approved' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                            <i class="bi bi-check-circle me-1"></i>Approved
+                                        </span>
+                                    {% elif reg.status == 'Rejected' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                            <i class="bi bi-x-circle me-1"></i>Rejected
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                                            <i class="bi bi-clock me-1"></i>Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 10px 14px; color: #64748b; font-size: 12px;">
+                                    {{ reg.admin_remarks|default:"—" }}
+                                </td>
+                                <td style="padding: 10px 14px; color: #94a3b8; font-size: 11px;">
+                                    {{ reg.created_at|date:"M d, Y H:i" }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 28px; color: #94a3b8;">
+                                    <i class="bi bi-inbox" style="font-size: 28px; display: block; margin-bottom: 6px;"></i>
+                                    No attendance regularization requests found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
 
         <footer class="footer">
             WorkEase · Employee Attendance

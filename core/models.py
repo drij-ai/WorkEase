@@ -55,6 +55,17 @@ class Employee(models.Model):
         default='Monthly'
     )
 
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Designates whether this employee record is active."
+    )
+
+    relieving_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date when the employee was relieved or deactivated."
+    )
+
     @property
     def contact_email(self):
         if self.email:
@@ -70,6 +81,29 @@ class Employee(models.Model):
     @property
     def primary_biometric(self):
         return self.biometric_credentials.first()
+
+    def soft_delete(self):
+        from django.utils import timezone
+        self.is_active = False
+        self.relieving_date = timezone.localdate()
+        self.save(update_fields=['is_active', 'relieving_date'])
+        if self.user:
+            self.user.is_active = False
+            self.user.save(update_fields=['is_active'])
+
+    def reactivate(self):
+        self.is_active = True
+        self.relieving_date = None
+        self.save(update_fields=['is_active', 'relieving_date'])
+        if self.user:
+            self.user.is_active = True
+            self.user.save(update_fields=['is_active'])
+
+    def delete(self, using=None, keep_parents=False):
+        self.soft_delete()
+
+    def hard_delete(self, using=None, keep_parents=False):
+        super().delete(using=using, keep_parents=keep_parents)
 
     def __str__(self):
         return f"{self.employee_id} - {self.name}"
@@ -448,4 +482,124 @@ class BiometricCredential(models.Model):
 
     def __str__(self):
         return f"{self.employee.name} - {self.device_name} ({self.credential_id[:16]}...)"
+
+
+class AttendanceRegularization(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name='regularization_requests'
+    )
+    attendance = models.ForeignKey(
+        Attendance,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='regularizations'
+    )
+    date = models.DateField()
+    requested_check_in = models.TimeField(
+        null=True,
+        blank=True,
+        help_text="Requested check-in time for missed punch"
+    )
+    requested_check_out = models.TimeField(
+        null=True,
+        blank=True,
+        help_text="Requested check-out time for missed punch"
+    )
+    reason = models.TextField(
+        help_text="Reason for attendance regularization"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='Pending'
+    )
+    admin_remarks = models.TextField(
+        blank=True,
+        default=''
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.employee.name} - Regularization ({self.date}) [{self.status}]"
+
+    def approve(self, admin_remarks=''):
+        from django.utils import timezone
+        self.status = 'Approved'
+        if admin_remarks:
+            self.admin_remarks = admin_remarks
+        self.reviewed_at = timezone.now()
+
+        # Create or update Attendance record for self.employee and self.date
+        attendance, _ = Attendance.objects.get_or_create(
+            employee=self.employee,
+            date=self.date,
+            defaults={
+                'status': 'Present',
+                'break_hours': 0,
+            }
+        )
+        if self.requested_check_in:
+            attendance.check_in = self.requested_check_in
+        if self.requested_check_out:
+            attendance.check_out = self.requested_check_out
+        attendance.status = 'Present'
+        attendance.save()
+
+        self.attendance = attendance
+        self.save()
+        return attendance
+
+    def reject(self, admin_remarks=''):
+        from django.utils import timezone
+        self.status = 'Rejected'
+        if admin_remarks:
+            self.admin_remarks = admin_remarks
+        self.reviewed_at = timezone.now()
+        self.save()
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        if self.status == 'Approved':
+            if not self.reviewed_at:
+                self.reviewed_at = timezone.now()
+            # If attendance is not updated yet or status changed directly
+            attendance, _ = Attendance.objects.get_or_create(
+                employee=self.employee,
+                date=self.date,
+                defaults={
+                    'status': 'Present',
+                    'break_hours': 0,
+                }
+            )
+            if self.requested_check_in:
+                attendance.check_in = self.requested_check_in
+            if self.requested_check_out:
+                attendance.check_out = self.requested_check_out
+            attendance.status = 'Present'
+            attendance.save()
+            self.attendance = attendance
+        elif self.status == 'Rejected':
+            if not self.reviewed_at:
+                self.reviewed_at = timezone.now()
+
+        super().save(*args, **kwargs)
+
 

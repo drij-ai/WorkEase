@@ -525,6 +525,7 @@
         <a href="/admin-dashboard/employees/"><span class="menu-icon">♧</span><span>Employees</span></a>
         <a href="/admin-dashboard/users/"><span class="menu-icon">♙</span><span>Users</span></a>
         <a href="/admin-dashboard/attendance/"><span class="menu-icon">▣</span><span>Attendance</span></a>
+        <a href="{% url 'admin_regularizations' %}"><span class="menu-icon">◷</span><span>Regularization{% if pending_regularizations_count %} <span class="badge bg-warning text-dark ms-1" style="font-size:10px;">{{ pending_regularizations_count }}</span>{% endif %}</span></a>
         <a href="/admin-dashboard/leave/"><span class="menu-icon">◷</span><span>Leave</span></a>
         <a href="/admin-dashboard/payroll/"><span class="menu-icon">＄</span><span>Payroll</span></a>
         <a href="/admin-dashboard/work-locations/"><span class="menu-icon">⌖</span><span>Work Locations</span></a>

@@ -8,7 +8,7 @@ import sys
 from django.test import TestCase, Client, SimpleTestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from core.models import Employee, Attendance, WorkLocation, Payroll, Leave, Notification, Holiday, BiometricCredential
+from core.models import Employee, Attendance, WorkLocation, Payroll, Leave, Notification, Holiday, BiometricCredential, AttendanceRegularization
 
 
 class HealthCheckAndCoreViewsTest(TestCase):
@@ -1355,3 +1355,298 @@ class BiometricRegistrationAndAuthTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn('Unrecognized or unauthorized', response.json()['error'])
+
+
+class EmployeeSoftDeleteAndRegularizationTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.password = "Secr3tP@ssw0rd!"
+
+        # Admin user
+        self.admin_user = User.objects.create_superuser(
+            username="admin_user",
+            email="admin@workease.com",
+            password=self.password,
+            is_staff=True,
+            is_superuser=True
+        )
+
+        # Standard employee user
+        self.emp_user = User.objects.create_user(
+            username="emp_john",
+            email="john@workease.com",
+            password=self.password
+        )
+
+        self.employee = Employee.objects.create(
+            user=self.emp_user,
+            employee_id="EMP-9001",
+            name="John SoftDelete",
+            phone="9876543210",
+            email="john@workease.com",
+            department="Engineering",
+            joining_date=datetime.date(2025, 1, 1),
+            basic_salary=Decimal("60000.00"),
+            hourly_rate=Decimal("350.00"),
+            salary_type="Monthly",
+            is_active=True
+        )
+
+    def test_employee_soft_delete_preserves_history_and_blocks_login(self):
+        """Soft delete deactivates employee and linked user, blocks login, and preserves historical records."""
+        # 1. Create historical Attendance, Leave, and Payroll records
+        att = Attendance.objects.create(
+            employee=self.employee,
+            date=datetime.date(2026, 10, 15),
+            check_in=datetime.time(9, 0),
+            check_out=datetime.time(17, 30),
+            break_hours=Decimal("0.5"),
+            status="Present"
+        )
+        leave = Leave.objects.create(
+            employee=self.employee,
+            leave_type="Casual",
+            from_date=datetime.date(2026, 10, 20),
+            to_date=datetime.date(2026, 10, 21),
+            reason="Family event",
+            status="Approved"
+        )
+        payroll = Payroll.objects.create(
+            employee=self.employee,
+            month=10,
+            year=2026,
+            salary_type="Monthly",
+            basic_salary=Decimal("60000.00"),
+            gross_salary=Decimal("60000.00"),
+            net_salary=Decimal("58000.00"),
+            payment_status="Paid"
+        )
+
+        # Verify active user can log in before soft delete
+        login_success = self.client.login(username="emp_john", password=self.password)
+        self.assertTrue(login_success)
+        self.client.logout()
+
+        # 2. Perform soft delete
+        self.employee.soft_delete()
+        self.employee.refresh_from_db()
+        self.emp_user.refresh_from_db()
+
+        self.assertFalse(self.employee.is_active)
+        self.assertEqual(self.employee.relieving_date, timezone.localdate())
+        self.assertFalse(self.emp_user.is_active)
+
+        # 3. Verify user cannot log in anymore
+        login_blocked = self.client.login(username="emp_john", password=self.password)
+        self.assertFalse(login_blocked)
+
+        # 4. Verify historical records remain 100% intact
+        self.assertTrue(Attendance.objects.filter(id=att.id, employee=self.employee).exists())
+        self.assertTrue(Leave.objects.filter(id=leave.id, employee=self.employee).exists())
+        self.assertTrue(Payroll.objects.filter(id=payroll.id, employee=self.employee).exists())
+
+    def test_employee_reactivation_restores_access(self):
+        """Reactivation restores employee is_active, clears relieving_date, and reactivates user."""
+        self.employee.soft_delete()
+        self.employee.refresh_from_db()
+        self.assertFalse(self.employee.is_active)
+
+        self.employee.reactivate()
+        self.employee.refresh_from_db()
+        self.emp_user.refresh_from_db()
+
+        self.assertTrue(self.employee.is_active)
+        self.assertIsNone(self.employee.relieving_date)
+        self.assertTrue(self.emp_user.is_active)
+
+        # Verify user can log in again
+        login_ok = self.client.login(username="emp_john", password=self.password)
+        self.assertTrue(login_ok)
+
+    def test_employee_delete_view_performs_soft_delete(self):
+        """Admin employee delete view performs soft delete without dropping database records."""
+        self.client.force_login(self.admin_user)
+        response = self.client.post(f"/admin-dashboard/employees/{self.employee.id}/delete/", secure=True)
+        self.assertEqual(response.status_code, 302)
+
+        self.employee.refresh_from_db()
+        self.assertFalse(self.employee.is_active)
+        self.assertEqual(self.employee.relieving_date, timezone.localdate())
+        self.assertFalse(self.employee.user.is_active)
+
+    def test_employee_toggle_status_view(self):
+        """Admin can toggle employee active status between deactivated and active."""
+        self.client.force_login(self.admin_user)
+
+        # Toggle active -> deactivated
+        res1 = self.client.post(f"/admin-dashboard/employees/{self.employee.id}/toggle-status/", secure=True)
+        self.assertEqual(res1.status_code, 302)
+        self.employee.refresh_from_db()
+        self.assertFalse(self.employee.is_active)
+
+        # Toggle deactivated -> active
+        res2 = self.client.post(f"/admin-dashboard/employees/{self.employee.id}/toggle-status/", secure=True)
+        self.assertEqual(res2.status_code, 302)
+        self.employee.refresh_from_db()
+        self.assertTrue(self.employee.is_active)
+        self.assertIsNone(self.employee.relieving_date)
+
+    def test_employee_api_destroy_performs_soft_delete(self):
+        """DRF DELETE /api/v1/employees/{id}/ triggers soft delete."""
+        self.client.force_login(self.admin_user)
+        response = self.client.delete(f"/api/v1/employees/{self.employee.id}/", secure=True)
+        self.assertEqual(response.status_code, 204)
+
+        self.employee.refresh_from_db()
+        self.assertFalse(self.employee.is_active)
+        self.assertEqual(self.employee.relieving_date, timezone.localdate())
+        self.assertFalse(self.employee.user.is_active)
+
+    def test_attendance_regularization_request_submission_by_employee(self):
+        """Employee can submit an attendance regularization request."""
+        self.client.force_login(self.emp_user)
+        reg_date = timezone.localdate() - datetime.timedelta(days=1)
+
+        payload = {
+            'date': reg_date.strftime('%Y-%m-%d'),
+            'requested_check_in': '09:15',
+            'requested_check_out': '18:15',
+            'reason': 'Forgot to punch out due to client demo'
+        }
+        response = self.client.post('/attendance/regularize/', payload, secure=True)
+        self.assertEqual(response.status_code, 302)
+
+        reg = AttendanceRegularization.objects.filter(employee=self.employee, date=reg_date).first()
+        self.assertIsNotNone(reg)
+        self.assertEqual(reg.status, 'Pending')
+        self.assertEqual(reg.requested_check_in, datetime.time(9, 15))
+        self.assertEqual(reg.requested_check_out, datetime.time(18, 15))
+
+    def test_attendance_regularization_approval_creates_attendance_and_recalculates_hours(self):
+        """Approving a regularization request creates attendance record and calculates working hours."""
+        reg_date = timezone.localdate() - datetime.timedelta(days=2)
+        reg = AttendanceRegularization.objects.create(
+            employee=self.employee,
+            date=reg_date,
+            requested_check_in=datetime.time(9, 0),
+            requested_check_out=datetime.time(18, 0),
+            reason='Missed full day punches due to biometric hardware update',
+            status='Pending'
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            f"/admin-dashboard/attendance/regularizations/{reg.id}/Approved/",
+            {'admin_remarks': 'Approved by HR manager'},
+            secure=True
+        )
+        self.assertEqual(response.status_code, 302)
+
+        reg.refresh_from_db()
+        self.assertEqual(reg.status, 'Approved')
+        self.assertIsNotNone(reg.reviewed_at)
+        self.assertEqual(reg.admin_remarks, 'Approved by HR manager')
+
+        # Verify Attendance record was created and working hours calculated
+        att = Attendance.objects.filter(employee=self.employee, date=reg_date).first()
+        self.assertIsNotNone(att)
+        self.assertEqual(att.check_in, datetime.time(9, 0))
+        self.assertEqual(att.check_out, datetime.time(18, 0))
+        self.assertEqual(att.status, 'Present')
+        # (18 - 9) = 9.00 hours
+        self.assertEqual(att.working_hours, Decimal('9.00'))
+
+        # Verify notification was sent
+        notif = Notification.objects.filter(employee=self.employee, title='Attendance Regularization Approved').first()
+        self.assertIsNotNone(notif)
+
+    def test_attendance_regularization_approval_updates_existing_attendance(self):
+        """Approving regularization updates existing partial attendance record and recalculates working hours."""
+        reg_date = timezone.localdate() - datetime.timedelta(days=3)
+        att = Attendance.objects.create(
+            employee=self.employee,
+            date=reg_date,
+            check_in=datetime.time(9, 0),
+            check_out=None,
+            break_hours=Decimal('1.00'),
+            status='Present'
+        )
+
+        reg = AttendanceRegularization.objects.create(
+            employee=self.employee,
+            attendance=att,
+            date=reg_date,
+            requested_check_out=datetime.time(18, 0),
+            reason='Forgot to punch out at shift end',
+            status='Pending'
+        )
+
+        reg.approve(admin_remarks='Auto-verified')
+        reg.refresh_from_db()
+        att.refresh_from_db()
+
+        self.assertEqual(reg.status, 'Approved')
+        self.assertEqual(att.check_out, datetime.time(18, 0))
+        # Total elapsed: 9 hours, minus 1 hour break = 8.00 hours
+        self.assertEqual(att.working_hours, Decimal('8.00'))
+
+    def test_attendance_regularization_rejection(self):
+        """Admin can reject a regularization request with remarks."""
+        reg_date = timezone.localdate() - datetime.timedelta(days=4)
+        reg = AttendanceRegularization.objects.create(
+            employee=self.employee,
+            date=reg_date,
+            requested_check_in=datetime.time(10, 0),
+            reason='Late arrival regularization',
+            status='Pending'
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            f"/admin-dashboard/attendance/regularizations/{reg.id}/Rejected/",
+            {'admin_remarks': 'Unexcused tardiness, rejected per company policy'},
+            secure=True
+        )
+        self.assertEqual(response.status_code, 302)
+
+        reg.refresh_from_db()
+        self.assertEqual(reg.status, 'Rejected')
+        self.assertIsNotNone(reg.reviewed_at)
+        self.assertEqual(reg.admin_remarks, 'Unexcused tardiness, rejected per company policy')
+
+    def test_attendance_regularization_api_endpoints(self):
+        """Verify DRF API endpoints for Attendance Regularization list, create, and approve."""
+        self.client.force_login(self.admin_user)
+        reg_date = (timezone.localdate() - datetime.timedelta(days=5)).strftime('%Y-%m-%d')
+
+        # 1. Create regularization via API
+        payload = {
+            'employee': self.employee.id,
+            'date': reg_date,
+            'requested_check_in': '09:00:00',
+            'requested_check_out': '17:00:00',
+            'reason': 'API Missed Punch Request',
+            'status': 'Pending'
+        }
+        res_create = self.client.post(
+            '/api/v1/attendance-regularizations/',
+            json.dumps(payload),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(res_create.status_code, 201)
+        reg_id = res_create.json()['id']
+
+        # 2. List regularizations
+        res_list = self.client.get('/api/v1/attendance-regularizations/', secure=True)
+        self.assertEqual(res_list.status_code, 200)
+
+        # 3. Approve via API custom action
+        res_approve = self.client.post(
+            f'/api/v1/attendance-regularizations/{reg_id}/approve/',
+            json.dumps({'admin_remarks': 'Approved via REST API'}),
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(res_approve.status_code, 200)
+        self.assertEqual(res_approve.json()['status'], 'Approved')

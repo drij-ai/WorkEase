@@ -170,6 +170,13 @@ urlpatterns = [
     
     path('admin-dashboard/employees/add/', views.employee_add, name='employee_add'),
     path('admin-dashboard/run-migrations/', views.run_migrations_view, name='run_migrations'),
+    path('admin-dashboard/attendance/regularizations/', views.admin_regularization_list, name='admin_regularizations'),
+    path('admin-dashboard/attendance/regularizations/<int:regularization_id>/<str:status>/', views.admin_regularization_action, name='admin_regularization_action'),
+    path('admin-dashboard/employees/<int:employee_id>/toggle-status/', views.employee_toggle_status, name='employee_toggle_status'),
+    path('admin-dashboard/employees/<int:employee_id>/deactivate/', views.employee_delete, name='employee_deactivate'),
+    path('admin-dashboard/employees/<int:employee_id>/reactivate/', views.employee_toggle_status, name='employee_reactivate'),
+    path('attendance/regularize/', views.attendance_regularize, name='attendance_regularize'),
+
     path('leave/', views.leave_apply, name='leave_apply'),
     path('attendance/', views.attendance, name='attendance'),
     path('biometric/register/options/', views.biometric_register_options, name='biometric_register_options'),
