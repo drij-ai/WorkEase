@@ -1,7 +1,10 @@
+import logging
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, extend_schema_view
+
+logger = logging.getLogger(__name__)
 from .models import Employee, Attendance, Leave, Payroll, BiometricCredential, AttendanceRegularization
 from .serializers import (
     EmployeeSerializer,
@@ -70,6 +73,24 @@ class LeaveViewSet(viewsets.ModelViewSet):
     serializer_class = LeaveSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def perform_create(self, serializer):
+        leave = serializer.save()
+        try:
+            from .email_utils import send_leave_submitted_email
+            send_leave_submitted_email(leave)
+        except Exception as e:
+            logger.warning(f"Failed to dispatch leave submitted email in API: {e}")
+
+    def perform_update(self, serializer):
+        old_status = serializer.instance.status
+        leave = serializer.save()
+        if old_status != leave.status and leave.status in ['Approved', 'Rejected']:
+            try:
+                from .email_utils import send_leave_status_email
+                send_leave_status_email(leave)
+            except Exception as e:
+                logger.warning(f"Failed to dispatch leave status email in API: {e}")
+
 
 # Direct alias for LeaveRequestViewSet
 LeaveRequestViewSet = LeaveViewSet
@@ -128,7 +149,12 @@ class AttendanceRegularizationViewSet(viewsets.ModelViewSet):
             serializer.validated_data['employee'] = employee
         reg_date = serializer.validated_data.get('date')
         att = Attendance.objects.filter(employee=employee, date=reg_date).first()
-        serializer.save(employee=employee, attendance=att)
+        instance = serializer.save(employee=employee, attendance=att)
+        try:
+            from .email_utils import send_regularization_submitted_email
+            send_regularization_submitted_email(instance)
+        except Exception as e:
+            logger.warning(f"Failed to dispatch regularization submitted email: {e}")
 
     @extend_schema(
         summary="Approve regularization request",
@@ -140,6 +166,11 @@ class AttendanceRegularizationViewSet(viewsets.ModelViewSet):
         regularization = self.get_object()
         admin_remarks = request.data.get('admin_remarks', '')
         regularization.approve(admin_remarks=admin_remarks)
+        try:
+            from .email_utils import send_regularization_status_email
+            send_regularization_status_email(regularization)
+        except Exception as e:
+            logger.warning(f"Failed to dispatch regularization approved email: {e}")
         return Response(self.get_serializer(regularization).data)
 
     @extend_schema(
@@ -152,4 +183,9 @@ class AttendanceRegularizationViewSet(viewsets.ModelViewSet):
         regularization = self.get_object()
         admin_remarks = request.data.get('admin_remarks', '')
         regularization.reject(admin_remarks=admin_remarks)
+        try:
+            from .email_utils import send_regularization_status_email
+            send_regularization_status_email(regularization)
+        except Exception as e:
+            logger.warning(f"Failed to dispatch regularization rejected email: {e}")
         return Response(self.get_serializer(regularization).data)

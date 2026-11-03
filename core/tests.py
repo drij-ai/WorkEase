@@ -1829,3 +1829,261 @@ class BulkCsvImportExportTests(TestCase):
         self.assertIn('Month,Year,Employee ID,Employee Name', content)
         self.assertIn('11,2026,EMP-7701,Alice Smith', content)
         self.assertIn('58000.00,Paid', content)
+
+
+from unittest.mock import patch
+from django.core import mail
+
+
+class EmailNotificationEngineTests(TestCase):
+    def setUp(self):
+        self.client = Client(headers={"x-forwarded-proto": "https"})
+        self.admin_user = User.objects.create_superuser(
+            username='admin_email',
+            email='admin_notif@workease.com',
+            password='adminpassword123'
+        )
+        self.emp_user = User.objects.create_user(
+            username='emp_email',
+            email='emp_notif@workease.com',
+            password='emppassword123'
+        )
+        self.employee = Employee.objects.create(
+            user=self.emp_user,
+            employee_id='EMP-MAIL-01',
+            name='Email Test User',
+            email='emp_notif@workease.com',
+            phone='9998887776',
+            department='Engineering',
+            basic_salary=Decimal('60000.00'),
+            salary_type='Monthly',
+            joining_date=datetime.date(2025, 1, 1),
+            is_active=True
+        )
+
+    def test_leave_submitted_dispatches_email_to_admin(self):
+        """When an employee submits a leave request, HR/Admin receives an email alert."""
+        mail.outbox = []
+        self.client.force_login(self.emp_user)
+        today = timezone.localdate()
+        from_date = today + datetime.timedelta(days=2)
+        to_date = today + datetime.timedelta(days=4)
+
+        response = self.client.post(reverse('leave_apply'), {
+            'leave_type': 'Casual',
+            'from_date': from_date.isoformat(),
+            'to_date': to_date.isoformat(),
+            'reason': 'Family vacation leave',
+        }, secure=True)
+        self.assertEqual(response.status_code, 302)
+
+        # Verify email dispatched
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('admin_notif@workease.com', email.to)
+        self.assertIn('New Leave Application', email.subject)
+        self.assertIn('Email Test User', email.body)
+        self.assertIn('Casual', email.body)
+        self.assertIn('Family vacation leave', email.body)
+
+    def test_leave_status_approved_dispatches_email_to_employee(self):
+        """When admin approves a leave request, the employee receives an approval email."""
+        leave = Leave.objects.create(
+            employee=self.employee,
+            leave_type='Sick',
+            from_date=datetime.date(2026, 11, 10),
+            to_date=datetime.date(2026, 11, 12),
+            reason='Medical recovery',
+            status='Pending'
+        )
+        mail.outbox = []
+        self.client.force_login(self.admin_user)
+        response = self.client.post(f'/admin-dashboard/leave/{leave.id}/Approved/', secure=True)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('emp_notif@workease.com', email.to)
+        self.assertIn('Leave Request Approved', email.subject)
+        self.assertIn('Status: Approved', email.body)
+
+    def test_leave_status_rejected_dispatches_email_to_employee(self):
+        """When admin rejects a leave request, the employee receives a rejection email."""
+        leave = Leave.objects.create(
+            employee=self.employee,
+            leave_type='Casual',
+            from_date=datetime.date(2026, 11, 15),
+            to_date=datetime.date(2026, 11, 16),
+            reason='Short break',
+            status='Pending'
+        )
+        mail.outbox = []
+        self.client.force_login(self.admin_user)
+        response = self.client.post(f'/admin-dashboard/leave/{leave.id}/Rejected/', secure=True)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('emp_notif@workease.com', email.to)
+        self.assertIn('Leave Request Rejected', email.subject)
+        self.assertIn('Status: Rejected', email.body)
+
+    def test_regularization_submitted_dispatches_email_to_admin(self):
+        """When an employee submits a regularization request, HR/Admin receives an email alert."""
+        mail.outbox = []
+        self.client.force_login(self.emp_user)
+        response = self.client.post(reverse('attendance_regularize'), {
+            'date': '2026-11-01',
+            'requested_check_in': '09:00',
+            'requested_check_out': '18:00',
+            'reason': 'Biometric scanner timeout at reception',
+        }, secure=True)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('admin_notif@workease.com', email.to)
+        self.assertIn('Attendance Regularization Request', email.subject)
+        self.assertIn('Email Test User', email.body)
+        self.assertIn('Biometric scanner timeout', email.body)
+
+    def test_regularization_status_approved_dispatches_email_to_employee(self):
+        """When admin approves a regularization request, the employee receives an approval email."""
+        reg = AttendanceRegularization.objects.create(
+            employee=self.employee,
+            date=datetime.date(2026, 11, 1),
+            requested_check_in=datetime.time(9, 0),
+            requested_check_out=datetime.time(18, 0),
+            reason='Fingerprint scanner glitch',
+            status='Pending'
+        )
+        mail.outbox = []
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            reverse('admin_regularization_action', kwargs={'regularization_id': reg.id, 'status': 'Approved'}),
+            {'admin_remarks': 'Verified with CCTV log'},
+            secure=True
+        )
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('emp_notif@workease.com', email.to)
+        self.assertIn('Attendance Regularization Approved', email.subject)
+        self.assertIn('Verified with CCTV log', email.body)
+
+    def test_regularization_status_rejected_dispatches_email_to_employee(self):
+        """When admin rejects a regularization request, the employee receives a rejection email."""
+        reg = AttendanceRegularization.objects.create(
+            employee=self.employee,
+            date=datetime.date(2026, 11, 2),
+            requested_check_in=datetime.time(9, 0),
+            requested_check_out=datetime.time(18, 0),
+            reason='Forgot to punch',
+            status='Pending'
+        )
+        mail.outbox = []
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            reverse('admin_regularization_action', kwargs={'regularization_id': reg.id, 'status': 'Rejected'}),
+            {'admin_remarks': 'Punch window expired'},
+            secure=True
+        )
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('emp_notif@workease.com', email.to)
+        self.assertIn('Attendance Regularization Rejected', email.subject)
+        self.assertIn('Punch window expired', email.body)
+
+    def test_payroll_payslip_email_dispatches_with_pdf_attachment(self):
+        """When payslip email is triggered, PDF attachment and salary summary are sent to employee."""
+        payroll = Payroll.objects.create(
+            employee=self.employee,
+            month=10,
+            year=2026,
+            salary_type='Monthly',
+            basic_salary=Decimal('60000.00'),
+            bonus=Decimal('5000.00'),
+            deductions=Decimal('1000.00'),
+            gross_salary=Decimal('65000.00'),
+            net_salary=Decimal('64000.00'),
+            payment_status='Paid',
+            payment_gateway='Razorpay'
+        )
+        mail.outbox = []
+        self.client.force_login(self.admin_user)
+        response = self.client.get(f'/admin-dashboard/payroll/{payroll.id}/send-email/', secure=True)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('emp_notif@workease.com', email.to)
+        self.assertIn('Salary Slip', email.subject)
+        self.assertIn('October 2026', email.subject)
+        self.assertEqual(len(email.attachments), 1)
+        attachment_name, attachment_content, mime_type = email.attachments[0]
+        self.assertTrue(attachment_name.endswith('.pdf'))
+        self.assertEqual(mime_type, 'application/pdf')
+        self.assertTrue(len(attachment_content) > 0)
+
+    def test_drf_api_email_triggers(self):
+        """DRF API endpoints trigger leave and regularization emails properly."""
+        mail.outbox = []
+        self.client.force_login(self.admin_user)
+
+        # 1. API Leave Create
+        res_leave = self.client.post('/api/v1/leaves/', {
+            'employee': self.employee.id,
+            'leave_type': 'Paid',
+            'from_date': '2026-11-20',
+            'to_date': '2026-11-22',
+            'reason': 'Conference attendance',
+        }, content_type='application/json', secure=True)
+        self.assertEqual(res_leave.status_code, 201)
+        self.assertGreaterEqual(len(mail.outbox), 1)
+        self.assertIn('admin_notif@workease.com', mail.outbox[-1].to)
+
+        # 2. API Regularization Create
+        reg_count_before = len(mail.outbox)
+        res_reg = self.client.post('/api/v1/attendance-regularizations/', {
+            'employee': self.employee.id,
+            'date': '2026-11-03',
+            'requested_check_in': '09:15:00',
+            'requested_check_out': '18:15:00',
+            'reason': 'Badge replacement delay',
+        }, content_type='application/json', secure=True)
+        self.assertEqual(res_reg.status_code, 201)
+        self.assertEqual(len(mail.outbox), reg_count_before + 1)
+        reg_id = res_reg.json()['id']
+
+        # 3. API Regularization Approve
+        res_approve = self.client.post(
+            f'/api/v1/attendance-regularizations/{reg_id}/approve/',
+            {'admin_remarks': 'Approved via API'},
+            content_type='application/json',
+            secure=True
+        )
+        self.assertEqual(res_approve.status_code, 200)
+        self.assertEqual(len(mail.outbox), reg_count_before + 2)
+        self.assertIn('emp_notif@workease.com', mail.outbox[-1].to)
+
+    def test_email_failure_does_not_break_db_transaction(self):
+        """Simulate SMTP failure and ensure core transactions/redirects succeed without 500 error."""
+        self.client.force_login(self.emp_user)
+        today = timezone.localdate()
+        from_date = today + datetime.timedelta(days=7)
+        to_date = today + datetime.timedelta(days=8)
+
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=Exception("SMTP connection timeout")):
+            response = self.client.post(reverse('leave_apply'), {
+                'leave_type': 'Casual',
+                'from_date': from_date.isoformat(),
+                'to_date': to_date.isoformat(),
+                'reason': 'Trip to family home',
+            }, secure=True)
+            # Response should succeed and redirect, not 500
+            self.assertEqual(response.status_code, 302)
+            # Record should still be persisted
+            self.assertTrue(Leave.objects.filter(employee=self.employee, reason='Trip to family home').exists())

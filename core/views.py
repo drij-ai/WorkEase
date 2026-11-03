@@ -1,6 +1,9 @@
 import json
+import logging
 import secrets
 import base64
+
+logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect
 from django.db import DatabaseError, OperationalError, ProgrammingError
 from django.core.management import call_command
@@ -364,13 +367,19 @@ def leave_apply(request):
                     error = 'To Date, From Date karta pehla na hoi shake.'
 
                 else:
-                    Leave.objects.create(
+                    leave = Leave.objects.create(
                         employee=employee,
                         leave_type=leave_type,
                         from_date=start_date,
                         to_date=end_date,
                         reason=reason
                     )
+
+                    try:
+                        from .email_utils import send_leave_submitted_email
+                        send_leave_submitted_email(leave)
+                    except Exception as email_err:
+                        logger.warning(f"Failed to dispatch leave submitted email: {email_err}")
 
                     return redirect('/dashboard/')
 
@@ -1019,7 +1028,12 @@ def payroll_add(request):
         form = PayrollForm(request.POST)
 
         if form.is_valid():
-            form.save()
+            payroll = form.save()
+            try:
+                from .email_utils import send_payslip_email
+                send_payslip_email(payroll)
+            except Exception as email_err:
+                logger.warning(f"Failed to dispatch payslip email in payroll_edit: {email_err}")
             return redirect('admin_payroll_list')
 
     else:
@@ -1039,7 +1053,12 @@ def payroll_edit(request, payroll_id):
         form = PayrollForm(request.POST, instance=payroll)
 
         if form.is_valid():
-            form.save()
+            payroll = form.save()
+            try:
+                from .email_utils import send_payslip_email
+                send_payslip_email(payroll)
+            except Exception as email_err:
+                logger.warning(f"Failed to dispatch payslip email in payroll_edit: {email_err}")
             return redirect('admin_payroll_list')
 
     else:
@@ -2001,6 +2020,12 @@ def attendance_regularize(request):
             status='Pending'
         )
 
+        try:
+            from .email_utils import send_regularization_submitted_email
+            send_regularization_submitted_email(regularization)
+        except Exception as email_err:
+            logger.warning(f"Failed to dispatch regularization submitted email: {email_err}")
+
         messages.success(
             request,
             f"Attendance regularization request for {reg_date} submitted successfully. Awaiting manager approval."
@@ -2115,6 +2140,12 @@ def admin_regularization_action(request, regularization_id, status):
             request,
             f"Attendance regularization for {regularization.employee.name} on {regularization.date} rejected."
         )
+
+    try:
+        from .email_utils import send_regularization_status_email
+        send_regularization_status_email(regularization)
+    except Exception as email_err:
+        logger.warning(f"Failed to dispatch regularization status email: {email_err}")
 
     return redirect('admin_regularizations')
 
