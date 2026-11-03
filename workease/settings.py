@@ -41,15 +41,15 @@ else:
     # In local development and CI testing, check DJANGO_DEBUG or DEBUG, defaulting to True
     DEBUG = (os.environ.get('DJANGO_DEBUG') or os.environ.get('DEBUG', 'True')).lower() in ('true', '1', 't', 'yes')
 
-# Secret key: read from DJANGO_SECRET_KEY or SECRET_KEY
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY')
+# Secret key: read from DJANGO_SECRET_KEY
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
-        # Fallback key solely for local development
-        SECRET_KEY = 'django-insecure-local-dev-key-change-in-production'
+        # Fallback key solely for local development and CI testing
+        SECRET_KEY = os.environ.get('SECRET_KEY') or 'django-insecure-local-dev-key-change-in-production'
     elif os.environ.get('VERCEL'):
         # Fallback key on Vercel if DJANGO_SECRET_KEY wasn't explicitly configured in Vercel dashboard
-        SECRET_KEY = 'django-insecure-vercel-prod-key-fallback-workease-app'
+        SECRET_KEY = os.environ.get('SECRET_KEY') or 'django-insecure-vercel-prod-key-fallback-workease-app'
     else:
         raise RuntimeError(
             "DJANGO_SECRET_KEY environment variable is required in production (when DEBUG=False)."
